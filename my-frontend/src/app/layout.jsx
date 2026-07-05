@@ -3,13 +3,13 @@ import { AppProvider } from '../context/AppContext';
 import Toast from '../components/ui/Toast';
 
 export const metadata = {
-  title: 'نُسخة — نظام إدارة الوثائق',
-  description: 'نظام إدارة الوثائق الرسمية للمؤسسة',
+  title: 'COPY - DMS',
+  description: 'Document Mangment System',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar" dir="rtl">
+    <html>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
