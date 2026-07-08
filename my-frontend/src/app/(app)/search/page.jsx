@@ -23,67 +23,67 @@ export default function SearchPage() {
 
   return (
     <>
-      <div className="panel" style={{ marginBottom: 20 }}>
-        <div className="panel-body">
-          <h2 style={{ marginBottom: 16 }}>بحث متقدم عن الوثائق</h2>
+      <div className="mb-5 rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <div className="p-5">
+          <h2 className="mb-4">Advanced document search</h2>
           <form onSubmit={runSearch}>
-            <div className="field-row">
-              <div className="field">
-                <label>عنوان الوثيقة</label>
-                <input placeholder="كلمة مفتاحية في العنوان" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <div className="mb-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label>Document title</label>
+                <input placeholder="Keyword in title" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
-              <div className="field">
-                <label>التصنيف</label>
+              <div>
+                <label>Category</label>
                 <select value={cat} onChange={(e) => setCat(e.target.value)}>
-                  <option value="">أي تصنيف</option>
+                  <option value="">Any category</option>
                   {CAT_NAMES.map((c) => (
                     <option key={c}>{c}</option>
                   ))}
                 </select>
               </div>
             </div>
-            <div className="field-row">
-              <div className="field">
-                <label>القسم</label>
+            <div className="mb-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label>Department</label>
                 <select value={dept} onChange={(e) => setDept(e.target.value)}>
-                  <option value="">أي قسم</option>
+                  <option value="">Any department</option>
                   {DEPT_NAMES.map((d) => (
                     <option key={d}>{d}</option>
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div>
                 <label>&nbsp;</label>
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} type="submit">
+                <button className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[#a63d2f] px-4 py-2.5 text-sm font-semibold text-[#fffdf8] transition duration-150 hover:bg-[#8a2f22]" type="submit">
                   <SearchIcon />
-                  بحث
+                  Search
                 </button>
               </div>
             </div>
           </form>
-          <p className="hint">تُقيَّد نتائج البحث تلقائياً وفق صلاحيات دورك الحالي (FR-33).</p>
+          <p className="mt-1.5 text-xs text-[#5b6b75]">Results are constrained automatically by your current role permissions (FR-33).</p>
         </div>
       </div>
 
-      <div className="panel">
-        <div className="panel-head">
-          <h2>النتائج</h2>
-          <span className="hint mono">{results ? `${results.length} نتيجة` : '—'}</span>
+      <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[#ede8db] px-5 py-4">
+          <h2>Results</h2>
+          <span className="text-xs text-[#5b6b75] font-mono">{results ? `${results.length} results` : '—'}</span>
         </div>
-        <table>
+        <table className="min-w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>العنوان</th>
-              <th>التصنيف</th>
-              <th>القسم</th>
-              <th>تاريخ الرفع</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Department</th>
+              <th>Uploaded</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {shown.map((d) => (
               <tr key={d.id}>
-                <td onClick={() => router.push(`/documents/${d.id}`)} style={{ cursor: 'pointer', fontWeight: 600 }}>
+                <td className="cursor-pointer font-semibold" onClick={() => router.push(`/documents/${d.id}`)}>
                   {d.title}
                 </td>
                 <td>
@@ -92,10 +92,10 @@ export default function SearchPage() {
                 <td>
                   <DeptBadge>{d.dept}</DeptBadge>
                 </td>
-                <td className="mono">{d.date}</td>
+                <td className="font-mono">{d.date}</td>
                 <td>
-                  <button className="btn btn-text btn-sm" onClick={() => router.push(`/documents/${d.id}`)}>
-                    فتح
+                  <button className="rounded-lg bg-transparent p-2 text-sm text-[#5b6b75] transition hover:text-[#1c2b39]" onClick={() => router.push(`/documents/${d.id}`)}>
+                    Open
                   </button>
                 </td>
               </tr>
@@ -103,10 +103,10 @@ export default function SearchPage() {
           </tbody>
         </table>
         {shown.length === 0 && (
-          <div className="empty">
-            <Stamp>؟</Stamp>
-            <h3>لا توجد نتائج</h3>
-            <p>عدّل كلمات البحث أو الفلاتر وحاول مجدداً.</p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-[#d8d0be] bg-[#fffdf8]/70 p-8 text-center">
+            <Stamp>?</Stamp>
+            <h3>No results</h3>
+            <p>Adjust search terms or filters and try again.</p>
           </div>
         )}
       </div>

@@ -8,25 +8,25 @@ export default function DepartmentModal({ open, department, onClose, onSave }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={department ? 'تعديل قسم' : 'إضافة قسم جديد'}
+      title={department ? 'Edit Department' : 'Add New Department'}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
-            إلغاء
+            Cancel
           </button>
           <button className="btn btn-primary" onClick={onSave}>
-            حفظ
+            Save
           </button>
         </>
       }
     >
-      <div className="field">
-        <label>اسم القسم</label>
-        <input placeholder="مثال: تقنية المعلومات" defaultValue={department?.name} />
+      <div className="mb-4">
+        <label>Department name</label>
+        <input placeholder="e.g. IT" defaultValue={department?.name} />
       </div>
-      <div className="field">
-        <label>الوصف</label>
-        <textarea rows={3} placeholder="وصف مختصر لمهام القسم" defaultValue={department?.desc} />
+      <div className="mb-4">
+        <label>Description</label>
+        <textarea rows={3} placeholder="Short description of the department" defaultValue={department?.desc} />
       </div>
     </Modal>
   );

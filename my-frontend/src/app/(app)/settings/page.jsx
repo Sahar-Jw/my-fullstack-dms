@@ -10,61 +10,62 @@ export default function SettingsPage() {
   function handleChangePassword(e) {
     e.preventDefault();
     setCurPassErr(false);
-    showToast('تم تحديث كلمة المرور بنجاح');
+    showToast('Password updated successfully');
   }
 
   return (
-    <div className="two-col">
-      <div className="panel">
-        <div className="panel-head">
-          <h2 style={{ fontSize: 17 }}>تغيير كلمة المرور</h2>
+    <div className="grid gap-4 xl:grid-cols-2">
+      <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[#ede8db] px-5 py-4">
+          <h2 className="text-[17px]">Change password</h2>
         </div>
-        <form className="panel-body" onSubmit={handleChangePassword}>
-          <div className="field">
-            <label>كلمة المرور الحالية</label>
+        <form className="p-5" onSubmit={handleChangePassword}>
+          <div className="mb-4">
+            <label>Current password</label>
             <input type="password" placeholder="••••••••" />
-            {curPassErr && <p className="error-text">كلمة المرور الحالية غير صحيحة.</p>}
+            {curPassErr && <p className="mt-1.5 text-xs text-[#a63d2f]">Current password is incorrect.</p>}
           </div>
-          <div className="field">
-            <label>كلمة المرور الجديدة</label>
-            <input type="password" placeholder="••••••••" />
-          </div>
-          <div className="field">
-            <label>تأكيد كلمة المرور الجديدة</label>
+          <div className="mb-4">
+            <label>New password</label>
             <input type="password" placeholder="••••••••" />
           </div>
-          <button className="btn btn-primary" type="submit">
-            حفظ كلمة المرور
+          <div className="mb-4">
+            <label>Confirm new password</label>
+            <input type="password" placeholder="••••••••" />
+          </div>
+          <button
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[#a63d2f] px-4 py-2.5 text-sm font-semibold text-[#fffdf8] transition duration-150 hover:bg-[#8a2f22]"
+            type="submit"
+          >
+            Save password
           </button>
         </form>
       </div>
 
-      <div className="panel">
-        <div className="panel-head">
-          <h2 style={{ fontSize: 17 }}>بيانات الحساب</h2>
+      <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[#ede8db] px-5 py-4">
+          <h2 className="text-[17px]">Account details</h2>
         </div>
-        <div className="panel-body">
-          <div className="detail-meta-list" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="meta-item">
-              <div className="k">الاسم الكامل</div>
-              <div className="v">{roleInfo.name}</div>
+        <div className="p-5">
+          <div className="mt-1 grid gap-3 sm:grid-cols-1">
+            <div className="rounded-xl border border-[#ede8db] bg-[#f6f3ec]/80 p-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b6b75]">Full name</div>
+              <div className="mt-1 text-sm font-semibold text-[#1c2b39]">{roleInfo.name}</div>
             </div>
-            <div className="meta-item">
-              <div className="k">البريد الإلكتروني</div>
-              <div className="v mono">{roleInfo.email}</div>
+            <div className="rounded-xl border border-[#ede8db] bg-[#f6f3ec]/80 p-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b6b75]">Email</div>
+              <div className="mt-1 text-sm font-semibold text-[#1c2b39] font-mono">{roleInfo.email}</div>
             </div>
-            <div className="meta-item">
-              <div className="k">الدور</div>
-              <div className="v">{roleInfo.label}</div>
+            <div className="rounded-xl border border-[#ede8db] bg-[#f6f3ec]/80 p-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b6b75]">Role</div>
+              <div className="mt-1 text-sm font-semibold text-[#1c2b39]">{roleInfo.label}</div>
             </div>
-            <div className="meta-item">
-              <div className="k">القسم</div>
-              <div className="v">{roleInfo.dept}</div>
+            <div className="rounded-xl border border-[#ede8db] bg-[#f6f3ec]/80 p-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b6b75]">Department</div>
+              <div className="mt-1 text-sm font-semibold text-[#1c2b39]">{roleInfo.dept}</div>
             </div>
           </div>
-          <p className="hint" style={{ marginTop: 16 }}>
-            لتعديل هذه البيانات، تواصل مع مدير النظام (Admin).
-          </p>
+          <p className="mt-4 text-xs text-[#5b6b75]">To change these details, contact the system administrator (Admin).</p>
         </div>
       </div>
     </div>

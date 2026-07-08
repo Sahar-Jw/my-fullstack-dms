@@ -28,63 +28,63 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="stat-grid">
-        <div className="stat-card">
-          <div className="top-row">
-            <Stamp size="sm">و</Stamp>
-          </div>
-          <div className="num mono">{total}</div>
-          <div className="lbl">إجمالي الوثائق</div>
+      <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+          <div className="mb-3 flex items-center justify-between">
+              <Stamp size="sm">D</Stamp>
+            </div>
+          <div className="text-3xl font-semibold text-[#1c2b39] font-mono">{total}</div>
+            <div className="text-sm text-[#5b6b75]">Total documents</div>
         </div>
-        <div className="stat-card">
-          <div className="top-row">
+        <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+          <div className="mb-3 flex items-center justify-between">
             <Stamp size="sm" color="olive">
               +
             </Stamp>
           </div>
-          <div className="num mono">{newThisWeek}</div>
-          <div className="lbl">وثائق أُضيفت هذا الأسبوع</div>
+          <div className="text-3xl font-semibold text-[#1c2b39] font-mono">{newThisWeek}</div>
+          <div className="text-sm text-[#5b6b75]">Documents added this week</div>
         </div>
-        <div className="stat-card">
-          <div className="top-row">
+        <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+          <div className="mb-3 flex items-center justify-between">
             <Stamp size="sm" color="ink">
-              س
+              C
             </Stamp>
           </div>
-          <div className="num mono">{usedCats}</div>
-          <div className="lbl">تصنيفات مستخدَمة</div>
+          <div className="text-3xl font-semibold text-[#1c2b39] font-mono">{usedCats}</div>
+          <div className="text-sm text-[#5b6b75]">Used categories</div>
         </div>
         {role === 'admin' && (
-          <div className="stat-card admin-only">
-            <div className="top-row">
+          <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+              <div className="mb-3 flex items-center justify-between">
               <Stamp size="sm" color="gold">
-                م
+                U
               </Stamp>
             </div>
-            <div className="num mono">{USERS.length}</div>
-            <div className="lbl">
-              إجمالي المستخدمين <span style={{ fontSize: 10, color: 'var(--gold)' }}>Admin فقط</span>
+            <div className="text-3xl font-semibold text-[#1c2b39] font-mono">{USERS.length}</div>
+            <div className="text-sm text-[#5b6b75]">
+              Total users <span className="text-[10px] text-[#b08b2e]">Admin only</span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="two-col">
-        <div className="panel">
-          <div className="panel-head">
-            <h2>آخر الوثائق المضافة</h2>
-            <Link className="btn btn-text btn-sm" href="/documents">
-              عرض الكل ←
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[#ede8db] px-5 py-4">
+            <h2>Latest documents</h2>
+            <Link className="rounded-lg bg-transparent p-2 text-sm text-[#5b6b75] transition hover:text-[#1c2b39]" href="/documents">
+              View all ←
             </Link>
           </div>
-          <div className="panel-body" style={{ padding: 0 }}>
-            <table>
+          <div className="p-0">
+            <table className="min-w-full border-collapse text-sm">
               <thead>
                 <tr>
-                  <th>العنوان</th>
-                  <th>التصنيف</th>
-                  <th>القسم</th>
-                  <th>تاريخ الرفع</th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Department</th>
+                  <th>Uploaded</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                     <td>
                       <DeptBadge>{d.dept}</DeptBadge>
                     </td>
-                    <td className="mono">{d.date}</td>
+                    <td className="font-mono">{d.date}</td>
                   </tr>
                 ))}
               </tbody>
@@ -105,23 +105,23 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="panel">
-          <div className="panel-head">
-            <h2>التوزيع حسب التصنيف</h2>
+        <div className="rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[#ede8db] px-5 py-4">
+            <h2>Distribution by category</h2>
           </div>
-          <div className="panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="flex flex-col gap-3.5 p-5">
             {Object.entries(byCat).map(([c, n]) => {
               const pct = Math.round((n / total) * 100);
               return (
                 <div key={c}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                  <div className="mb-1.5 flex items-center justify-between text-[13px]">
                     <span>{c}</span>
-                    <span className="mono" style={{ color: 'var(--ink-soft)' }}>
+                    <span className="font-mono text-[#5b6b75]">
                       {n} ({pct}%)
                     </span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 4, background: 'var(--paper-2)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: CAT_COLORS[c] }} />
+                  <div className="h-1.5 overflow-hidden rounded bg-[#ede8db]">
+                    <div className="h-full" style={{ width: `${pct}%`, background: CAT_COLORS[c] }} />
                   </div>
                 </div>
               );

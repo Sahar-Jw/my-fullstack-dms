@@ -27,52 +27,60 @@ export default function DocumentsPage() {
   );
 
   function handleDelete() {
-    showToast('تم الحذف بنجاح');
+    showToast('Deleted successfully');
     setConfirmTarget(null);
   }
 
   return (
     <>
-      <div className="toolbar">
-        <div className="search-box">
-          <input placeholder="ابحث بعنوان الوثيقة…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <SearchIcon />
+      <div className="mb-5 flex flex-col gap-3 rounded-[10px] border border-[#e3ddc9] bg-white/70 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)] md:flex-row md:items-center">
+        <div className="relative flex-1">
+          <input
+            className="pr-10"
+            placeholder="Search by title…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5b6b75]" />
         </div>
-        <select className="filter-select" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
-          <option value="">كل التصنيفات</option>
+        <select className="min-w-[180px]" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+          <option value="">All categories</option>
           {CAT_NAMES.map((c) => (
             <option key={c}>{c}</option>
           ))}
         </select>
-        <select className="filter-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-          <option value="">كل الأقسام</option>
+        <select className="min-w-[180px]" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+          <option value="">All departments</option>
           {DEPT_NAMES.map((d) => (
             <option key={d}>{d}</option>
           ))}
         </select>
-        <div className="spacer" />
-        <Link className="btn btn-primary" href="/documents/new">
+        <div className="hidden flex-1 md:block" />
+        <Link
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[#a63d2f] px-4 py-2.5 text-sm font-semibold text-[#fffdf8] transition duration-150 hover:bg-[#8a2f22]"
+          href="/documents/new"
+        >
           <PlusIcon />
-          إضافة وثيقة
+          Add document
         </Link>
       </div>
 
-      <div className="panel">
-        <table>
+      <div className="overflow-hidden rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <table className="min-w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>العنوان</th>
-              <th>التصنيف</th>
-              <th>القسم</th>
-              <th>أنشأها</th>
-              <th>تاريخ الرفع</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Department</th>
+              <th>Created by</th>
+              <th>Uploaded</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((d) => (
               <tr key={d.id}>
-                <td onClick={() => router.push(`/documents/${d.id}`)} style={{ cursor: 'pointer', fontWeight: 600 }}>
+                <td className="cursor-pointer font-semibold" onClick={() => router.push(`/documents/${d.id}`)}>
                   {d.title}
                 </td>
                 <td>
@@ -82,17 +90,29 @@ export default function DocumentsPage() {
                   <DeptBadge>{d.dept}</DeptBadge>
                 </td>
                 <td>{d.by}</td>
-                <td className="mono">{d.date}</td>
+                <td className="font-mono">{d.date}</td>
                 <td>
-                  <div className="row-actions">
-                    <button className="icon-btn" title="عرض" onClick={() => router.push(`/documents/${d.id}`)}>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d8d0be] bg-[#fffdf8] text-[#1c2b39] transition hover:border-[#a63d2f] hover:text-[#a63d2f]"
+                      title="View"
+                      onClick={() => router.push(`/documents/${d.id}`)}
+                    >
                       <ViewIcon />
                     </button>
-                    <button className="icon-btn" title="تعديل" onClick={() => router.push(`/documents/${d.id}/edit`)}>
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d8d0be] bg-[#fffdf8] text-[#1c2b39] transition hover:border-[#a63d2f] hover:text-[#a63d2f]"
+                      title="Edit"
+                      onClick={() => router.push(`/documents/${d.id}/edit`)}
+                    >
                       <EditIcon />
                     </button>
                     {role === 'admin' && (
-                      <button className="icon-btn danger" title="حذف" onClick={() => setConfirmTarget(d.title)}>
+                      <button
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#e7c4ba] bg-[#fffdf8] text-[#a63d2f] transition hover:bg-[#fbede9]"
+                        title="Delete"
+                        onClick={() => setConfirmTarget(d.title)}
+                      >
                         <TrashIcon />
                       </button>
                     )}
@@ -103,17 +123,17 @@ export default function DocumentsPage() {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="empty">
-            <Stamp>؟</Stamp>
-            <h3>لا توجد نتائج</h3>
-            <p>لم يتم العثور على وثائق مطابقة لمعايير البحث الحالية. جرّب تعديل الفلاتر.</p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] border border-dashed border-[#d8d0be] bg-[#fffdf8]/70 p-8 text-center">
+            <Stamp>?</Stamp>
+            <h3>No results</h3>
+            <p>No documents match the current filters. Try adjusting them.</p>
           </div>
         )}
       </div>
 
       <ConfirmModal
         open={confirmTarget !== null}
-        text={`هل تريد حذف '${confirmTarget}'؟ سيتم حذف مرفقاتها أيضاً.`}
+        text={`Delete '${confirmTarget}'? Attachments will also be deleted.`}
         onClose={() => setConfirmTarget(null)}
         onConfirm={handleDelete}
       />

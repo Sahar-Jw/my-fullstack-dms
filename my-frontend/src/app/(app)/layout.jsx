@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import Sidebar from '../../components/layout/Sidebar';
@@ -10,6 +10,7 @@ const ADMIN_ONLY_PREFIXES = ['/users', '/departments', '/categories'];
 
 export default function AppLayout({ children }) {
   const { isAuthenticated, role } = useApp();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,11 +32,11 @@ export default function AppLayout({ children }) {
 
   return (
     <div id="app">
-      <div className="shell">
-        <Sidebar />
-        <div className="main">
-          <Topbar />
-          <div className="content">{children}</div>
+      <div className="flex min-h-screen flex-col bg-[#f6f3ec] lg:flex-row">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="flex min-h-screen flex-1 flex-col">
+          <Topbar onMenuClick={() => setSidebarOpen(true)} />
+          <div className="flex-1 p-4 sm:p-5 lg:p-6">{children}</div>
         </div>
       </div>
     </div>

@@ -2,57 +2,70 @@
 
 import { usePathname } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
+import { MenuIcon } from '../../components/icons';
 import Stamp from '../ui/Stamp';
 
 const PAGE_TITLES = {
-  '/dashboard': ['لوحة التحكم', 'الرئيسية'],
-  '/documents': ['الوثائق', 'الرئيسية / الوثائق'],
-  '/documents/new': ['إضافة وثيقة', 'الرئيسية / الوثائق / نموذج'],
-  '/search': ['البحث', 'الرئيسية / البحث'],
-  '/users': ['إدارة المستخدمين', 'الرئيسية / إدارة النظام / المستخدمون'],
-  '/departments': ['إدارة الأقسام', 'الرئيسية / إدارة النظام / الأقسام'],
-  '/categories': ['إدارة التصنيفات', 'الرئيسية / إدارة النظام / التصنيفات'],
-  '/settings': ['الإعدادات', 'الرئيسية / الإعدادات'],
+  '/dashboard': ['Dashboard', 'Home'],
+  '/documents': ['Documents', 'Home / Documents'],
+  '/documents/new': ['Add Document', 'Home / Documents / New'],
+  '/search': ['Search', 'Home / Search'],
+  '/users': ['User Management', 'Home / Admin / Users'],
+  '/departments': ['Departments', 'Home / Admin / Departments'],
+  '/categories': ['Categories', 'Home / Admin / Categories'],
+  '/settings': ['Settings', 'Home / Settings'],
 };
 
 function titleFor(pathname) {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  if (/^\/documents\/[^/]+\/edit$/.test(pathname)) return ['تعديل الوثيقة', 'الرئيسية / الوثائق / نموذج'];
-  if (/^\/documents\/[^/]+$/.test(pathname)) return ['تفاصيل الوثيقة', 'الرئيسية / الوثائق / تفاصيل'];
-  return ['نُسخة', 'الرئيسية'];
+  if (/^\/documents\/[^/]+\/edit$/.test(pathname)) return ['Edit document', 'Home / Documents / Edit'];
+  if (/^\/documents\/[^/]+$/.test(pathname)) return ['Document details', 'Home / Documents / Details'];
+  return ['MyDocs', 'Home'];
 }
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
   const pathname = usePathname();
   const { role, roleInfo, setRole } = useApp();
   const [title, path] = titleFor(pathname);
 
   return (
-    <div className="topbar">
-      <div>
-        <h1>{title}</h1>
-        <div className="path">{path}</div>
+    <div className="flex flex-col gap-4 border-b border-[#e3ddc9] bg-white/80 px-4 py-4 backdrop-blur sm:px-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d8d0be] bg-white text-[#1c2b39] transition hover:border-[#a63d2f] hover:text-[#a63d2f] lg:hidden"
+          onClick={onMenuClick}
+        >
+          <MenuIcon />
+        </button>
+
+        <div>
+          <h1 className="text-2xl sm:text-[1.7rem]">{title}</h1>
+          <div className="mt-1 text-sm text-[#5b6b75]">{path}</div>
+        </div>
       </div>
-      <div className="topbar-right">
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <select
-          className="role-switch"
+          className="min-w-40 rounded-xl border border-[#d8d0be] bg-[#fffdf8] px-3 py-2 text-sm text-[#1c2b39]"
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          title="تبديل الدور (للعرض التجريبي)"
+          title="Switch role (preview)"
         >
-          <option value="admin">عرض كـ Admin</option>
-          <option value="manager">عرض كـ Manager</option>
-          <option value="employee">عرض كـ Employee</option>
+          <option value="admin">View as Admin</option>
+          <option value="manager">View as Manager</option>
+          <option value="employee">View as Employee</option>
         </select>
-        <div className="user-pill">
+
+        <div className="flex items-center gap-3 rounded-2xl border border-[#e3ddc9] bg-[#f6f3ec] px-3 py-2">
           <Stamp size="sm" color="gold">
             {roleInfo.initials}
           </Stamp>
-          <div className="who">
-            <b>{roleInfo.name}</b>
-            <span>
+          <div>
+            <div className="font-semibold text-[#1c2b39]">{roleInfo.name}</div>
+            <div className="block text-xs text-[#5b6b75]">
               {roleInfo.label} · {roleInfo.dept}
-            </span>
+            </div>
           </div>
         </div>
       </div>

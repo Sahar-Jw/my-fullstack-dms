@@ -12,36 +12,44 @@ export default function UsersPage() {
   const { showToast } = useApp();
   const [users] = useState(USERS);
   const [query, setQuery] = useState('');
-  const [modalUser, setModalUser] = useState(AppUser | null | undefined)(undefined);
-  const [confirmTarget, setConfirmTarget] = useState(string | null)(null);
+  const [modalUser, setModalUser] = useState(undefined);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
-  const filtered = USERS.filter(
+  const filtered = users.filter(
     (u) => u.name.includes(query) || u.email.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
     <>
-      <div className="toolbar">
-        <div className="search-box">
-          <input placeholder="ابحث عن مستخدم بالاسم أو البريد…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <SearchIcon />
+      <div className="mb-5 flex flex-col gap-3 rounded-[10px] border border-[#e3ddc9] bg-white/70 p-4 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)] md:flex-row md:items-center">
+        <div className="relative flex-1">
+          <input
+            className="pr-10"
+            placeholder="Search by name or email…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5b6b75]" />
         </div>
-        <div className="spacer" />
-        <button className="btn btn-primary" onClick={() => setModalUser(null)}>
+        <div className="hidden flex-1 md:block" />
+        <button
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[#a63d2f] px-4 py-2.5 text-sm font-semibold text-[#fffdf8] transition duration-150 hover:bg-[#8a2f22]"
+          onClick={() => setModalUser(null)}
+        >
           <PlusIcon />
-          إضافة مستخدم
+          Add user
         </button>
       </div>
 
-      <div className="panel">
-        <table>
+      <div className="overflow-hidden rounded-[10px] border border-[#e3ddc9] bg-white/80 shadow-[0_1px_2px_rgba(28,43,57,0.06),0_6px_20px_rgba(28,43,57,0.06)]">
+        <table className="min-w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>الاسم</th>
-              <th>البريد الإلكتروني</th>
-              <th>القسم</th>
-              <th>الدور</th>
-              <th>الحالة</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Role</th>
+              <th>Status</th>
               <th></th>
             </tr>
           </thead>
@@ -49,7 +57,7 @@ export default function UsersPage() {
             {filtered.map((u) => (
               <tr key={u.id}>
                 <td style={{ fontWeight: 600 }}>{u.name}</td>
-                <td className="mono">{u.email}</td>
+                <td className="font-mono">{u.email}</td>
                 <td>
                   <DeptBadge>{u.dept}</DeptBadge>
                 </td>
@@ -60,11 +68,19 @@ export default function UsersPage() {
                   <StatusBadge active={u.active} />
                 </td>
                 <td>
-                  <div className="row-actions">
-                    <button className="icon-btn" title="تعديل" onClick={() => setModalUser(u)}>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d8d0be] bg-[#fffdf8] text-[#1c2b39] transition hover:border-[#a63d2f] hover:text-[#a63d2f]"
+                      title="Edit"
+                      onClick={() => setModalUser(u)}
+                    >
                       <EditIcon />
                     </button>
-                    <button className="icon-btn danger" title="حذف" onClick={() => setConfirmTarget(u.name)}>
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#e7c4ba] bg-[#fffdf8] text-[#a63d2f] transition hover:bg-[#fbede9]"
+                      title="Delete"
+                      onClick={() => setConfirmTarget(u.name)}
+                    >
                       <TrashIcon />
                     </button>
                   </div>
@@ -80,16 +96,16 @@ export default function UsersPage() {
         user={modalUser ?? null}
         onClose={() => setModalUser(undefined)}
         onSave={() => {
-          showToast('تم حفظ بيانات المستخدم');
+          showToast('User saved');
           setModalUser(undefined);
         }}
       />
       <ConfirmModal
         open={confirmTarget !== null}
-        text={`هل تريد حذف المستخدم '${confirmTarget}'؟`}
+        text={`Delete user '${confirmTarget}'?`}
         onClose={() => setConfirmTarget(null)}
         onConfirm={() => {
-          showToast('تم الحذف بنجاح');
+          showToast('Deleted successfully');
           setConfirmTarget(null);
         }}
       />

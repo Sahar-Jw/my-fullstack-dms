@@ -9,25 +9,25 @@ export default function CategoryModal({ open, category, onClose, onSave }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={category ? 'تعديل تصنيف' : 'إضافة تصنيف جديد'}
+      title={category ? 'Edit Category' : 'Add New Category'}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
-            إلغاء
+            Cancel
           </button>
           <button className="btn btn-primary" onClick={onSave}>
-            حفظ
+            Save
           </button>
         </>
       }
     >
-      <div className="field">
-        <label>اسم التصنيف</label>
-        <input placeholder="مثال: Legal" defaultValue={category?.name} />
+      <div className="mb-4">
+        <label>Category name</label>
+        <input placeholder="e.g. Legal" defaultValue={category?.name} />
       </div>
-      <div className="field">
-        <label>الوصف</label>
-        <textarea rows={3} placeholder="وصف مختصر لهذا التصنيف" defaultValue={category?.desc} />
+      <div className="mb-4">
+        <label>Description</label>
+        <textarea rows={3} placeholder="Short description for this category" defaultValue={category?.desc} />
       </div>
     </Modal>
   );

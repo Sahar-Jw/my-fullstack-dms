@@ -3,8 +3,8 @@ import { AppProvider } from '../context/AppContext';
 import Toast from '../components/ui/Toast';
 
 export const metadata = {
-  title: 'COPY - DMS',
-  description: 'Document Mangment System',
+  title: 'MD - My Docs',
+  description: 'Document management system', 
 };
 
 export default function RootLayout({ children }) {

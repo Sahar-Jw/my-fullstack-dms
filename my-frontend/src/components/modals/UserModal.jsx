@@ -9,37 +9,37 @@ export default function UserModal({ open, user, onClose, onSave }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={user ? 'تعديل بيانات مستخدم' : 'إضافة مستخدم جديد'}
+      title={user ? 'Edit User' : 'Add New User'}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
-            إلغاء
+            Cancel
           </button>
           <button className="btn btn-primary" onClick={onSave}>
-            حفظ
+            Save
           </button>
         </>
       }
     >
-      <div className="field">
-        <label>الاسم الكامل</label>
-        <input placeholder="مثال: سارة أحمد" defaultValue={user?.name} />
+      <div className="mb-4">
+        <label>Full name</label>
+        <input placeholder="e.g. Sarah Ahmed" defaultValue={user?.name} />
       </div>
-      <div className="field">
-        <label>البريد الإلكتروني</label>
+      <div className="mb-4">
+        <label>Email</label>
         <input type="email" placeholder="name@organization.com" defaultValue={user?.email} />
       </div>
-      <div className="field-row">
-        <div className="field">
-          <label>القسم</label>
+      <div className="mb-4 grid gap-4 md:grid-cols-2">
+        <div>
+          <label>Department</label>
           <select defaultValue={user?.dept ?? DEPT_NAMES[0]}>
             {DEPT_NAMES.map((d) => (
               <option key={d}>{d}</option>
             ))}
           </select>
         </div>
-        <div className="field">
-          <label>الدور</label>
+        <div>
+          <label>Role</label>
           <select defaultValue={user?.role ?? 'Employee'}>
             <option>Employee</option>
             <option>Manager</option>
@@ -47,9 +47,9 @@ export default function UserModal({ open, user, onClose, onSave }) {
           </select>
         </div>
       </div>
-      <div className="field">
-        <label>كلمة مرور مؤقتة</label>
-        <input type="password" placeholder="ستُطلب من المستخدم تغييرها عند أول دخول" />
+      <div className="mb-4">
+        <label>Temporary password</label>
+        <input type="password" placeholder="User will be asked to change this on first login" />
       </div>
     </Modal>
   );

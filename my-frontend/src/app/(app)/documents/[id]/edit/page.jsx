@@ -15,10 +15,10 @@ export default function EditDocumentPage() {
 
   return (
     <>
-      <button className="back-link" onClick={() => router.push('/documents')}>
-        <BackIcon />
-        العودة إلى قائمة الوثائق
-      </button>
+        <button className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[#a63d2f]" onClick={() => router.push('/documents')}>
+          <BackIcon />
+          Back to documents list
+        </button>
       <DocumentForm document={doc} />
     </>
   );
