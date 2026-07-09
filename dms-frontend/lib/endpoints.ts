@@ -40,16 +40,38 @@ export const usersApi = {
     roleId: number;
     departmentId?: number;
   }) => api.post<AppUser & Record<string, unknown>>('/users', data),
-  update: (
+  // update: (
+  //   id: number,
+  //   data: Partial<{
+  //     name: string;
+  //     email: string;
+  //     roleId?: number;
+  //     role_id?: number;
+  //     departmentId: number | null;
+  //     isActive: boolean;
+  //   }>,
+  // ) => api.put<AppUser>(`/users/${id}`, data),
+
+   update: (
     id: number,
-    data: Partial<{
-      name: string;
-      email: string;
-      roleId: number;
-      departmentId: number | null;
-      isActive: boolean;
-    }>,
-  ) => api.put<AppUser>(`/users/${id}`, data),
+    data: {
+      name?: string;
+      email?: string;
+      roleId?: number;
+      departmentId?: number | null;
+      isActive?: boolean;
+    },
+  ) => {
+    const cleanData: Record<string, any> = {};
+    if (data.name !== undefined) cleanData.name = data.name;
+    if (data.email !== undefined) cleanData.email = data.email;
+    if (data.roleId !== undefined) cleanData.roleId = data.roleId;
+    if (data.departmentId !== undefined) cleanData.departmentId = data.departmentId;
+    if (data.isActive !== undefined) cleanData.isActive = data.isActive;
+    
+    return api.put<AppUser>(`/users/${id}`, cleanData);
+  },
+
   remove: (id: number) => api.delete(`/users/${id}`),
   toggleStatus: (id: number) => api.patch<AppUser>(`/users/${id}/toggle-status`),
   forceResetRequired: (id: number) =>

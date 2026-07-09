@@ -142,41 +142,84 @@ function UsersBody() {
     setModalOpen(true);
   }
 
+  // async function handleSubmit(e: FormEvent) {
+  //   e.preventDefault();
+  //   setFormError('');
+  //   if (!form.roleId) {
+  //     setFormError('Please select a role.');
+  //     return;
+  //   }
+  //   setSaving(true);
+  //   try {
+  //     if (form.id) {
+  //       await usersApi.update(form.id, {
+  //         name: form.name,
+  //         email: form.email,
+  //         roleId: Number(form.roleId),
+  //         departmentId: form.departmentId ? Number(form.departmentId) : null,
+  //       });
+  //       notify('User updated.', 'success');
+  //     } else {
+  //       const created = await usersApi.create({
+  //         name: form.name,
+  //         email: form.email,
+  //         roleId: Number(form.roleId),
+  //         departmentId: form.departmentId ? Number(form.departmentId) : undefined,
+  //       });
+  //       setCreateResult(created);
+  //       notify('User created.', 'success');
+  //     }
+  //     setModalOpen(false);
+  //     loadAll();
+  //   } catch (err) {
+  //     setFormError(errorMessage(err));
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // }
+
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setFormError('');
-    if (!form.roleId) {
-      setFormError('Please select a role.');
-      return;
-    }
-    setSaving(true);
-    try {
-      if (form.id) {
-        await usersApi.update(form.id, {
-          name: form.name,
-          email: form.email,
-          roleId: Number(form.roleId),
-          departmentId: form.departmentId ? Number(form.departmentId) : null,
-        });
-        notify('User updated.', 'success');
-      } else {
-        const created = await usersApi.create({
-          name: form.name,
-          email: form.email,
-          roleId: Number(form.roleId),
-          departmentId: form.departmentId ? Number(form.departmentId) : undefined,
-        });
-        setCreateResult(created);
-        notify('User created.', 'success');
-      }
-      setModalOpen(false);
-      loadAll();
-    } catch (err) {
-      setFormError(errorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+  e.preventDefault();
+  setFormError('');
+  if (!form.roleId) {
+    setFormError('Please select a role.');
+    return;
   }
+  setSaving(true);
+  try {
+    if (form.id) {
+      const updateData: any = {};
+      if (form.name) updateData.name = form.name;
+      if (form.email) updateData.email = form.email;
+      if (form.roleId) updateData.roleId = Number(form.roleId);
+      if (form.departmentId) {
+        updateData.departmentId = Number(form.departmentId);
+      } else {
+        updateData.departmentId = null;
+      }
+      
+      
+      await usersApi.update(form.id, updateData);
+      notify('User updated successfully.', 'success');
+    } else {
+      const created = await usersApi.create({
+        name: form.name,
+        email: form.email,
+        roleId: Number(form.roleId),
+        departmentId: form.departmentId ? Number(form.departmentId) : undefined,
+      });
+      setCreateResult(created);
+      notify('User created successfully.', 'success');
+    }
+    setModalOpen(false);
+    loadAll();
+  } catch (err) {
+    setFormError(errorMessage(err));
+    notify(errorMessage(err), 'error');
+  } finally {
+    setSaving(false);
+  }
+}
 
   async function copyCreateResult() {
     if (!createResult) return;

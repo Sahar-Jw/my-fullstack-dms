@@ -62,19 +62,41 @@ export class UsersService {
     };
   }
 
-  async update(id: number, dto: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
+  // async update(id: number, dto: UpdateUserDto): Promise<User> {
+  //   const user = await this.findOne(id);
 
-    if (dto.email && dto.email !== user.email) {
-      const existing = await this.findByEmail(dto.email);
-      if (existing) {
-        throw new ConflictException('A user with this email already exists');
-      }
+  //   if (dto.email && dto.email !== user.email) {
+  //     const existing = await this.findByEmail(dto.email);
+  //     if (existing) {
+  //       throw new ConflictException('A user with this email already exists');
+  //     }
+  //   }
+
+  //   Object.assign(user, dto);
+  //   return this.usersRepository.save(user);
+  // }
+
+  // In your backend users.service.ts
+async update(id: number, dto: UpdateUserDto): Promise<User> {
+  const user = await this.findOne(id); 
+
+  if (dto.email && dto.email !== user.email) {
+    const existing = await this.findByEmail(dto.email);
+    if (existing) {
+      throw new ConflictException('A user with this email already exists');
     }
-
-    Object.assign(user, dto);
-    return this.usersRepository.save(user);
   }
+
+  const patch: Partial<User> = {};
+  if (dto.name !== undefined) patch.name = dto.name;
+  if (dto.email !== undefined) patch.email = dto.email;
+  if (dto.roleId !== undefined) patch.roleId = dto.roleId;
+  if (dto.departmentId !== undefined) patch.departmentId = dto.departmentId;
+
+  await this.usersRepository.update(id, patch);
+
+  return this.findOne(id);
+}
 
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);
