@@ -26,6 +26,7 @@ import { multerOptions } from '../../common/utils/file-upload.util';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
+import * as fs from 'fs'; 
 
 @Controller('documents')
 export class DocumentsController {
@@ -122,22 +123,48 @@ export class DocumentsController {
     return res.download(absPath, version.originalFileName || 'document');
   }
 
+  // @Get(':id/preview')
+  // async preview(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @CurrentUser() user: AuthUser,
+  //   @Res() res: Response,
+  // ) {
+  //   const version = await this.documentsService.getLatestVersion(id, user);
+  //   const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
+  //   if (!this.fileStorageService.fileExists(version.filePath)) {
+  //     throw new NotFoundException('File not found on disk');
+  //   }
+  //   if (version.mimeType) {
+  //     res.setHeader('Content-Type', version.mimeType);
+  //   }
+  //   return res.sendFile(absPath);
+  // }
+
   @Get(':id/preview')
-  async preview(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthUser,
-    @Res() res: Response,
-  ) {
-    const version = await this.documentsService.getLatestVersion(id, user);
-    const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
-    if (!this.fileStorageService.fileExists(version.filePath)) {
-      throw new NotFoundException('File not found on disk');
-    }
-    if (version.mimeType) {
-      res.setHeader('Content-Type', version.mimeType);
-    }
-    return res.sendFile(absPath);
+async preview(
+  @Param('id', ParseIntPipe) id: number,
+  @CurrentUser() user: AuthUser,
+  @Res() res: Response,
+) {
+  const version = await this.documentsService.getLatestVersion(id, user);
+  const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
+
+  if (!this.fileStorageService.fileExists(version.filePath)) {
+    throw new NotFoundException('File not found on disk');
   }
+
+  const fileBuffer = fs.readFileSync(absPath);
+
+  res.set({
+    'Content-Type': version.mimeType || 'application/octet-stream',
+    'Content-Disposition': `inline; filename="${(version.originalFileName || 'document').replace(/"/g, '')}"`,
+    'Content-Length': fileBuffer.length,
+  });
+
+  res.send(fileBuffer);
+  // No `return` — returning undefined instead of the Response object
+  // keeps the ClassSerializerInterceptor from trying to serialize it.
+}
 
   @Get(':id/versions')
   getVersions(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {

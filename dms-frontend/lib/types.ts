@@ -122,3 +122,16 @@ export type EmployeeDashboard = {
 };
 
 export type DashboardData = AdminDashboard | ManagerDashboard | EmployeeDashboard;
+
+// lib/types.ts — append these
+
+export type PreviewLoadState = 'idle' | 'loading' | 'ready' | 'error';
+
+/** The minimal shape FilePreview needs, regardless of what it came from
+ *  (a document's latest version, a specific version, or an attachment). */
+export interface PreviewTarget {
+  /** URL path segment appended to API_URL, e.g. "/documents/12/preview" */
+  previewPath: string;
+  filename: string;
+  mimeType: string;
+}

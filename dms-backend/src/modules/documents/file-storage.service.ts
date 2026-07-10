@@ -1,3 +1,4 @@
+// documents/file-storage.service.ts
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
@@ -9,7 +10,12 @@ export class FileStorageService {
   private readonly root: string;
 
   constructor(private configService: ConfigService) {
-    this.root = this.configService.get('fileUpload.path') || './uploads';
+    const configuredPath = this.configService.get('fileUpload.path') || './uploads';
+    // Resolve to an absolute path once, here — res.sendFile() (used by the
+    // preview route) throws if given a relative path; res.download() and
+    // fs.existsSync() work fine with absolute paths too, so this is safe
+    // for every other consumer of getAbsolutePath().
+    this.root = path.resolve(process.cwd(), configuredPath);
   }
 
   private ensureDir(dir: string) {
@@ -18,10 +24,6 @@ export class FileStorageService {
     }
   }
 
-  /**
-   * Saves a buffer under uploads/<type>/<documentId>/<uuid>-<originalname>
-   * Returns the relative path stored in the DB.
-   */
   saveFile(
     type: 'documents' | 'attachments',
     documentId: number,

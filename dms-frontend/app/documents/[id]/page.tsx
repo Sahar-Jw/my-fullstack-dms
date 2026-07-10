@@ -12,8 +12,10 @@ import { Category, DmsDocument, DocAttachment, DocVersion, Folder } from '@/lib/
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { formatBytes, formatDateTime, fileTypeLabel } from '@/lib/format';
+import FilePreview from '@/components/FilePreview';
+import { previewTargetForDocument } from '@/lib/preview';
 
-type Tab = 'overview' | 'versions' | 'attachments';
+type Tab = 'overview' | 'preview' | 'versions' | 'attachments';
 
 type PreviewState = {
   url: string;
@@ -151,8 +153,9 @@ function DocumentDetailBody() {
     setMoveSaving(true);
     setMoveError('');
     try {
-      const updated = await documentsApi.move(id, Number(moveFolderId));
-      setDoc(updated);
+      await documentsApi.move(id, Number(moveFolderId));
+      // Reload to ensure folder/folder relation is updated in UI
+      await loadDoc();
       notify('Document moved.', 'success');
       setMoveOpen(false);
     } catch (e) {
@@ -306,13 +309,13 @@ function DocumentDetailBody() {
           </p>
         </div>
         <div className="page-actions">
-          <button
+          {/* <button
             className="btn btn-primary"
             onClick={() => openPreview(doc.name, () => documentsApi.preview(id))}
             disabled={previewLoading}
           >
             {previewLoading ? 'Loading...' : 'Preview'}
-          </button>
+          </button> */}
           <button
             className="btn btn-secondary"
             onClick={() => documentsApi.download(id, doc.name)}
@@ -334,6 +337,9 @@ function DocumentDetailBody() {
       <div className="tabs">
         <button className={`tab${tab === 'overview' ? ' active' : ''}`} onClick={() => setTab('overview')}>
           Overview
+        </button>
+        <button className={`tab${tab === 'preview' ? ' active' : ''}`} onClick={() => setTab('preview')}>
+          Preview
         </button>
         <button className={`tab${tab === 'versions' ? ' active' : ''}`} onClick={() => setTab('versions')}>
           Versions ({versions.length})
@@ -380,7 +386,16 @@ function DocumentDetailBody() {
           </div>
         </div>
       )}
-
+        {tab === 'preview' && (
+          (() => {
+            const target = previewTargetForDocument(doc, versions[0]); // versions[0] = latest, per your existing sort
+            return target ? (
+              <FilePreview target={target} />
+            ) : (
+              <div className="card card-pad">No file uploaded yet.</div>
+            );
+          })()
+        )}
       {tab === 'versions' && (
         <div>
           <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>

@@ -352,35 +352,34 @@ export class DocumentsService {
   }
 
   async move(
-    id: number,
-    dto: MoveDocumentDto,
-    user: AuthUser,
-  ): Promise<Document> {
-    const document = await this.loadDocumentOrFail(id);
-    if (!this.canModify(user, document)) {
-      throw new ForbiddenException(
-        'You do not have permission to move this document',
-      );
-    }
-    const targetFolder = await this.assertFolderAccessible(
-      dto.folderId,
-      user,
+  id: number,
+  dto: MoveDocumentDto,
+  user: AuthUser,
+): Promise<Document> {
+  const document = await this.loadDocumentOrFail(id);
+  if (!this.canModify(user, document)) {
+    throw new ForbiddenException(
+      'You do not have permission to move this document',
     );
-
-    // For non-admins, moving across departments is not allowed
-    if (
-      user.roleName !== RoleName.ADMIN &&
-      targetFolder.departmentId !== document.folder.departmentId
-    ) {
-      throw new ForbiddenException(
-        'Cannot move a document to a folder in a different department',
-      );
-    }
-
-    document.folderId = dto.folderId;
-    await this.documentsRepository.save(document);
-    return this.loadDocumentOrFail(id);
   }
+  const targetFolder = await this.assertFolderAccessible(
+    dto.folderId,
+    user,
+  );
+
+  // For non-admins, moving across departments is not allowed
+  if (
+    user.roleName !== RoleName.ADMIN &&
+    targetFolder.departmentId !== document.folder.departmentId
+  ) {
+    throw new ForbiddenException(
+      'Cannot move a document to a folder in a different department',
+    );
+  }
+
+  await this.documentsRepository.update(id, { folderId: dto.folderId });
+  return this.loadDocumentOrFail(id);
+}
 
   // ---------- Versions ----------
 
