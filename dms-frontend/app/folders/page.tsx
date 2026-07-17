@@ -34,6 +34,9 @@ function FolderNode({
       <div className="folder-row" onClick={() => onOpenDocuments(node)}>
         <span className="folder-row-label">
           📁 {node.name}
+          <span className="badge badge-muted" style={{ marginLeft: 8 }}>
+            {node.documentCount} {node.documentCount === 1 ? 'document' : 'documents'}
+          </span>
         </span>
         {canManage && (
           <span className="folder-row-actions" onClick={(e) => e.stopPropagation()}>

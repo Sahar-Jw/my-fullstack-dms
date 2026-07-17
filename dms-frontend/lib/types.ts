@@ -1,3 +1,5 @@
+// lib/types.ts
+
 export type RoleName = 'Admin' | 'Manager' | 'Employee';
 
 export interface Role {
@@ -28,6 +30,7 @@ export interface AppUser {
   role: Role;
   departmentId: number | null;
   department: Department | null;
+  profilePicture: string | null; // ✅ ADD THIS
   createdAt: string;
   updatedAt: string;
 }
@@ -47,6 +50,7 @@ export interface FolderTreeNode {
   name: string;
   departmentId: number;
   parentFolderId: number | null;
+  documentCount: number;
   children: FolderTreeNode[];
 }
 
@@ -98,6 +102,7 @@ export interface LoginResponse {
     role: RoleName;
     departmentId: number | null;
     department: string | null;
+    profilePicture?: string | null; 
   };
 }
 
@@ -123,15 +128,10 @@ export type EmployeeDashboard = {
 
 export type DashboardData = AdminDashboard | ManagerDashboard | EmployeeDashboard;
 
-// lib/types.ts — append these
-
-export type PreviewLoadState = 'idle' | 'loading' | 'ready' | 'error';
-
-/** The minimal shape FilePreview needs, regardless of what it came from
- *  (a document's latest version, a specific version, or an attachment). */
-export interface PreviewTarget {
-  /** URL path segment appended to API_URL, e.g. "/documents/12/preview" */
+export type PreviewTarget = {
   previewPath: string;
   filename: string;
   mimeType: string;
-}
+};
+
+export type PreviewLoadState = 'idle' | 'loading' | 'ready' | 'error';

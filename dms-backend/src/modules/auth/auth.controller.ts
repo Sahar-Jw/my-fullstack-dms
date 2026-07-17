@@ -1,8 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { ForceChangePasswordDto } from './dto/force-change-password.dto';
 import {
   RequestResetPasswordDto,
   CompleteResetPasswordDto,
@@ -15,6 +15,13 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
 
   @Public()
   @Post('login')
@@ -42,17 +49,6 @@ export class AuthController {
     return this.authService.changePassword(userId, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @SkipPasswordCheck()
-  @HttpCode(HttpStatus.OK)
-  @Patch('force-change-password')
-  forceChangePassword(
-    @CurrentUser('userId') userId: number,
-    @Body() dto: ForceChangePasswordDto,
-  ) {
-    return this.authService.forceChangePassword(userId, dto.newPassword);
-  }
-
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('reset-password')
@@ -65,12 +61,5 @@ export class AuthController {
   @Post('reset-password/complete')
   completeReset(@Body() dto: CompleteResetPasswordDto) {
     return this.authService.completePasswordReset(dto.token, dto.newPassword);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @SkipPasswordCheck()
-  @Get('check-password-required')
-  checkPasswordRequired(@CurrentUser('userId') userId: number) {
-    return this.authService.checkPasswordRequired(userId);
   }
 }

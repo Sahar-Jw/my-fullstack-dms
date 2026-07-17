@@ -20,6 +20,7 @@ import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/auth.guard';
 import { PasswordChangeGuard } from './common/guards/password-change.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { ProfileModule } from './modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     }),
     AuthModule,
     UsersModule,
+    ProfileModule,
     DepartmentsModule,
     RolesModule,
     CategoriesModule,

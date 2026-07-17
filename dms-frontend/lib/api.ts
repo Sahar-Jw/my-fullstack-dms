@@ -1,3 +1,4 @@
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export class ApiError extends Error {
@@ -19,11 +20,6 @@ function flattenMessage(message: unknown): string {
   return 'Something went wrong';
 }
 
-/**
- * Core fetch wrapper. Handles JSON + FormData bodies, attaches the bearer
- * token, parses JSON responses, and normalizes errors into ApiError.
- * On a 401 it clears the stored session and sends the user back to /login.
- */
 async function request<T>(
   path: string,
   options: RequestInit & { isFormData?: boolean } = {},
@@ -74,7 +70,6 @@ async function request<T>(
     return res.json() as Promise<T>;
   }
 
-  // Binary / file responses
   return res.blob() as unknown as Promise<T>;
 }
 
@@ -134,6 +129,10 @@ export const api = {
   putForm: <T>(path: string, formData: FormData) =>
     request<T>(path, { method: 'PUT', body: formData, isFormData: true }),
 
+  // ✅ ADD THIS
+  patchForm: <T>(path: string, formData: FormData) =>
+    request<T>(path, { method: 'PATCH', body: formData, isFormData: true }),
+
   async blobUrl(path: string) {
     const res = await fetchFile(path);
     const blob = await res.blob();
@@ -143,7 +142,6 @@ export const api = {
     };
   },
 
-  /** Downloads a file endpoint and triggers a browser save-as. */
   async download(path: string, fallbackName = 'download') {
     const res = await fetchFile(path);
     const blob = await res.blob();

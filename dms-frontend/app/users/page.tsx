@@ -12,7 +12,7 @@ import { formatDate } from '@/lib/format';
 import { useAuth } from '@/lib/auth-context';
 
 interface UserFormState {
-  id?: number;
+  id: number;
   name: string;
   email: string;
   roleId: string;
@@ -20,48 +20,12 @@ interface UserFormState {
 }
 
 const EMPTY_FORM: UserFormState = {
+  id: 0,
   name: '',
   email: '',
   roleId: '',
   departmentId: '',
 };
-
-function formatApiResult(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object') return String(value ?? '');
-
-  const data = value as Record<string, unknown>;
-  const lines: string[] = [];
-  const add = (label: string, key: string) => {
-    const field = data[key];
-    if (field !== undefined && field !== null && field !== '') {
-      lines.push(`${label}: ${String(field)}`);
-    }
-  };
-
-  add('Name', 'name');
-  add('Email', 'email');
-  add('Password', 'password');
-  add('Password', 'temporaryPassword');
-  add('Temporary password', 'tempPassword');
-  add('Message', 'message');
-
-  Object.entries(data).forEach(([key, field]) => {
-    if (
-      ['id', 'name', 'email', 'password', 'temporaryPassword', 'tempPassword', 'message'].includes(
-        key,
-      ) ||
-      field === undefined ||
-      field === null ||
-      typeof field === 'object'
-    ) {
-      return;
-    }
-    lines.push(`${key}: ${String(field)}`);
-  });
-
-  return lines.length > 0 ? lines.join('\n') : 'User created successfully.';
-}
 
 function userDeleteMessage(message: string, userName: string): string {
   const normalized = message.toLowerCase();
@@ -94,8 +58,6 @@ function UsersBody() {
   const [form, setForm] = useState<UserFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [createResult, setCreateResult] = useState<unknown>(null);
-  const [copying, setCopying] = useState(false);
 
   const [confirmTarget, setConfirmTarget] = useState<AppUser | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -124,12 +86,6 @@ function UsersBody() {
     loadAll();
   }, []);
 
-  function openCreate() {
-    setForm(EMPTY_FORM);
-    setFormError('');
-    setModalOpen(true);
-  }
-
   function openEdit(u: AppUser) {
     setForm({
       id: u.id,
@@ -142,96 +98,30 @@ function UsersBody() {
     setModalOpen(true);
   }
 
-  // async function handleSubmit(e: FormEvent) {
-  //   e.preventDefault();
-  //   setFormError('');
-  //   if (!form.roleId) {
-  //     setFormError('Please select a role.');
-  //     return;
-  //   }
-  //   setSaving(true);
-  //   try {
-  //     if (form.id) {
-  //       await usersApi.update(form.id, {
-  //         name: form.name,
-  //         email: form.email,
-  //         roleId: Number(form.roleId),
-  //         departmentId: form.departmentId ? Number(form.departmentId) : null,
-  //       });
-  //       notify('User updated.', 'success');
-  //     } else {
-  //       const created = await usersApi.create({
-  //         name: form.name,
-  //         email: form.email,
-  //         roleId: Number(form.roleId),
-  //         departmentId: form.departmentId ? Number(form.departmentId) : undefined,
-  //       });
-  //       setCreateResult(created);
-  //       notify('User created.', 'success');
-  //     }
-  //     setModalOpen(false);
-  //     loadAll();
-  //   } catch (err) {
-  //     setFormError(errorMessage(err));
-  //   } finally {
-  //     setSaving(false);
-  //   }
-  // }
-
   async function handleSubmit(e: FormEvent) {
-  e.preventDefault();
-  setFormError('');
-  if (!form.roleId) {
-    setFormError('Please select a role.');
-    return;
-  }
-  setSaving(true);
-  try {
-    if (form.id) {
+    e.preventDefault();
+    setFormError('');
+    if (!form.roleId) {
+      setFormError('Please select a role.');
+      return;
+    }
+    setSaving(true);
+    try {
       const updateData: any = {};
       if (form.name) updateData.name = form.name;
       if (form.email) updateData.email = form.email;
       if (form.roleId) updateData.roleId = Number(form.roleId);
-      if (form.departmentId) {
-        updateData.departmentId = Number(form.departmentId);
-      } else {
-        updateData.departmentId = null;
-      }
-      
-      
+      updateData.departmentId = form.departmentId ? Number(form.departmentId) : null;
+
       await usersApi.update(form.id, updateData);
       notify('User updated successfully.', 'success');
-    } else {
-      const created = await usersApi.create({
-        name: form.name,
-        email: form.email,
-        roleId: Number(form.roleId),
-        departmentId: form.departmentId ? Number(form.departmentId) : undefined,
-      });
-      setCreateResult(created);
-      notify('User created successfully.', 'success');
-    }
-    setModalOpen(false);
-    loadAll();
-  } catch (err) {
-    setFormError(errorMessage(err));
-    notify(errorMessage(err), 'error');
-  } finally {
-    setSaving(false);
-  }
-}
-
-  async function copyCreateResult() {
-    if (!createResult) return;
-    const text = formatApiResult(createResult);
-    setCopying(true);
-    try {
-      await navigator.clipboard.writeText(text);
-      notify('Copied user details.', 'success');
-    } catch {
-      notify('Copy failed. Select the text and copy it manually.', 'error');
+      setModalOpen(false);
+      loadAll();
+    } catch (err) {
+      setFormError(errorMessage(err));
+      notify(errorMessage(err), 'error');
     } finally {
-      setCopying(false);
+      setSaving(false);
     }
   }
 
@@ -239,16 +129,6 @@ function UsersBody() {
     try {
       await usersApi.toggleStatus(u.id);
       notify(u.isActive ? 'User deactivated.' : 'User activated.', 'success');
-      loadAll();
-    } catch (e) {
-      notify(errorMessage(e), 'error');
-    }
-  }
-
-  async function forceReset(u: AppUser) {
-    try {
-      await usersApi.forceResetRequired(u.id);
-      notify('User must change their password on next login.', 'success');
       loadAll();
     } catch (e) {
       notify(errorMessage(e), 'error');
@@ -282,12 +162,7 @@ function UsersBody() {
         <div>
           <span className="page-eyebrow">Administration</span>
           <h1 className="page-title">Users</h1>
-          <p className="page-subtitle">Create accounts and assign roles and departments.</p>
-        </div>
-        <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreate}>
-            + New user
-          </button>
+          <p className="page-subtitle">Manage roles, departments, and account status.</p>
         </div>
       </div>
 
@@ -298,7 +173,7 @@ function UsersBody() {
           <div className="spinner" />
         </div>
       ) : users.length === 0 ? (
-        <EmptyState title="No users yet" message="Create the first account to get started." />
+        <EmptyState title="No users yet" message="Users will appear here once they register." />
       ) : (
         <div className="table-wrap users-table-wrap">
           <table className="users-table">
@@ -326,11 +201,6 @@ function UsersBody() {
                     <span className={`badge ${u.isActive ? 'badge-success' : 'badge-danger'}`}>
                       {u.isActive ? 'Active' : 'Disabled'}
                     </span>
-                    {u.mustChangePassword && (
-                      <span className="badge badge-brass" style={{ marginLeft: 6 }}>
-                        Pwd reset pending
-                      </span>
-                    )}
                   </td>
                   <td data-label="Joined">{formatDate(u.createdAt)}</td>
                   <td data-label="Actions">
@@ -340,9 +210,6 @@ function UsersBody() {
                       </button>
                       <button className="btn btn-secondary btn-sm" onClick={() => toggleStatus(u)}>
                         {u.isActive ? 'Disable' : 'Enable'}
-                      </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => forceReset(u)}>
-                        Force reset
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
@@ -364,7 +231,7 @@ function UsersBody() {
 
       {modalOpen && (
         <Modal
-          title={form.id ? 'Edit user' : 'New user'}
+          title="Edit user"
           onClose={() => setModalOpen(false)}
           footer={
             <>
@@ -372,7 +239,7 @@ function UsersBody() {
                 Cancel
               </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Saving...' : form.id ? 'Save changes' : 'Create user'}
+                {saving ? 'Saving...' : 'Save changes'}
               </button>
             </>
           }
@@ -433,26 +300,6 @@ function UsersBody() {
         </Modal>
       )}
 
-      {createResult && (
-        <Modal
-          title="User created"
-          onClose={() => setCreateResult(null)}
-          footer={
-            <>
-              <button className="btn btn-secondary" onClick={() => setCreateResult(null)}>
-                Close
-              </button>
-              <button className="btn btn-primary" onClick={copyCreateResult} disabled={copying}>
-                {copying ? 'Copying...' : 'Copy'}
-              </button>
-            </>
-          }
-        >
-          <p className="modal-note">Copy these details and send them to the new user.</p>
-          <div className="api-result">{formatApiResult(createResult)}</div>
-        </Modal>
-      )}
-
       {confirmTarget && (
         <Modal
           title="Delete user"
@@ -484,9 +331,7 @@ function UsersBody() {
               You are trying to delete your own signed-in account. The API may block this.
             </div>
           )}
-          <p>
-            Delete {confirmTarget.name}? 
-          </p>
+          <p>Delete {confirmTarget.name}?</p>
         </Modal>
       )}
     </div>

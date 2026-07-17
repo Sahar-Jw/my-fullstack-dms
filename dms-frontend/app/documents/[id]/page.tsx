@@ -13,15 +13,14 @@ import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { formatBytes, formatDateTime, fileTypeLabel } from '@/lib/format';
 import FilePreview from '@/components/FilePreview';
-import { previewTargetForDocument } from '@/lib/preview';
+import {
+  previewTargetForDocument,
+  previewTargetForVersion,
+  previewTargetForAttachment,
+} from '@/lib/preview';
+import { PreviewTarget } from '@/lib/types';
 
 type Tab = 'overview' | 'preview' | 'versions' | 'attachments';
-
-type PreviewState = {
-  url: string;
-  contentType: string;
-  name: string;
-} | null;
 
 function DocumentDetailBody() {
   const { notify } = useToast();
@@ -53,16 +52,18 @@ function DocumentDetailBody() {
   const [versionSaving, setVersionSaving] = useState(false);
   const [versionError, setVersionError] = useState('');
 
-  const [attachFile, setAttachFile] = useState<File | null>(null);
+  // Attachments now support multi-file upload in a single request.
+  const [attachFiles, setAttachFiles] = useState<File[]>([]);
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachSaving, setAttachSaving] = useState(false);
   const [attachError, setAttachError] = useState('');
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [preview, setPreview] = useState<PreviewState>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState('');
+
+  // Unified preview modal state — used by Versions AND Attachments,
+  // always rendered through <FilePreview>, which handles image/pdf/docx/excel.
+  const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
 
   async function loadDoc() {
     setLoading(true);
@@ -103,12 +104,6 @@ function DocumentDetailBody() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  useEffect(() => {
-    return () => {
-      if (preview?.url) window.URL.revokeObjectURL(preview.url);
-    };
-  }, [preview?.url]);
 
   function openEdit() {
     if (!doc) return;
@@ -154,7 +149,6 @@ function DocumentDetailBody() {
     setMoveError('');
     try {
       await documentsApi.move(id, Number(moveFolderId));
-      // Reload to ensure folder/folder relation is updated in UI
       await loadDoc();
       notify('Document moved.', 'success');
       setMoveOpen(false);
@@ -200,18 +194,21 @@ function DocumentDetailBody() {
 
   async function handleAttachSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!attachFile) {
-      setAttachError('Please choose a file.');
+    if (attachFiles.length === 0) {
+      setAttachError('Please choose at least one file.');
       return;
     }
     setAttachSaving(true);
     setAttachError('');
     try {
-      await documentsApi.addAttachment(id, attachFile);
+      const added = await documentsApi.addAttachment(id, attachFiles);
       await loadAttachments();
-      notify('Attachment added.', 'success');
+      notify(
+        added.length > 1 ? `${added.length} attachments added.` : 'Attachment added.',
+        'success',
+      );
       setAttachOpen(false);
-      setAttachFile(null);
+      setAttachFiles([]);
     } catch (e) {
       setAttachError(errorMessage(e));
     } finally {
@@ -227,42 +224,6 @@ function DocumentDetailBody() {
     } catch (e) {
       notify(errorMessage(e), 'error');
     }
-  }
-
-  function closePreview() {
-    if (preview?.url) window.URL.revokeObjectURL(preview.url);
-    setPreview(null);
-    setPreviewError('');
-  }
-
-  async function openPreview(name: string, load: () => Promise<{ url: string; contentType: string }>) {
-    setPreviewLoading(true);
-    setPreviewError('');
-    try {
-      const result = await load();
-      setPreview({ ...result, name });
-    } catch (e) {
-      const message = errorMessage(e);
-      setPreviewError(message);
-      notify(message, 'error');
-    } finally {
-      setPreviewLoading(false);
-    }
-  }
-
-  function previewKind(file: PreviewState): 'image' | 'frame' | 'unsupported' {
-    if (!file) return 'unsupported';
-    const name = file.name.toLowerCase();
-    const type = file.contentType.toLowerCase();
-    if (type.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(name)) return 'image';
-    if (
-      type.includes('pdf') ||
-      type.startsWith('text/') ||
-      /\.(pdf|txt|csv|html?)$/.test(name)
-    ) {
-      return 'frame';
-    }
-    return 'unsupported';
   }
 
   async function handleSoftDelete() {
@@ -309,13 +270,6 @@ function DocumentDetailBody() {
           </p>
         </div>
         <div className="page-actions">
-          {/* <button
-            className="btn btn-primary"
-            onClick={() => openPreview(doc.name, () => documentsApi.preview(id))}
-            disabled={previewLoading}
-          >
-            {previewLoading ? 'Loading...' : 'Preview'}
-          </button> */}
           <button
             className="btn btn-secondary"
             onClick={() => documentsApi.download(id, doc.name)}
@@ -386,16 +340,17 @@ function DocumentDetailBody() {
           </div>
         </div>
       )}
-        {tab === 'preview' && (
-          (() => {
-            const target = previewTargetForDocument(doc, versions[0]); // versions[0] = latest, per your existing sort
-            return target ? (
-              <FilePreview target={target} />
-            ) : (
-              <div className="card card-pad">No file uploaded yet.</div>
-            );
-          })()
-        )}
+
+      {tab === 'preview' &&
+        (() => {
+          const target = previewTargetForDocument(doc, versions[0]);
+          return target ? (
+            <FilePreview target={target} />
+          ) : (
+            <div className="card card-pad">No file uploaded yet.</div>
+          );
+        })()}
+
       {tab === 'versions' && (
         <div>
           <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
@@ -430,11 +385,7 @@ function DocumentDetailBody() {
                       <div className="row-actions">
                         <button
                           className="btn btn-secondary btn-sm"
-                          onClick={() =>
-                            openPreview(v.originalFileName, () =>
-                              documentsApi.previewVersion(id, v.id),
-                            )
-                          }
+                          onClick={() => setPreviewTarget(previewTargetForVersion(id, v))}
                         >
                           Preview
                         </button>
@@ -466,7 +417,7 @@ function DocumentDetailBody() {
         <div>
           <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn btn-primary btn-sm" onClick={() => setAttachOpen(true)}>
-              + Add attachment
+              + Add attachments
             </button>
           </div>
           {attachments.length === 0 ? (
@@ -474,55 +425,42 @@ function DocumentDetailBody() {
               No attachments yet.
             </div>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>File</th>
-                    <th>Size</th>
-                    <th>Uploaded by</th>
-                    <th>Date</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attachments.map((a) => (
-                    <tr key={a.id}>
-                      <td>
-                        <span className="badge badge-muted">{fileTypeLabel(a.mimeType)}</span>{' '}
-                        {a.fileName}
-                      </td>
-                      <td>{formatBytes(a.fileSize)}</td>
-                      <td>{a.uploadedBy?.name}</td>
-                      <td>{formatDateTime(a.createdAt)}</td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() =>
-                              openPreview(a.fileName, () => documentsApi.previewAttachment(a.id))
-                            }
-                          >
-                            Preview
-                          </button>
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => documentsApi.downloadAttachment(a.id, a.fileName)}
-                          >
-                            Download
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDeleteAttachment(a.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="attachment-grid">
+              {attachments.map((a) => (
+                <div key={a.id} className="attachment-card">
+                  <div className="attachment-card-header">
+                    <span className="badge badge-muted">{fileTypeLabel(a.mimeType)}</span>
+                    <div className="attachment-card-title" title={a.fileName}>
+                      {a.fileName}
+                    </div>
+                  </div>
+
+                  <div className="attachment-card-preview-slot">
+                    <FilePreview target={previewTargetForAttachment(a)} />
+                  </div>
+
+                  <div className="attachment-card-actions">
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setPreviewTarget(previewTargetForAttachment(a))}
+                    >
+                      Preview
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => documentsApi.downloadAttachment(a.id, a.fileName)}
+                    >
+                      Download
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteAttachment(a.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -638,7 +576,10 @@ function DocumentDetailBody() {
             {versionError && <div className="banner banner-danger">{versionError}</div>}
             <div className="field">
               <label>File</label>
-              <FileDrop file={newVersionFile} onChange={setNewVersionFile} />
+              <FileDrop
+                files={newVersionFile ? [newVersionFile] : []}
+                onChange={(files) => setNewVersionFile(files[0] || null)}
+              />
             </div>
           </form>
         </Modal>
@@ -646,7 +587,7 @@ function DocumentDetailBody() {
 
       {attachOpen && (
         <Modal
-          title="Add attachment"
+          title="Add attachments"
           onClose={() => setAttachOpen(false)}
           footer={
             <>
@@ -662,34 +603,24 @@ function DocumentDetailBody() {
           <form onSubmit={handleAttachSubmit}>
             {attachError && <div className="banner banner-danger">{attachError}</div>}
             <div className="field">
-              <label>File</label>
-              <FileDrop file={attachFile} onChange={setAttachFile} />
+              <label>File(s)</label>
+              <FileDrop files={attachFiles} onChange={setAttachFiles} multiple />
             </div>
           </form>
         </Modal>
       )}
 
-      {previewError && <div className="banner banner-danger">{previewError}</div>}
-
-      {preview && (
+      {previewTarget && (
         <Modal
-          title={`Preview: ${preview.name}`}
-          onClose={closePreview}
+          title={`Preview: ${previewTarget.filename}`}
+          onClose={() => setPreviewTarget(null)}
           footer={
-            <button className="btn btn-secondary" onClick={closePreview}>
+            <button className="btn btn-secondary" onClick={() => setPreviewTarget(null)}>
               Close
             </button>
           }
         >
-          {previewKind(preview) === 'image' ? (
-            <img className="preview-image" src={preview.url} alt={preview.name} />
-          ) : previewKind(preview) === 'frame' ? (
-            <iframe className="preview-frame" src={preview.url} title={preview.name} />
-          ) : (
-            <div className="preview-empty">
-              This file type cannot be previewed directly in the browser. Download it to open it.
-            </div>
-          )}
+          <FilePreview target={previewTarget} />
         </Modal>
       )}
 

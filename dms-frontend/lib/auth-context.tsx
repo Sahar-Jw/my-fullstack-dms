@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,6 +20,7 @@ interface SessionUser {
   role: RoleName;
   departmentId: number | null;
   department: string | null;
+  profilePicture: string | null;
 }
 
 interface AuthState {
@@ -27,8 +29,10 @@ interface AuthState {
   mustChangePassword: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
+  setSession: (res: LoginResponse) => void;
   logout: () => void;
   markPasswordChanged: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -46,42 +50,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedFlag = window.localStorage.getItem('dms_must_change');
     if (storedToken && storedUser) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
       setMustChangePassword(storedFlag === 'true');
     }
     setLoading(false);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
+  const applySession = useCallback((res: LoginResponse) => {
+    const userData = {
+      ...res.user,
+      profilePicture: res.user.profilePicture || null,
+    };
     window.localStorage.setItem('dms_token', res.accessToken);
-    window.localStorage.setItem('dms_user', JSON.stringify(res.user));
-    window.localStorage.setItem('dms_must_change', String(res.mustChangePassword));
+    window.localStorage.setItem('dms_user', JSON.stringify(userData));
+    window.localStorage.setItem('dms_must_change', String(res.mustChangePassword ?? false));
     setToken(res.accessToken);
-    setUser(res.user);
-    setMustChangePassword(res.mustChangePassword);
-    return res;
+    setUser(userData);
+    setMustChangePassword(res.mustChangePassword ?? false);
   }, []);
 
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const res = await authApi.login(email, password);
+      applySession(res);
+      return res;
+    },
+    [applySession],
+  );
+
+  const setSession = useCallback(
+    (res: LoginResponse) => {
+      applySession(res);
+    },
+    [applySession],
+  );
+
+  // ✅ FIX: Logout redirects to landing page (/) using window.location
   const logout = useCallback(() => {
     authApi.logout().catch(() => {});
+    
+    // Clear storage immediately
     window.localStorage.removeItem('dms_token');
     window.localStorage.removeItem('dms_user');
     window.localStorage.removeItem('dms_must_change');
     setToken(null);
     setUser(null);
     setMustChangePassword(false);
-    router.push('/login');
-  }, [router]);
+    
+    // ✅ Use window.location for a full page reload to landing page
+    window.location.href = '/';
+  }, []);
 
   const markPasswordChanged = useCallback(() => {
     window.localStorage.setItem('dms_must_change', 'false');
     setMustChangePassword(false);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    if (!token) return;
+    try {
+      const { profileApi } = await import('./endpoints');
+      const data = await profileApi.get();
+      const updatedUser = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role?.name as RoleName,
+        departmentId: data.departmentId,
+        department: data.department?.name || null,
+        profilePicture: data.profilePicture || null,
+      };
+      setUser(updatedUser);
+      window.localStorage.setItem('dms_user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+    }
+  }, [token]);
+
   return (
     <AuthContext.Provider
-      value={{ user, token, mustChangePassword, loading, login, logout, markPasswordChanged }}
+      value={{ 
+        user, 
+        token, 
+        mustChangePassword, 
+        loading, 
+        login, 
+        setSession, 
+        logout, 
+        markPasswordChanged,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

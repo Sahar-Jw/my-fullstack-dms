@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { errorMessage } from '@/lib/api';
@@ -15,7 +16,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && token) {
-      router.replace(mustChangePassword ? '/force-change-password' : '/');
+      router.replace(mustChangePassword ? '/force-change-password' : '/dashboard');
     }
   }, [loading, token, mustChangePassword, router]);
 
@@ -25,7 +26,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const res = await login(email, password);
-      router.push(res.mustChangePassword ? '/force-change-password' : '/');
+      router.push(res.mustChangePassword ? '/force-change-password' : '/dashboard');
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -35,6 +36,10 @@ export default function LoginPage() {
 
   return (
     <div className="auth-screen">
+      <Link href="/" className="auth-home-link">
+        ← Back to home
+      </Link>
+
       <div className="auth-card">
         <div className="auth-mark" />
         <h1 className="auth-title">Sign in to Ledger</h1>
@@ -72,6 +77,15 @@ export default function LoginPage() {
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
+
+          <div style={{ marginTop: 14, textAlign: 'center' }}>
+            <span style={{ color: 'var(--color-muted)', fontSize: 13 }}>
+              Don&apos;t have an account?{' '}
+            </span>
+            <Link className="link-btn" href="/register">
+              Register
+            </Link>
+          </div>
         </form>
       </div>
     </div>

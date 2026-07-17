@@ -17,10 +17,6 @@ export class CreateUserDto {
   @MaxLength(150)
   email: string;
 
-  // @IsNotEmpty()
-  // @IsString()
-  // @MinLength(6)
-  // password: string;
 
   @IsInt()
   roleId: number;

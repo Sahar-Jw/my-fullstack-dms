@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -18,6 +19,33 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  async register(dto: RegisterDto) {
+    const user = await this.usersService.register(dto);
+
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      roleId: user.roleId,
+      roleName: user.role?.name,
+      departmentId: user.departmentId ?? null,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      mustChangePassword: false,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role?.name,
+        departmentId: user.departmentId,
+        department: user.department?.name ?? null,
+      },
+    };
+  }
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
@@ -61,8 +89,6 @@ export class AuthService {
     };
   }
 
-  // Stateless logout: the client discards the token. Nothing to invalidate server-side
-  // since no token blacklist/session store is part of the specified schema.
   logout() {
     return { message: 'Logged out successfully' };
   }
@@ -85,22 +111,8 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  async forceChangePassword(userId: number, newPassword: string) {
-    await this.usersService.updatePassword(userId, newPassword);
-    return { message: 'Password set successfully. You may now use the system.' };
-  }
-
-  async checkPasswordRequired(userId: number) {
-    const user = await this.usersService.findOne(userId);
-    return { mustChangePassword: user.mustChangePassword };
-  }
-
-  // Generates a short-lived signed reset token. In a production system this
-  // would be emailed to the user; here it is returned directly since no
-  // email/SMTP integration was part of the spec.
   async requestPasswordReset(email: string) {
     const user = await this.usersService.findByEmail(email);
-    // Always return a generic response to avoid leaking which emails exist
     if (!user) {
       return {
         message:
@@ -116,7 +128,7 @@ export class AuthService {
     return {
       message:
         'If an account with that email exists, a password reset token has been generated.',
-      resetToken, // exposed directly for dev/testing purposes (no email service configured)
+      resetToken,
     };
   }
 

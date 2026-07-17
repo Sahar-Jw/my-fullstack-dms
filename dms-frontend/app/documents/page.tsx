@@ -7,11 +7,12 @@ import RequireAuth from '@/components/RequireAuth';
 import Modal from '@/components/Modal';
 import EmptyState from '@/components/EmptyState';
 import FileDrop from '@/components/FileDrop';
-import { categoriesApi, documentsApi, foldersApi } from '@/lib/endpoints';
-import { Category, DmsDocument, Folder } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
+import { categoriesApi, departmentsApi, documentsApi, foldersApi } from '@/lib/endpoints';
+import { Category, Department, DmsDocument, Folder } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
-import { formatBytes, formatDateTime } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 
 function DocumentsBody() {
   const { notify } = useToast();
@@ -19,14 +20,20 @@ function DocumentsBody() {
   const searchParams = useSearchParams();
   const folderIdParam = searchParams.get('folderId');
 
+  const { user, loading: authLoading } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
   const [docs, setDocs] = useState<DmsDocument[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [nameFilter, setNameFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [folderFilter, setFolderFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -37,7 +44,7 @@ function DocumentsBody() {
     folderId: folderIdParam || '',
     categoryId: '',
   });
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
 
@@ -46,6 +53,10 @@ function DocumentsBody() {
       const [f, c] = await Promise.all([foldersApi.list(), categoriesApi.list()]);
       setFolders(f);
       setCategories(c);
+      if (isAdmin) {
+        const d = await departmentsApi.list();
+        setDepartments(d);
+      }
     } catch (e) {
       notify(errorMessage(e), 'error');
     }
@@ -56,11 +67,25 @@ function DocumentsBody() {
     setError('');
     try {
       let result: DmsDocument[];
-      if (useSearch || nameFilter || categoryFilter || dateFrom || dateTo || folderIdParam) {
+      if (
+        useSearch ||
+        nameFilter ||
+        categoryFilter ||
+        folderFilter ||
+        departmentFilter ||
+        dateFrom ||
+        dateTo ||
+        folderIdParam
+      ) {
         result = await documentsApi.search({
           name: nameFilter || undefined,
           categoryId: categoryFilter ? Number(categoryFilter) : undefined,
-          folderId: folderIdParam ? Number(folderIdParam) : undefined,
+          folderId: folderFilter
+            ? Number(folderFilter)
+            : folderIdParam
+              ? Number(folderIdParam)
+              : undefined,
+          departmentId: isAdmin && departmentFilter ? Number(departmentFilter) : undefined,
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
         });
@@ -76,14 +101,16 @@ function DocumentsBody() {
   }
 
   useEffect(() => {
+    if (authLoading) return;
     loadLookups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading]);
 
   useEffect(() => {
+    if (authLoading) return;
     loadDocs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [folderIdParam]);
+  }, [authLoading, folderIdParam]);
 
   function handleSearchSubmit(e: FormEvent) {
     e.preventDefault();
@@ -101,7 +128,7 @@ function DocumentsBody() {
       folderId: folderIdParam || '',
       categoryId: '',
     });
-    setUploadFile(null);
+    setUploadFiles([]);
     setUploadError('');
     setUploadOpen(true);
   }
@@ -109,8 +136,8 @@ function DocumentsBody() {
   async function handleUpload(e: FormEvent) {
     e.preventDefault();
     setUploadError('');
-    if (!uploadFile) {
-      setUploadError('Please choose a file to upload.');
+    if (uploadFiles.length === 0) {
+      setUploadError('Please choose at least one file to upload.');
       return;
     }
     if (!uploadForm.folderId || !uploadForm.categoryId) {
@@ -119,16 +146,26 @@ function DocumentsBody() {
     }
     setUploading(true);
     try {
-      const doc = await documentsApi.upload({
-        file: uploadFile,
-        name: uploadForm.name || uploadFile.name,
+      const docs = await documentsApi.upload({
+        files: uploadFiles,
+         name: uploadFiles.length === 1
+        ? (uploadForm.name || uploadFiles[0].name)
+         : uploadFiles[0].name,
         description: uploadForm.description || undefined,
         folderId: Number(uploadForm.folderId),
         categoryId: Number(uploadForm.categoryId),
       });
-      notify('Document uploaded.', 'success');
+      notify(
+        docs.length > 1 ? `${docs.length} documents uploaded.` : 'Document uploaded.',
+        'success',
+      );
       setUploadOpen(false);
-      router.push(`/documents/${doc.id}`);
+      if (docs.length === 1) {
+        router.push(`/documents/${docs[0].id}`);
+      } else {
+        router.push('/documents');
+        loadDocs();
+      }
     } catch (err) {
       setUploadError(errorMessage(err));
     } finally {
@@ -193,6 +230,38 @@ function DocumentsBody() {
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
+            <label>Folder</label>
+            <select
+              className="select"
+              value={folderFilter}
+              onChange={(e) => setFolderFilter(e.target.value)}
+            >
+              <option value="">Any folder</option>
+              {folders.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {isAdmin && (
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Department</label>
+              <select
+                className="select"
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+              >
+                <option value="">Any department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="field" style={{ marginBottom: 0 }}>
             <label>From</label>
             <input
               className="input"
@@ -221,6 +290,8 @@ function DocumentsBody() {
             onClick={() => {
               setNameFilter('');
               setCategoryFilter('');
+              setFolderFilter('');
+              setDepartmentFilter('');
               setDateFrom('');
               setDateTo('');
               loadDocs(false);
@@ -282,16 +353,20 @@ function DocumentsBody() {
           <form onSubmit={handleUpload}>
             {uploadError && <div className="banner banner-danger">{uploadError}</div>}
             <div className="field">
-              <label>File</label>
-              <FileDrop file={uploadFile} onChange={setUploadFile} />
+              <label>File(s)</label>
+              <FileDrop files={uploadFiles} onChange={setUploadFiles} multiple />
             </div>
             <div className="field">
-              <label>Document name</label>
+              <label>
+                Document name
+                {uploadFiles.length > 1 && ' (ignored for multiple files — each keeps its filename)'}
+              </label>
               <input
                 className="input"
                 value={uploadForm.name}
                 onChange={(e) => setUploadForm({ ...uploadForm, name: e.target.value })}
-                placeholder={uploadFile?.name || 'Defaults to file name'}
+                placeholder={uploadFiles[0]?.name || 'Defaults to file name'}
+                disabled={uploadFiles.length > 1}
               />
             </div>
             <div className="field">

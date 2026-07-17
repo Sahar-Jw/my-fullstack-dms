@@ -28,4 +28,9 @@ export class SearchDocumentDto {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
+
+   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  departmentId?: number;
 }

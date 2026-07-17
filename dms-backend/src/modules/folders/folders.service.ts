@@ -44,8 +44,41 @@ export class FoldersService {
     });
   }
 
+  /**
+   * Returns, per folder id, the count of non-deleted documents directly
+   * inside that folder (not including documents in subfolders).
+   */
+  private async getDocumentCounts(
+    folderIds: number[],
+  ): Promise<Map<number, number>> {
+    const counts = new Map<number, number>();
+    if (folderIds.length === 0) {
+      return counts;
+    }
+
+    const rows = await this.foldersRepository
+      .createQueryBuilder('folder')
+      .leftJoin(
+        'folder.documents',
+        'document',
+        'document.is_deleted = false',
+      )
+      .select('folder.id', 'folderId')
+      .addSelect('COUNT(document.id)', 'count')
+      .where('folder.id IN (:...folderIds)', { folderIds })
+      .groupBy('folder.id')
+      .getRawMany();
+
+    rows.forEach((row) => {
+      counts.set(Number(row.folderId), parseInt(row.count, 10) || 0);
+    });
+    return counts;
+  }
+
   async getTree(user: AuthUser): Promise<any[]> {
     const folders = await this.findAll(user);
+    const counts = await this.getDocumentCounts(folders.map((f) => f.id));
+
     const byId = new Map<number, any>();
     folders.forEach((f) =>
       byId.set(f.id, {
@@ -53,6 +86,7 @@ export class FoldersService {
         name: f.name,
         departmentId: f.departmentId,
         parentFolderId: f.parentFolderId,
+        documentCount: counts.get(f.id) || 0,
         children: [],
       }),
     );

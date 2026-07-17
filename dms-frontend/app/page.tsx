@@ -1,132 +1,113 @@
+// app/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
-import RequireAuth from '@/components/RequireAuth';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { dashboardApi } from '@/lib/endpoints';
-import { DashboardData } from '@/lib/types';
-import { errorMessage } from '@/lib/api';
-import { formatBytes, formatDateTime } from '@/lib/format';
 
-function DashboardBody() {
-  const { user } = useAuth();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+export default function LandingPage() {
+  const { token, mustChangePassword, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    dashboardApi
-      .get()
-      .then(setData)
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false));
-  }, []);
+    if (loading) return;
+    if (token) {
+      router.replace(mustChangePassword ? '/force-change-password' : '/dashboard');
+    }
+  }, [loading, token, mustChangePassword, router]);
 
-  return (
-    <div>
-      <div className="page-header">
-        <div>
-          <span className="page-eyebrow">Overview</span>
-          <h1 className="page-title">Welcome back, {user?.name?.split(' ')[0]}</h1>
-          <p className="page-subtitle">
-            {user?.role}
-            {user?.department ? ` in ${user.department}` : ' · all departments'}
-          </p>
-        </div>
-        <div className="page-actions">
-          <Link href="/documents" className="btn btn-primary">
-            Go to documents
-          </Link>
-        </div>
+  if (loading) {
+    return (
+      <div className="center-loading" style={{ minHeight: '100vh' }}>
+        <div className="spinner" />
       </div>
+    );
+  }
 
-      {error && <div className="banner banner-danger">{error}</div>}
+  if (token) {
+    // About to redirect via the effect above — render nothing to avoid a flash of the landing page.
+    return (
+      <div className="center-loading" style={{ minHeight: '100vh' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
 
-      {loading ? (
-        <div className="center-loading">
-          <div className="spinner" />
-        </div>
-      ) : data?.role === 'Admin' ? (
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Total users</div>
-            <div className="stat-value">{data.totalUsers}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Total documents</div>
-            <div className="stat-value">{data.totalDocuments}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Storage used</div>
-            <div className="stat-value">{formatBytes(data.storageUsedBytes)}</div>
-          </div>
-        </div>
-      ) : data?.role === 'Manager' ? (
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Department documents</div>
-            <div className="stat-value">{data.departmentDocuments}</div>
-          </div>
-        </div>
-      ) : data?.role === 'Employee' ? (
-        <>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-label">My documents</div>
-              <div className="stat-value">{data.myDocuments}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Storage used</div>
-              <div className="stat-value">{formatBytes(data.storageUsedBytes)}</div>
-            </div>
-          </div>
-
-          <h2 style={{ fontSize: 16, marginBottom: 12 }}>Recent documents</h2>
-          {data.recentDocuments.length === 0 ? (
-            <div className="card card-pad">
-              <p style={{ color: 'var(--color-muted)' }}>
-                You haven&apos;t uploaded any documents yet.
-              </p>
-            </div>
-          ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Folder</th>
-                    <th>Category</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentDocuments.map((doc) => (
-                    <tr key={doc.id}>
-                      <td>
-                        <Link href={`/documents/${doc.id}`} className="link-btn">
-                          {doc.name}
-                        </Link>
-                      </td>
-                      <td>{doc.folder?.name}</td>
-                      <td>{doc.category?.name}</td>
-                      <td>{formatDateTime(doc.updatedAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-export default function DashboardPage() {
   return (
-    <RequireAuth>
-      <DashboardBody />
-    </RequireAuth>
+    <div className="landing">
+      <header className="landing-nav">
+        <div className="landing-nav-inner">
+          <div className="landing-brand">
+            <span className="auth-mark" style={{ width: 28, height: 28 }} />
+            <span className="landing-brand-name">Ledger</span>
+          </div>
+          <div className="landing-nav-actions">
+            <Link className="link-btn" href="/login">
+              Sign in
+            </Link>
+            <Link className="btn btn-primary btn-sm" href="/register">
+              Get started
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section className="landing-hero">
+          <span className="page-eyebrow">Document Management</span>
+          <h1 className="landing-title">
+            Keep every department&apos;s documents organized, secure, and easy to find.
+          </h1>
+          <p className="landing-subtitle">
+            Ledger gives your team a single place to upload, version, and share files —
+            with role-based access so the right people see the right documents.
+          </p>
+          <div className="landing-hero-actions">
+            <Link className="btn btn-primary btn-lg" href="/register">
+              Create your account
+            </Link>
+            <Link className="btn btn-secondary btn-lg" href="/login">
+              Sign in
+            </Link>
+          </div>
+        </section>
+
+        <section className="landing-features">
+          <div className="landing-feature">
+            <h3>Organized by department</h3>
+            <p>
+              Every document lives in a folder tied to your team, so people only see
+              what&apos;s relevant to them.
+            </p>
+          </div>
+          <div className="landing-feature">
+            <h3>Version history built in</h3>
+            <p>
+              Upload a new version of a file without losing the old one — restore any
+              prior version whenever you need it.
+            </p>
+          </div>
+          <div className="landing-feature">
+            <h3>Role-based access</h3>
+            <p>
+              Admins manage accounts and permissions; everyone else just sees the
+              documents that matter to their work.
+            </p>
+          </div>
+        </section>
+
+        <section className="landing-cta">
+          <h2>Ready to get your documents in order?</h2>
+          <Link className="btn btn-primary btn-lg" href="/register">
+            Create your account
+          </Link>
+        </section>
+      </main>
+
+      <footer className="landing-footer">
+        <span>© {new Date().getFullYear()} Ledger. All rights reserved.</span>
+      </footer>
+    </div>
   );
 }

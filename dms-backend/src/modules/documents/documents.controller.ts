@@ -11,10 +11,11 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   Res,
   NotFoundException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { FileStorageService } from './file-storage.service';
@@ -26,7 +27,7 @@ import { multerOptions } from '../../common/utils/file-upload.util';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
-import * as fs from 'fs'; 
+import * as fs from 'fs';
 
 @Controller('documents')
 export class DocumentsController {
@@ -56,13 +57,13 @@ export class DocumentsController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('file', multerOptions))
+  @UseInterceptors(FilesInterceptor('files', 10, multerOptions))
   create(
     @Body() dto: CreateDocumentDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: AuthUser,
   ) {
-    return this.documentsService.create(dto, file, user);
+    return this.documentsService.create(dto, files, user);
   }
 
   @Put(':id')
@@ -123,48 +124,54 @@ export class DocumentsController {
     return res.download(absPath, version.originalFileName || 'document');
   }
 
-  // @Get(':id/preview')
-  // async preview(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @CurrentUser() user: AuthUser,
-  //   @Res() res: Response,
-  // ) {
-  //   const version = await this.documentsService.getLatestVersion(id, user);
-  //   const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
-  //   if (!this.fileStorageService.fileExists(version.filePath)) {
-  //     throw new NotFoundException('File not found on disk');
-  //   }
-  //   if (version.mimeType) {
-  //     res.setHeader('Content-Type', version.mimeType);
-  //   }
-  //   return res.sendFile(absPath);
-  // }
-
   @Get(':id/preview')
-async preview(
-  @Param('id', ParseIntPipe) id: number,
-  @CurrentUser() user: AuthUser,
-  @Res() res: Response,
-) {
-  const version = await this.documentsService.getLatestVersion(id, user);
-  const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
+  async preview(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+    @Res() res: Response,
+  ) {
+    const version = await this.documentsService.getLatestVersion(id, user);
+    const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
 
-  if (!this.fileStorageService.fileExists(version.filePath)) {
-    throw new NotFoundException('File not found on disk');
+    if (!this.fileStorageService.fileExists(version.filePath)) {
+      throw new NotFoundException('File not found on disk');
+    }
+
+    const mimeType = version.mimeType || 'application/octet-stream';
+
+    // File types the browser (or our frontend JS libraries) can render inline
+    const browserPreviewable = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'text/plain', 'text/csv', 'application/json',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel.sheet.macroEnabled.12',
+    ];
+
+    const isBrowserPreviewable = browserPreviewable.some((type) =>
+      mimeType.includes(type),
+    );
+
+    if (!isBrowserPreviewable) {
+      return res.status(400).json({
+        message: `Preview not available for ${mimeType} files. Please download to view.`,
+        downloadUrl: `/api/documents/${id}/download`,
+      });
+    }
+
+    const fileBuffer = fs.readFileSync(absPath);
+
+    res.set({
+      'Content-Type': mimeType,
+      'Content-Disposition': `inline; filename="${encodeURIComponent(version.originalFileName || 'document')}"`,
+      'Content-Length': fileBuffer.length,
+    });
+
+    res.send(fileBuffer);
   }
-
-  const fileBuffer = fs.readFileSync(absPath);
-
-  res.set({
-    'Content-Type': version.mimeType || 'application/octet-stream',
-    'Content-Disposition': `inline; filename="${(version.originalFileName || 'document').replace(/"/g, '')}"`,
-    'Content-Length': fileBuffer.length,
-  });
-
-  res.send(fileBuffer);
-  // No `return` — returning undefined instead of the Response object
-  // keeps the ClassSerializerInterceptor from trying to serialize it.
-}
 
   @Get(':id/versions')
   getVersions(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
@@ -203,15 +210,15 @@ async preview(
     return this.documentsService.getAttachments(id, user);
   }
 
-  @Post(':id/attachments')
-  @UseInterceptors(FileInterceptor('file', multerOptions))
-  addAttachment(
-    @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
-    @CurrentUser() user: AuthUser,
-  ) {
-    return this.documentsService.addAttachment(id, file, user);
-  }
+@Post(':id/attachments')
+@UseInterceptors(FilesInterceptor('files', 10, multerOptions))
+addAttachment(
+  @Param('id', ParseIntPipe) id: number,
+  @UploadedFiles() files: Express.Multer.File[],
+  @CurrentUser() user: AuthUser,
+) {
+  return this.documentsService.addAttachment(id, files, user);
+}
 
   @Get('attachments/:attachmentId/download')
   async downloadAttachment(

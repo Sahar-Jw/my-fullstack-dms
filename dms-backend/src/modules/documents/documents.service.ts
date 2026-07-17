@@ -40,7 +40,6 @@ export class DocumentsService {
     if (user.roleName === RoleName.MANAGER) {
       return document.folder.departmentId === user.departmentId;
     }
-    // Employee: own documents, or read-only visibility into department docs
     return (
       document.ownerId === user.userId ||
       document.folder.departmentId === user.departmentId
@@ -52,11 +51,9 @@ export class DocumentsService {
     if (user.roleName === RoleName.MANAGER) {
       return document.folder.departmentId === user.departmentId;
     }
-    // Employee can only modify their own documents
     return document.ownerId === user.userId;
   }
 
-  // Public wrappers used by other services/controllers
   public checkIsVisible(user: AuthUser, document: Document): boolean {
     return this.canRead(user, document);
   }
@@ -171,6 +168,20 @@ export class DocumentsService {
       );
     }
 
+    // Department filter — Admin only. Uses a distinct param name
+    // (filterDepartmentId) so it never collides with the :departmentId
+    // binding already used above for Manager/Employee scoping.
+    if (dto.departmentId) {
+      if (user.roleName !== RoleName.ADMIN) {
+        throw new ForbiddenException(
+          'Only Admins can filter documents by department',
+        );
+      }
+      qb.andWhere('folder.department_id = :filterDepartmentId', {
+        filterDepartmentId: dto.departmentId,
+      });
+    }
+
     if (dto.name) {
       qb.andWhere('LOWER(document.name) LIKE :name', {
         name: `%${dto.name.toLowerCase()}%`,
@@ -204,45 +215,57 @@ export class DocumentsService {
 
   // ---------- Mutations ----------
 
+  /**
+   * Creates one or more Documents from an array of uploaded files.
+   * - Single file: uses dto.name (or falls back to the filename) as the document name.
+   * - Multiple files: each file becomes its own Document, named after its filename
+   *   (dto.name is ignored in this case since one name can't apply to N documents).
+   */
   async create(
     dto: CreateDocumentDto,
-    file: Express.Multer.File,
+    files: Express.Multer.File[],
     user: AuthUser,
-  ): Promise<Document> {
-    if (!file) {
-      throw new BadRequestException('A file is required to upload a document');
+  ): Promise<Document[]> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one file is required to upload a document');
     }
 
     await this.assertFolderAccessible(dto.folderId, user);
 
-    const document = this.documentsRepository.create({
-      name: dto.name,
-      description: dto.description,
-      folderId: dto.folderId,
-      categoryId: dto.categoryId,
-      ownerId: user.userId,
-    });
-    const saved = await this.documentsRepository.save(document);
+    const createdDocs: Document[] = [];
 
-    const relativePath = this.fileStorageService.saveFile(
-      'documents',
-      saved.id,
-      file.originalname,
-      file.buffer,
-    );
+    for (const file of files) {
+      const document = this.documentsRepository.create({
+        name: files.length > 1 ? file.originalname : (dto.name || file.originalname),
+        description: dto.description,
+        folderId: dto.folderId,
+        categoryId: dto.categoryId,
+        ownerId: user.userId,
+      });
+      const saved = await this.documentsRepository.save(document);
 
-    const version = this.versionsRepository.create({
-      documentId: saved.id,
-      uploadedById: user.userId,
-      versionNumber: 1,
-      filePath: relativePath,
-      originalFileName: file.originalname,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-    });
-    await this.versionsRepository.save(version);
+      const relativePath = this.fileStorageService.saveFile(
+        'documents',
+        saved.id,
+        file.originalname,
+        file.buffer,
+      );
 
-    return this.loadDocumentOrFail(saved.id);
+      const version = this.versionsRepository.create({
+        documentId: saved.id,
+        uploadedById: user.userId,
+        versionNumber: 1,
+        filePath: relativePath,
+        originalFileName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      });
+      await this.versionsRepository.save(version);
+
+      createdDocs.push(await this.loadDocumentOrFail(saved.id));
+    }
+
+    return createdDocs;
   }
 
   async update(
@@ -352,39 +375,38 @@ export class DocumentsService {
   }
 
   async move(
-  id: number,
-  dto: MoveDocumentDto,
-  user: AuthUser,
-): Promise<Document> {
-  const document = await this.loadDocumentOrFail(id);
-  if (!this.canModify(user, document)) {
-    throw new ForbiddenException(
-      'You do not have permission to move this document',
+    id: number,
+    dto: MoveDocumentDto,
+    user: AuthUser,
+  ): Promise<Document> {
+    const document = await this.loadDocumentOrFail(id);
+    if (!this.canModify(user, document)) {
+      throw new ForbiddenException(
+        'You do not have permission to move this document',
+      );
+    }
+    const targetFolder = await this.assertFolderAccessible(
+      dto.folderId,
+      user,
     );
-  }
-  const targetFolder = await this.assertFolderAccessible(
-    dto.folderId,
-    user,
-  );
 
-  // For non-admins, moving across departments is not allowed
-  if (
-    user.roleName !== RoleName.ADMIN &&
-    targetFolder.departmentId !== document.folder.departmentId
-  ) {
-    throw new ForbiddenException(
-      'Cannot move a document to a folder in a different department',
-    );
-  }
+    if (
+      user.roleName !== RoleName.ADMIN &&
+      targetFolder.departmentId !== document.folder.departmentId
+    ) {
+      throw new ForbiddenException(
+        'Cannot move a document to a folder in a different department',
+      );
+    }
 
-  await this.documentsRepository.update(id, { folderId: dto.folderId });
-  return this.loadDocumentOrFail(id);
-}
+    await this.documentsRepository.update(id, { folderId: dto.folderId });
+    return this.loadDocumentOrFail(id);
+  }
 
   // ---------- Versions ----------
 
   async getVersions(id: number, user: AuthUser): Promise<DocumentVersion[]> {
-    const document = await this.findOne(id, user); // enforces read access
+    const document = await this.findOne(id, user);
     return this.versionsRepository.find({
       where: { documentId: document.id },
       order: { versionNumber: 'DESC' },
@@ -396,7 +418,7 @@ export class DocumentsService {
     versionId: number,
     user: AuthUser,
   ): Promise<DocumentVersion> {
-    await this.findOne(id, user); // enforces read access
+    await this.findOne(id, user);
     const version = await this.versionsRepository.findOne({
       where: { id: versionId, documentId: id },
     });
@@ -430,7 +452,6 @@ export class DocumentsService {
     });
     const nextVersionNumber = latestVersion ? latestVersion.versionNumber + 1 : 1;
 
-    // Restoring creates a new version copying the old file content, keeping full history
     const absPath = this.fileStorageService.getAbsolutePath(
       targetVersion.filePath,
     );
@@ -484,21 +505,56 @@ export class DocumentsService {
     });
   }
 
-  async addAttachment(
-    id: number,
-    file: Express.Multer.File,
-    user: AuthUser,
-  ): Promise<DocumentAttachment> {
-    if (!file) {
-      throw new BadRequestException('A file is required');
-    }
-    const document = await this.loadDocumentOrFail(id);
-    if (!this.canModify(user, document)) {
-      throw new ForbiddenException(
-        'You do not have permission to add attachments to this document',
-      );
-    }
+  // async addAttachment(
+  //   id: number,
+  //   file: Express.Multer.File,
+  //   user: AuthUser,
+  // ): Promise<DocumentAttachment> {
+  //   if (!file) {
+  //     throw new BadRequestException('A file is required');
+  //   }
+  //   const document = await this.loadDocumentOrFail(id);
+  //   if (!this.canModify(user, document)) {
+  //     throw new ForbiddenException(
+  //       'You do not have permission to add attachments to this document',
+  //     );
+  //   }
 
+  //   const relativePath = this.fileStorageService.saveFile(
+  //     'attachments',
+  //     id,
+  //     file.originalname,
+  //     file.buffer,
+  //   );
+
+  //   const attachment = this.attachmentsRepository.create({
+  //     documentId: id,
+  //     uploadedById: user.userId,
+  //     fileName: file.originalname,
+  //     filePath: relativePath,
+  //     mimeType: file.mimetype,
+  //     fileSize: file.size,
+  //   });
+  //   return this.attachmentsRepository.save(attachment);
+  // }
+
+  async addAttachment(
+  id: number,
+  files: Express.Multer.File[],
+  user: AuthUser,
+): Promise<DocumentAttachment[]> {
+  if (!files || files.length === 0) {
+    throw new BadRequestException('At least one file is required');
+  }
+  const document = await this.loadDocumentOrFail(id);
+  if (!this.canModify(user, document)) {
+    throw new ForbiddenException(
+      'You do not have permission to add attachments to this document',
+    );
+  }
+
+  const attachments: DocumentAttachment[] = [];
+  for (const file of files) {
     const relativePath = this.fileStorageService.saveFile(
       'attachments',
       id,
@@ -514,8 +570,11 @@ export class DocumentsService {
       mimeType: file.mimetype,
       fileSize: file.size,
     });
-    return this.attachmentsRepository.save(attachment);
+    attachments.push(await this.attachmentsRepository.save(attachment));
   }
+
+  return attachments;
+}
 
   async getAttachment(
     attachmentId: number,
@@ -527,7 +586,7 @@ export class DocumentsService {
     if (!attachment) {
       throw new NotFoundException('Attachment not found');
     }
-    await this.findOne(attachment.documentId, user); // enforces read access
+    await this.findOne(attachment.documentId, user);
     return attachment;
   }
 

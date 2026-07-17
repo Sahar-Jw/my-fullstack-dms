@@ -1,3 +1,4 @@
+
 import { api } from './api';
 import {
   AppUser,
@@ -17,42 +18,22 @@ import {
 export const authApi = {
   login: (email: string, password: string) =>
     api.post<LoginResponse>('/auth/login', { email, password }),
+  register: (data: { name: string; email: string; password: string; departmentId: number }) =>
+    api.post<LoginResponse>('/auth/register', data),
   logout: () => api.post('/auth/logout'),
   changePassword: (currentPassword: string, newPassword: string) =>
     api.patch('/auth/change-password', { currentPassword, newPassword }),
-  forceChangePassword: (newPassword: string) =>
-    api.patch('/auth/force-change-password', { newPassword }),
   requestReset: (email: string) =>
     api.post<{ message: string; resetToken?: string }>('/auth/reset-password', { email }),
   completeReset: (token: string, newPassword: string) =>
     api.post('/auth/reset-password/complete', { token, newPassword }),
-  checkPasswordRequired: () =>
-    api.get<{ mustChangePassword: boolean }>('/auth/check-password-required'),
 };
 
 // ---------- Users ----------
 export const usersApi = {
   list: () => api.get<AppUser[]>('/users'),
   get: (id: number) => api.get<AppUser>(`/users/${id}`),
-  create: (data: {
-    name: string;
-    email: string;
-    roleId: number;
-    departmentId?: number;
-  }) => api.post<AppUser & Record<string, unknown>>('/users', data),
-  // update: (
-  //   id: number,
-  //   data: Partial<{
-  //     name: string;
-  //     email: string;
-  //     roleId?: number;
-  //     role_id?: number;
-  //     departmentId: number | null;
-  //     isActive: boolean;
-  //   }>,
-  // ) => api.put<AppUser>(`/users/${id}`, data),
-
-   update: (
+  update: (
     id: number,
     data: {
       name?: string;
@@ -68,14 +49,38 @@ export const usersApi = {
     if (data.roleId !== undefined) cleanData.roleId = data.roleId;
     if (data.departmentId !== undefined) cleanData.departmentId = data.departmentId;
     if (data.isActive !== undefined) cleanData.isActive = data.isActive;
-    
     return api.put<AppUser>(`/users/${id}`, cleanData);
   },
-
   remove: (id: number) => api.delete(`/users/${id}`),
   toggleStatus: (id: number) => api.patch<AppUser>(`/users/${id}/toggle-status`),
-  forceResetRequired: (id: number) =>
-    api.patch<AppUser>(`/users/${id}/reset-password-required`),
+};
+
+// ---------- Profile ----------
+export const profileApi = {
+  // Get current user profile
+  get: () => api.get<AppUser>('/profile'),
+  
+  // Update profile (name only)
+  update: (data: { name?: string }) =>
+    api.put<AppUser>('/profile', data),
+  
+  // Change password
+  changePassword: (data: { 
+    currentPassword: string; 
+    newPassword: string; 
+    confirmPassword: string 
+  }) =>
+    api.patch('/profile/change-password', data),
+  
+  // Upload profile picture
+  uploadPicture: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.patchForm<AppUser>('/profile/upload-picture', fd);
+  },
+  
+  // Remove profile picture
+  removePicture: () => api.patch<AppUser>('/profile/remove-picture'),
 };
 
 // ---------- Roles ----------
@@ -110,7 +115,8 @@ export const foldersApi = {
   get: (id: number) => api.get<Folder>(`/folders/${id}`),
   create: (data: { name: string; parentFolderId?: number; departmentId?: number }) =>
     api.post<Folder>('/folders', data),
-  update: (id: number, data: { name: string }) => api.put<Folder>(`/folders/${id}`, data),
+  update: (id: number, data: { name: string }) =>
+    api.put<Folder>(`/folders/${id}`, data),
   remove: (id: number) => api.delete(`/folders/${id}`),
 };
 
@@ -120,6 +126,7 @@ export interface DocumentSearchParams {
   categoryId?: number;
   folderId?: number;
   ownerId?: number;
+  departmentId?: number;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -132,19 +139,19 @@ export const documentsApi = {
   get: (id: number) => api.get<DmsDocument>(`/documents/${id}`),
 
   upload: (data: {
-    file: File;
-    name: string;
+    files: File[];
+    name?: string;
     description?: string;
     folderId: number;
     categoryId: number;
   }) => {
     const fd = new FormData();
-    fd.append('file', data.file);
-    fd.append('name', data.name);
+    data.files.forEach((f) => fd.append('files', f));
+    if (data.name) fd.append('name', data.name);
     if (data.description) fd.append('description', data.description);
     fd.append('folderId', String(data.folderId));
     fd.append('categoryId', String(data.categoryId));
-    return api.postForm<DmsDocument>('/documents', fd);
+    return api.postForm<DmsDocument[]>('/documents', fd);
   },
 
   updateMetadata: (
@@ -177,11 +184,13 @@ export const documentsApi = {
     api.patch<DmsDocument>(`/documents/${id}/restore-version/${versionId}`),
 
   getAttachments: (id: number) => api.get<DocAttachment[]>(`/documents/${id}/attachments`),
-  addAttachment: (id: number, file: File) => {
+
+  addAttachment: (id: number, files: File[]) => {
     const fd = new FormData();
-    fd.append('file', file);
-    return api.postForm<DocAttachment>(`/documents/${id}/attachments`, fd);
+    files.forEach((f) => fd.append('files', f));
+    return api.postForm<DocAttachment[]>(`/documents/${id}/attachments`, fd);
   },
+
   downloadAttachment: (attachmentId: number, fallbackName?: string) =>
     api.download(`/documents/attachments/${attachmentId}/download`, fallbackName),
   previewAttachment: (attachmentId: number) =>

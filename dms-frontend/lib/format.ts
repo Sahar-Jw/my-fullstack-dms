@@ -43,6 +43,10 @@ const MIME_LABELS: Record<string, string> = {
   'image/png': 'PNG',
   'application/msword': 'DOC',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+  'application/vnd.ms-excel': 'XLS',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+  'application/vnd.ms-excel.sheet.macroEnabled.12': 'XLSM',
+  'text/csv': 'CSV',
 };
 
 export function fileTypeLabel(mime: string): string {
