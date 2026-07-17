@@ -7,6 +7,7 @@ import { QueryActivityLogDto } from './dto/query-activity-log.dto';
 import { PaginatedResult } from './dto/paginated-result.dto';
 import { RoleName } from '../../common/enums/role.enum';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
+import { I18nService } from 'nestjs-i18n';
 
 export interface ActorSnapshot {
   id: number;
@@ -57,6 +58,7 @@ export class ActivityLogService {
   constructor(
     @InjectRepository(ActivityLog)
     private readonly repo: Repository<ActivityLog>,
+    private readonly i18n: I18nService, // Add i18n service
   ) {}
 
   // Used when the actor comes from a TypeORM entity (e.g. after
@@ -136,14 +138,15 @@ export class ActivityLogService {
           },
         });
         if (!belongsToScope) {
-          throw new ForbiddenException('You can only view activity for employees in your department.');
+          // Translate this error message
+          throw new ForbiddenException(await this.i18n.translate('validation.ACTIVITY_LOG_PERMISSION_DENIED'));
         }
       }
 
       return this.paginate(qb, query);
     }
 
-    throw new ForbiddenException('You do not have permission to view activity logs.');
+    throw new ForbiddenException(await this.i18n.translate('validation.PERMISSION_DENIED'));
   }
 
   private baseQuery(query: QueryActivityLogDto) {

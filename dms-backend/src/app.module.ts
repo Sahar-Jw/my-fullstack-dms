@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { I18nModule, HeaderResolver } from 'nestjs-i18n';
 import { join } from 'path';
+import * as path from 'path';
 import configuration from './config/configuration';
 
 import { AuthModule } from './modules/auth/auth.module';
@@ -45,6 +47,16 @@ import { ProfileModule } from './modules/profile/profile.module';
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
+    }),
+    // ✅ Resolves the active locale from the Accept-Language header sent by
+    // lib/api.ts on every frontend request, and falls back to English.
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [new HeaderResolver(['Accept-Language'])],
     }),
     AuthModule,
     UsersModule,

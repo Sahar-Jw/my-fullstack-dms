@@ -1,0 +1,15 @@
+{
+  "FOLDER_NOT_FOUND": "Folder not found.",
+  "FOLDER_ACCESS_DENIED": "You do not have access to folders outside your department.",
+  "MANAGER_DEPARTMENT_ONLY": "Managers can only manage folders within their own department.",
+  "EMPLOYEE_VIEW_ONLY": "Employees do not have permission to manage folders (view only).",
+  "DEPARTMENT_ID_REQUIRED": "Department ID is required when an Admin creates a folder.",
+  "PARENT_FOLDER_NOT_FOUND": "Parent folder not found.",
+  "PARENT_FOLDER_DEPARTMENT_MISMATCH": "Parent folder must belong to the same department.",
+  "FOLDER_HAS_SUBFOLDERS": "Cannot delete a folder that contains subfolders.",
+  "FOLDER_HAS_DOCUMENTS": "Cannot delete a folder that still contains documents.",
+  "PARENT_FOLDER_DETAILS": "under parent folder \"{parentName}\"",
+  "CREATE_LOG": "Created folder \"{folderName}\" in department \"{departmentName}\"{parentDetails}",
+  "UPDATE_LOG": "Renamed folder from \"{oldName}\" to \"{newName}\"",
+  "DELETE_LOG": "Deleted folder \"{folderName}\" from department \"{departmentName}\""
+}

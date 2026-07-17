@@ -9,19 +9,17 @@ import { Department } from './entities/department.entity';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
-
-// 🔥 استيراد موديول سجلات الأنشطة والـ Enum الجديد لعمليات الأقسام
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class DepartmentsService {
   constructor(
     @InjectRepository(Department)
     private departmentsRepository: Repository<Department>,
-
-    // 🔥 حقن خدمة الأنشطة هنا داخل الباني
     private readonly activityLogService: ActivityLogService,
+    private readonly i18n: I18nService, // Add i18n service
   ) {}
 
   findAll(): Promise<Department[]> {
@@ -33,7 +31,7 @@ export class DepartmentsService {
       where: { id },
     });
     if (!department) {
-      throw new NotFoundException(`Department not found`);
+      throw new NotFoundException(await this.i18n.translate('validation.DEPARTMENT_NOT_FOUND'));
     }
     return department;
   }
@@ -42,13 +40,15 @@ export class DepartmentsService {
     const department = this.departmentsRepository.create(dto);
     const savedDept = await this.departmentsRepository.save(department);
 
-    // 🔥 تسجيل حركة إنشاء قسم جديد
+    // Log with translation
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.DEPARTMENT_CREATE,
       targetType: 'Department',
       targetId: savedDept.id,
-      description: `Created new department: "${savedDept.name}"`,
+      description: await this.i18n.translate('validation.DEPARTMENT_CREATE_LOG', {
+        args: { departmentName: savedDept.name }
+      }),
     });
 
     return savedDept;
@@ -61,13 +61,23 @@ export class DepartmentsService {
     Object.assign(department, dto);
     const updatedDept = await this.departmentsRepository.save(department);
 
-    // 🔥 تسجيل حركة تعديل بيانات أو اسم القسم
+    // Log with translation
+    let description = await this.i18n.translate('validation.DEPARTMENT_UPDATE_LOG', {
+      args: { oldName }
+    });
+    
+    if (dto.name) {
+      description += ' ' + await this.i18n.translate('validation.DEPARTMENT_RENAMED_LOG', {
+        args: { newName: dto.name }
+      });
+    }
+
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.DEPARTMENT_UPDATE,
       targetType: 'Department',
       targetId: id,
-      description: `Updated department "${oldName}"` + (dto.name ? ` (Renamed to: "${dto.name}")` : ''),
+      description,
     });
 
     return updatedDept;
@@ -81,22 +91,25 @@ export class DepartmentsService {
       .where('d.id = :id', { id })
       .andWhere('u.id IS NOT NULL')
       .getCount();
+    
     if (usersCount > 0) {
       throw new BadRequestException(
-        'Cannot delete a department that still has users assigned to it',
+        await this.i18n.translate('validation.DEPARTMENT_HAS_USERS'),
       );
     }
 
     const deptName = department.name;
     await this.departmentsRepository.remove(department);
 
-    // 🔥 تسجيل حركة حذف القسم نهائياً
+    // Log with translation
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.DEPARTMENT_DELETE,
       targetType: 'Department',
       targetId: id,
-      description: `Deleted department "${deptName}"`,
+      description: await this.i18n.translate('validation.DEPARTMENT_DELETE_LOG', {
+        args: { departmentName: deptName }
+      }),
     });
   }
 }

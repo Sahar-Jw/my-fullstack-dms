@@ -1,0 +1,11 @@
+{
+  "ROLE_ADMIN": "مدير النظام",
+  "ROLE_MANAGER": "مدير",
+  "ROLE_EMPLOYEE": "موظف",
+  "TOTAL_USERS": "إجمالي المستخدمين",
+  "TOTAL_DOCUMENTS": "إجمالي الوثائق",
+  "STORAGE_USED": "المساحة المستخدمة",
+  "DEPARTMENT_DOCUMENTS": "وثائق القسم",
+  "MY_DOCUMENTS": "وثائقي",
+  "RECENT_DOCUMENTS": "الوثائق الأخيرة"
+}

@@ -15,6 +15,7 @@ import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { relativeStoredPath } from '../../common/utils/multer.config';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
+import { I18nService } from 'nestjs-i18n';
 
 const UPLOAD_ROOT = process.env.UPLOAD_ROOT || './uploads';
 
@@ -27,6 +28,7 @@ export class AttachmentsService {
     private documentsRepository: Repository<Document>,
     private documentsService: DocumentsService,
     private readonly activityLogService: ActivityLogService,
+    private readonly i18n: I18nService, // Add i18n service
   ) {}
 
   private async getDocumentOrFail(documentId: number): Promise<Document> {
@@ -34,7 +36,7 @@ export class AttachmentsService {
       where: { id: documentId },
     });
     if (!document) {
-      throw new NotFoundException('Document not found');
+      throw new NotFoundException(await this.i18n.translate('validation.DOCUMENT_NOT_FOUND'));
     }
     return document;
   }
@@ -46,14 +48,14 @@ export class AttachmentsService {
     user: AuthUser,
   ): Promise<Attachment[]> {
     if (!files || files.length === 0) {
-      throw new BadRequestException('Please select at least one file to upload');
+      throw new BadRequestException(await this.i18n.translate('validation.NO_FILES_SELECTED'));
     }
 
     const document = await this.getDocumentOrFail(documentId);
 
     if (!this.documentsService.checkCanModify(user, document)) {
       throw new ForbiddenException(
-        'You are not authorized to add attachments to this document',
+        await this.i18n.translate('validation.ATTACHMENT_UPLOAD_UNAUTHORIZED'),
       );
     }
 
@@ -69,14 +71,16 @@ export class AttachmentsService {
 
     const savedAttachments = await this.attachmentsRepository.save(attachments);
 
-    // 🔥 تعديل: استخدام DOCUMENT_UPLOAD لتظهر كعملية رفع واضحة ومستقلة في جدول الأنشطة
+    // Activity log with translated description
     const fileNames = savedAttachments.map(a => a.fileName).join(', ');
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
-      action: ActivityAction.DOCUMENT_UPLOAD, // 👈 تم التغيير هنا لتعمل بشكل فوري ومباشر
+      action: ActivityAction.DOCUMENT_UPLOAD,
       targetType: 'Document',
       targetId: document.id,
-      description: `Uploaded attachment(s) to document "${document.name}": [${fileNames}]`,
+      description: await this.i18n.translate('validation.ATTACHMENT_UPLOAD_LOG', {
+        args: { fileName: fileNames, documentName: document.name }
+      }),
     });
 
     return savedAttachments;
@@ -90,7 +94,7 @@ export class AttachmentsService {
     const document = await this.getDocumentOrFail(documentId);
 
     if (!this.documentsService.checkIsVisible(user, document)) {
-      throw new ForbiddenException('You are not authorized to access this document');
+      throw new ForbiddenException(await this.i18n.translate('validation.DOCUMENT_ACCESS_UNAUTHORIZED'));
     }
 
     return this.attachmentsRepository.find({
@@ -107,11 +111,11 @@ export class AttachmentsService {
     });
 
     if (!attachment) {
-      throw new NotFoundException('Attachment not found');
+      throw new NotFoundException(await this.i18n.translate('validation.ATTACHMENT_NOT_FOUND'));
     }
 
     if (!this.documentsService.checkIsVisible(user, attachment.document)) {
-      throw new ForbiddenException('You are not authorized to download this attachment');
+      throw new ForbiddenException(await this.i18n.translate('validation.ATTACHMENT_DOWNLOAD_UNAUTHORIZED'));
     }
 
     await this.activityLogService.log({
@@ -119,7 +123,9 @@ export class AttachmentsService {
       action: ActivityAction.DOCUMENT_DOWNLOAD,
       targetType: 'Attachment',
       targetId: attachment.id,
-      description: `Downloaded attachment "${attachment.fileName}" from document "${attachment.document.name}"`,
+      description: await this.i18n.translate('validation.ATTACHMENT_DOWNLOAD_LOG', {
+        args: { fileName: attachment.fileName, documentName: attachment.document.name }
+      }),
     });
 
     return {
@@ -139,11 +145,11 @@ export class AttachmentsService {
     });
 
     if (!attachment) {
-      throw new NotFoundException('Attachment not found');
+      throw new NotFoundException(await this.i18n.translate('validation.ATTACHMENT_NOT_FOUND'));
     }
 
     if (!this.documentsService.checkCanModify(user, attachment.document)) {
-      throw new ForbiddenException('You are not authorized to delete this attachment');
+      throw new ForbiddenException(await this.i18n.translate('validation.ATTACHMENT_DELETE_UNAUTHORIZED'));
     }
 
     const fullPath = join(UPLOAD_ROOT, attachment.filePath);
@@ -153,15 +159,16 @@ export class AttachmentsService {
 
     await this.attachmentsRepository.remove(attachment);
 
-    // 🔥 تعديل: استخدام DOCUMENT_DELETE لتظهر كعملية حذف مرفق داخل المستند
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
-      action: ActivityAction.DOCUMENT_DELETE, // 👈 تم التغيير هنا لتعمل بشكل فوري ومباشر
+      action: ActivityAction.DOCUMENT_DELETE,
       targetType: 'Document',
       targetId: attachment.document.id,
-      description: `Deleted attachment "${attachment.fileName}" from document "${attachment.document.name}"`,
+      description: await this.i18n.translate('validation.ATTACHMENT_DELETE_LOG', {
+        args: { fileName: attachment.fileName, documentName: attachment.document.name }
+      }),
     });
 
-    return { message: 'Attachment deleted successfully' };
+    return { message: await this.i18n.translate('validation.ATTACHMENT_DELETED_SUCCESS') };
   }
 }

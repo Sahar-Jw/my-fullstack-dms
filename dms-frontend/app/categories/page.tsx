@@ -10,10 +10,12 @@ import { Category } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { useAuth } from '@/lib/auth-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function CategoriesBody() {
   const { user } = useAuth();
   const { notify } = useToast();
+  const { t } = useLocale();
   const isAdmin = user?.role === 'Admin';
 
   const [items, setItems] = useState<Category[]>([]);
@@ -65,10 +67,10 @@ function CategoriesBody() {
     try {
       if (form.id) {
         await categoriesApi.update(form.id, { name: form.name, description: form.description });
-        notify('Category updated.', 'success');
+        notify(t('categories.updated'), 'success');
       } else {
         await categoriesApi.create({ name: form.name, description: form.description });
-        notify('Category created.', 'success');
+        notify(t('categories.created'), 'success');
       }
       setModalOpen(false);
       load();
@@ -84,7 +86,7 @@ function CategoriesBody() {
     setConfirmLoading(true);
     try {
       await categoriesApi.remove(confirmTarget.id);
-      notify('Category deleted.', 'success');
+      notify(t('categories.deleted'), 'success');
       setConfirmTarget(null);
       load();
     } catch (e) {
@@ -98,14 +100,14 @@ function CategoriesBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Classification</span>
-          <h1 className="page-title">Categories</h1>
-          <p className="page-subtitle">Every document belongs to exactly one category.</p>
+          <span className="page-eyebrow">{t('categories.eyebrow')}</span>
+          <h1 className="page-title">{t('categories.title')}</h1>
+          <p className="page-subtitle">{t('categories.subtitle')}</p>
         </div>
         {isAdmin && (
           <div className="page-actions">
             <button className="btn btn-primary" onClick={openCreate}>
-              + New category
+              {t('categories.newCategory')}
             </button>
           </div>
         )}
@@ -118,14 +120,14 @@ function CategoriesBody() {
           <div className="spinner" />
         </div>
       ) : items.length === 0 ? (
-        <EmptyState title="No categories yet" />
+        <EmptyState title={t('categories.noCategoriesYet')} />
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Description</th>
+                <th>{t('categories.name')}</th>
+                <th>{t('categories.description')}</th>
                 {isAdmin && <th></th>}
               </tr>
             </thead>
@@ -138,13 +140,13 @@ function CategoriesBody() {
                     <td>
                       <div className="row-actions">
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(c)}>
-                          Edit
+                          {t('categories.edit')}
                         </button>
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => setConfirmTarget(c)}
                         >
-                          Delete
+                          {t('categories.delete')}
                         </button>
                       </div>
                     </td>
@@ -158,15 +160,15 @@ function CategoriesBody() {
 
       {modalOpen && (
         <Modal
-          title={form.id ? 'Edit category' : 'New category'}
+          title={form.id ? t('categories.editCategory') : t('categories.newCategoryTitle')}
           onClose={() => setModalOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t('categories.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? t('categories.saving') : t('categories.save')}
               </button>
             </>
           }
@@ -174,7 +176,7 @@ function CategoriesBody() {
           <form onSubmit={handleSubmit}>
             {formError && <div className="banner banner-danger">{formError}</div>}
             <div className="field">
-              <label>Name</label>
+              <label>{t('categories.name')}</label>
               <input
                 className="input"
                 required
@@ -183,7 +185,7 @@ function CategoriesBody() {
               />
             </div>
             <div className="field">
-              <label>Description</label>
+              <label>{t('categories.description')}</label>
               <input
                 className="input"
                 value={form.description}
@@ -196,9 +198,9 @@ function CategoriesBody() {
 
       {confirmTarget && (
         <ConfirmDialog
-          title="Delete category"
-          message={`Delete ${confirmTarget.name}? This is blocked while documents still use it.`}
-          confirmLabel="Delete"
+          title={t('categories.deleteCategory')}
+          message={t('categories.deleteConfirm', { name: confirmTarget.name })}
+          confirmLabel={t('categories.delete')}
           danger
           loading={confirmLoading}
           onConfirm={handleDelete}

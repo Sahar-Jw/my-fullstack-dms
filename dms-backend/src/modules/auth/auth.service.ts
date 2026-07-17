@@ -14,6 +14,7 @@ import { JwtPayload } from './strategies/jwt.strategy';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
+import { I18nService } from 'nestjs-i18n';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -27,6 +28,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private activityLogService: ActivityLogService,
+    private i18n: I18nService,
   ) {}
 
   async register(dto: RegisterDto, meta: RequestMeta = {}) {
@@ -42,7 +44,6 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    // 🔥 1. تفعيل تسجيل الحسابات الجديدة بنجاح
     void this.activityLogService.log({
       actor: {
         id: user.id,
@@ -54,7 +55,9 @@ export class AuthService {
       action: ActivityAction.REGISTER,
       targetType: 'User',
       targetId: user.id,
-      description: `${user.name} registered a new employee account`,
+      description: await this.i18n.translate('validation.REGISTER_LOG', {
+        args: { userName: user.name }
+      }),
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
@@ -79,24 +82,27 @@ export class AuthService {
       void this.activityLogService.log({
         actor: null,
         action: ActivityAction.LOGIN_FAILED,
-        description: `Failed login attempt for ${dto.email} (unknown account)`,
+        description: await this.i18n.translate('validation.LOGIN_FAILED_UNKNOWN_LOG', {
+          args: { email: dto.email }
+        }),
         metadata: { attemptedEmail: dto.email },
         ipAddress: meta.ipAddress,
         userAgent: meta.userAgent,
       });
-      throw new UnauthorizedException('Invalid email ');
+      throw new UnauthorizedException(await this.i18n.translate('validation.INVALID_CREDENTIALS'));
     }
 
     if (!user.isActive) {
-      // 🔥 2. تسجيل محاولة تسجيل دخول فاشلة بسبب حساب مجمد أو معطل
       void this.activityLogService.log({
         actor: this.activityLogService.toActorSnapshot(user),
         action: ActivityAction.LOGIN_FAILED,
-        description: `Failed login attempt: Account "${user.email}" is deactivated`,
+        description: await this.i18n.translate('validation.LOGIN_FAILED_DEACTIVATED_LOG', {
+          args: { email: user.email }
+        }),
         ipAddress: meta.ipAddress,
         userAgent: meta.userAgent,
       });
-      throw new ForbiddenException('Your account has been deactivated. Please contact an administrator.');
+      throw new ForbiddenException(await this.i18n.translate('validation.ACCOUNT_DEACTIVATED'));
     }
 
     const passwordValid = await this.usersService.validatePassword(
@@ -107,11 +113,11 @@ export class AuthService {
       void this.activityLogService.log({
         actor: this.activityLogService.toActorSnapshot(user),
         action: ActivityAction.LOGIN_FAILED,
-        description: `Failed login attempt (wrong password)`,
+        description: await this.i18n.translate('validation.LOGIN_FAILED_PASSWORD_LOG'),
         ipAddress: meta.ipAddress,
         userAgent: meta.userAgent,
       });
-      throw new UnauthorizedException('Invalid password');
+      throw new UnauthorizedException(await this.i18n.translate('validation.INVALID_CREDENTIALS'));
     }
 
     const payload: JwtPayload = {
@@ -145,10 +151,8 @@ export class AuthService {
     };
   }
 
-  // Now takes the real AuthUser shape from req.user (JWT payload) instead
-  // of a made-up actor shape — the field names (userId, roleName) match
-  // what JwtStrategy.validate() actually returns.
-  logout(authUser: AuthUser | null, meta: RequestMeta = {}) {
+  // Make logout async to use await with translate
+  async logout(authUser: AuthUser | null, meta: RequestMeta = {}) {
     if (authUser) {
       void this.activityLogService.log({
         actor: this.activityLogService.fromAuthUser(authUser),
@@ -157,7 +161,8 @@ export class AuthService {
         userAgent: meta.userAgent,
       });
     }
-    return { message: 'Logged out successfully' };
+    // Use await with translate instead of translateSync
+    return { message: await this.i18n.translate('validation.LOGOUT_SUCCESS') };
   }
 
   async changePassword(userId: number, dto: ChangePasswordDto, meta: RequestMeta = {}) {
@@ -167,12 +172,10 @@ export class AuthService {
       dto.currentPassword,
     );
     if (!valid) {
-      throw new UnauthorizedException('Current password is incorrect');
+      throw new UnauthorizedException(await this.i18n.translate('validation.CURRENT_PASSWORD_INCORRECT'));
     }
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException(
-        'New password must be different from the current password',
-      );
+      throw new BadRequestException(await this.i18n.translate('validation.PASSWORD_SAME_AS_CURRENT'));
     }
     await this.usersService.updatePassword(userId, dto.newPassword);
 
@@ -183,15 +186,14 @@ export class AuthService {
       userAgent: meta.userAgent,
     });
 
-    return { message: 'Password changed successfully' };
+    return { message: await this.i18n.translate('validation.PASSWORD_CHANGED_SUCCESS') };
   }
 
   async requestPasswordReset(email: string, meta: RequestMeta = {}) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       return {
-        message:
-          'If an account with that email exists, a password reset token has been generated.',
+        message: await this.i18n.translate('validation.RESET_TOKEN_SENT'),
       };
     }
 
@@ -208,8 +210,7 @@ export class AuthService {
     });
 
     return {
-      message:
-        'If an account with that email exists, a password reset token has been generated.',
+      message: await this.i18n.translate('validation.RESET_TOKEN_SENT'),
       resetToken,
     };
   }
@@ -219,11 +220,11 @@ export class AuthService {
     try {
       payload = this.jwtService.verify(token);
     } catch (e) {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new BadRequestException(await this.i18n.translate('validation.INVALID_RESET_TOKEN'));
     }
 
     if (payload.purpose !== 'password_reset') {
-      throw new BadRequestException('Invalid reset token');
+      throw new BadRequestException(await this.i18n.translate('validation.INVALID_RESET_TOKEN'));
     }
 
     await this.usersService.updatePassword(payload.sub, newPassword);
@@ -236,6 +237,6 @@ export class AuthService {
       userAgent: meta.userAgent,
     });
 
-    return { message: 'Password has been reset successfully. Please log in.' };
+    return { message: await this.i18n.translate('validation.PASSWORD_RESET_SUCCESS') };
   }
 }

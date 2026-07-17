@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { SKIP_PASSWORD_CHECK_KEY } from '../decorators/skip-password-check.decorator';
+import { I18nService } from 'nestjs-i18n';
 
 /**
  * Blocks access to all endpoints until the user has changed their
@@ -15,9 +16,13 @@ import { SKIP_PASSWORD_CHECK_KEY } from '../decorators/skip-password-check.decor
  */
 @Injectable()
 export class PasswordChangeGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private readonly i18n: I18nService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  // Make canActivate async
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(
       IS_PUBLIC_KEY,
       [context.getHandler(), context.getClass()],
@@ -37,9 +42,8 @@ export class PasswordChangeGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     if (user && user.mustChangePassword) {
-      throw new ForbiddenException(
-        'Password change required before accessing this resource. Please change your password first.',
-      );
+      const message = await this.i18n.translate('guards.PASSWORD_CHANGE_REQUIRED');
+      throw new ForbiddenException(message);
     }
 
     return true;

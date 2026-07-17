@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { errorMessage } from '@/lib/api';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 export default function LoginPage() {
   const { login, token, mustChangePassword, loading } = useAuth();
+  const { t } = useLocale();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,19 +39,19 @@ export default function LoginPage() {
   return (
     <div className="auth-screen">
       <Link href="/" className="auth-home-link">
-        ← Back to home
+        {t('common.backToHome')}
       </Link>
 
       <div className="auth-card">
         <div className="auth-mark" />
-        <h1 className="auth-title">Sign in to Ledger</h1>
-        <p className="auth-subtitle">Your department&apos;s document system.</p>
+        <h1 className="auth-title">{t('auth.signInTitle')}</h1>
+        <p className="auth-subtitle">{t('auth.signInSubtitle')}</p>
 
         {error && <div className="banner banner-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               className="input"
@@ -62,7 +64,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               className="input"
@@ -75,15 +77,15 @@ export default function LoginPage() {
             />
           </div>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('auth.signingIn') : t('auth.signInButton')}
           </button>
 
           <div style={{ marginTop: 14, textAlign: 'center' }}>
             <span style={{ color: 'var(--color-muted)', fontSize: 13 }}>
-              Don&apos;t have an account?{' '}
+              {t('auth.noAccount')}
             </span>
             <Link className="link-btn" href="/register">
-              Register
+              {t('auth.registerLink')}
             </Link>
           </div>
         </form>

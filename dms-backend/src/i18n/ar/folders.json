@@ -1,0 +1,15 @@
+{
+  "FOLDER_NOT_FOUND": "المجلد غير موجود.",
+  "FOLDER_ACCESS_DENIED": "ليس لديك صلاحية للوصول إلى المجلدات خارج قسمك.",
+  "MANAGER_DEPARTMENT_ONLY": "يمكن للمديرين فقط إدارة المجلدات داخل قسمهم.",
+  "EMPLOYEE_VIEW_ONLY": "الموظفون ليس لديهم صلاحية لإدارة المجلدات (عرض فقط).",
+  "DEPARTMENT_ID_REQUIRED": "معرف القسم مطلوب عندما يقوم المدير بإنشاء مجلد.",
+  "PARENT_FOLDER_NOT_FOUND": "المجلد الأب غير موجود.",
+  "PARENT_FOLDER_DEPARTMENT_MISMATCH": "يجب أن ينتمي المجلد الأب إلى نفس القسم.",
+  "FOLDER_HAS_SUBFOLDERS": "لا يمكن حذف مجلد يحتوي على مجلدات فرعية.",
+  "FOLDER_HAS_DOCUMENTS": "لا يمكن حذف مجلد لا يزال يحتوي على وثائق.",
+  "PARENT_FOLDER_DETAILS": "تحت المجلد الأب \"{parentName}\"",
+  "CREATE_LOG": "تم إنشاء مجلد \"{folderName}\" في القسم \"{departmentName}\"{parentDetails}",
+  "UPDATE_LOG": "تم إعادة تسمية المجلد من \"{oldName}\" إلى \"{newName}\"",
+  "DELETE_LOG": "تم حذف المجلد \"{folderName}\" من القسم \"{departmentName}\""
+}

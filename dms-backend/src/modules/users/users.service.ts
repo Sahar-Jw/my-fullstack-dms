@@ -13,10 +13,9 @@ import { RolesService } from '../roles/roles.service';
 import { DepartmentsService } from '../departments/departments.service';
 import { RoleName } from '../../common/decorators/roles.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
-
-// 1. استيراد موديول سجلات الأنشطة
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
+import { I18nService } from 'nestjs-i18n';
 
 const SALT_ROUNDS = 10;
 const DEFAULT_ROLE_NAME = RoleName.EMPLOYEE;
@@ -28,9 +27,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     private rolesService: RolesService,
     private departmentsService: DepartmentsService,
-    
-    // 2. حقن خدمة الأنشطة هنا
     private readonly activityLogService: ActivityLogService,
+    private readonly i18n: I18nService,
   ) {}
 
   findAll(): Promise<User[]> {
@@ -40,7 +38,7 @@ export class UsersService {
   async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User not found`);
+      throw new NotFoundException(await this.i18n.translate('users.USER_NOT_FOUND'));
     }
     return user;
   }
@@ -49,11 +47,6 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  /**
-   * Public self-registration. Role is never taken from the caller — every
-   * self-registered user gets the fixed default role. Only an authenticated
-   * admin can change roles afterward, via update().
-   */
   async register(dto: {
     name: string;
     email: string;
@@ -62,12 +55,12 @@ export class UsersService {
   }): Promise<User> {
     const existing = await this.findByEmail(dto.email);
     if (existing) {
-      throw new ConflictException('A user with this email already exists');
+      throw new ConflictException(await this.i18n.translate('users.EMAIL_ALREADY_EXISTS'));
     }
 
     const defaultRole = await this.rolesService.findByName(DEFAULT_ROLE_NAME);
     if (!defaultRole) {
-      throw new BadRequestException('Default role is not configured');
+      throw new BadRequestException(await this.i18n.translate('users.DEFAULT_ROLE_NOT_CONFIGURED'));
     }
     if (defaultRole.name !== RoleName.EMPLOYEE) {
       throw new Error('DEFAULT_ROLE_NAME must resolve to the Employee role');
@@ -77,7 +70,7 @@ export class UsersService {
       .findOne(dto.departmentId)
       .catch(() => null);
     if (!department) {
-      throw new BadRequestException('Invalid department');
+      throw new BadRequestException(await this.i18n.translate('users.INVALID_DEPARTMENT'));
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, SALT_ROUNDS);
@@ -93,7 +86,6 @@ export class UsersService {
 
     const savedUser = await this.usersRepository.save(user);
 
-    // 🔥 3. تسجيل عملية إنشاء حساب موظف جديد (تسجيل ذاتي)
     await this.activityLogService.log({
       actor: {
         id: savedUser.id,
@@ -105,20 +97,21 @@ export class UsersService {
       action: ActivityAction.REGISTER,
       targetType: 'User',
       targetId: savedUser.id,
-      description: `New user self-registered account with email "${savedUser.email}"`,
+      description: await this.i18n.translate('users.REGISTER_LOG', {
+        args: { email: savedUser.email }
+      }),
     });
 
     return savedUser;
   }
 
-  // أضفنا معامل `actor` هنا لنعرف أي أدمن قام بالتعديل
   async update(id: number, dto: UpdateUserDto, actor?: AuthUser): Promise<User> {
     const user = await this.findOne(id);
 
     if (dto.email && dto.email !== user.email) {
       const existing = await this.findByEmail(dto.email);
       if (existing) {
-        throw new ConflictException('A user with this email already exists');
+        throw new ConflictException(await this.i18n.translate('users.EMAIL_ALREADY_EXISTS'));
       }
     }
 
@@ -131,13 +124,14 @@ export class UsersService {
     await this.usersRepository.update(id, patch);
     const updatedUser = await this.findOne(id);
 
-    // 🔥 4. تسجيل تعديل بيانات مستخدم بواسطة الأدمن
     await this.activityLogService.log({
       actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
       action: ActivityAction.USER_UPDATE,
       targetType: 'User',
       targetId: id,
-      description: `Updated profile details for account "${user.email}"`,
+      description: await this.i18n.translate('users.UPDATE_LOG', {
+        args: { email: user.email }
+      }),
     });
 
     return updatedUser;
@@ -148,13 +142,14 @@ export class UsersService {
     const userEmail = user.email;
     await this.usersRepository.remove(user);
 
-    // 🔥 5. تسجيل حذف الحساب بالكامل
     await this.activityLogService.log({
       actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
       action: ActivityAction.USER_UPDATE,
       targetType: 'User',
       targetId: id,
-      description: `Permanently deleted user account "${userEmail}"`,
+      description: await this.i18n.translate('users.DELETE_LOG', {
+        args: { email: userEmail }
+      }),
     });
   }
 
@@ -163,13 +158,18 @@ export class UsersService {
     user.isActive = !user.isActive;
     const savedUser = await this.usersRepository.save(user);
 
-    // 🔥 6. تسجيل تجميد أو تفعيل حساب الموظف في الـ Logs
+    const statusText = savedUser.isActive 
+      ? await this.i18n.translate('users.ACTIVE') 
+      : await this.i18n.translate('users.INACTIVE');
+
     await this.activityLogService.log({
       actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
       action: ActivityAction.USER_STATUS_TOGGLE,
       targetType: 'User',
       targetId: id,
-      description: `Toggled account status for "${user.email}". Current status: ${savedUser.isActive ? 'Active' : 'Inactive'}`,
+      description: await this.i18n.translate('users.STATUS_TOGGLE_LOG', {
+        args: { email: user.email, status: statusText }
+      }),
     });
 
     return savedUser;
@@ -178,7 +178,7 @@ export class UsersService {
   async updatePassword(id: number, newPassword: string, actor?: AuthUser): Promise<User> {
     if (!newPassword || newPassword.length < 6) {
       throw new BadRequestException(
-        'Password must be at least 6 characters long',
+        await this.i18n.translate('users.PASSWORD_MIN_LENGTH'),
       );
     }
     const user = await this.findOne(id);
@@ -188,13 +188,20 @@ export class UsersService {
     
     const savedUser = await this.usersRepository.save(user);
 
-    // 🔥 7. تسجيل حركة تغيير كلمة المرور للحساب
     await this.activityLogService.log({
-      actor: actor ? this.activityLogService.fromAuthUser(actor) : user ? { id: user.id, name: user.name, email: user.email, role: RoleName.EMPLOYEE, departmentId: user.departmentId } : null,
+      actor: actor ? this.activityLogService.fromAuthUser(actor) : { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: RoleName.EMPLOYEE, 
+        departmentId: user.departmentId 
+      },
       action: ActivityAction.PASSWORD_CHANGED,
       targetType: 'User',
       targetId: id,
-      description: `Changed password for account "${user.email}"`,
+      description: await this.i18n.translate('users.PASSWORD_CHANGE_LOG', {
+        args: { email: user.email }
+      }),
     });
 
     return savedUser;

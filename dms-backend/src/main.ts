@@ -1,16 +1,16 @@
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as fs from 'fs';
 import * as path from 'path';
+import { I18nValidationExceptionFilter } from 'nestjs-i18n';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/exceptions.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  
+
   // Create upload directories
   const uploadRoot = process.env.FILE_UPLOAD_PATH || './uploads';
   const subDirs = ['documents', 'attachments', 'profile-pictures'];
@@ -42,7 +42,11 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // I18nValidationExceptionFilter only catches validation-pipe errors and
+  // translates their messages; HttpExceptionFilter still handles everything
+  // else exactly as before. Registration order doesn't matter here since
+  // the two filters target different exception types.
+  app.useGlobalFilters(new HttpExceptionFilter(), new I18nValidationExceptionFilter());
   app.enableCors();
 
   const port = process.env.PORT || 5000;

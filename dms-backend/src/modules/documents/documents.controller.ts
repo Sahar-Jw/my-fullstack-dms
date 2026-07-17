@@ -30,12 +30,14 @@ import { Roles, RoleName } from '../../common/decorators/roles.decorator';
 import * as fs from 'fs';
 import { LogActivity } from '../activity-logs/decorators/log-activity.decorator';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
+import { I18nService } from 'nestjs-i18n';
 
 @Controller('documents')
 export class DocumentsController {
   constructor(
     private readonly documentsService: DocumentsService,
     private readonly fileStorageService: FileStorageService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get()
@@ -87,12 +89,11 @@ export class DocumentsController {
     return this.documentsService.updateFile(id, file, user);
   }
 
- @Delete(':id')
+  @Delete(':id')
   softDelete(
     @Param('id', ParseIntPipe) id: number, 
     @CurrentUser() user: AuthUser
   ) {
-    // نكتفي باستدعاء الخدمة، والخدمة ستقوم بتسجيل الاسم النصي النظيف تلقائياً وبأمان في قاعدة البيانات
     return this.documentsService.softDelete(id, user);
   }
 
@@ -101,16 +102,14 @@ export class DocumentsController {
     return this.documentsService.restore(id, user);
   }
 
-   @Delete(':id/permanent')
+  @Delete(':id/permanent')
   @Roles(RoleName.ADMIN)
   permanentDelete(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthUser 
   ) {
-    // تمرير الأدمن كمعامل ثانٍ صريح للخدمة
     return this.documentsService.permanentDelete(id, user); 
   }
-
 
   @Patch(':id/move')
   move(
@@ -130,7 +129,7 @@ export class DocumentsController {
     const version = await this.documentsService.getLatestVersion(id, user);
     const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
     if (!this.fileStorageService.fileExists(version.filePath)) {
-      throw new NotFoundException('File not found on disk');
+      throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
     return res.download(absPath, version.originalFileName || 'document');
   }
@@ -145,12 +144,11 @@ export class DocumentsController {
     const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
 
     if (!this.fileStorageService.fileExists(version.filePath)) {
-      throw new NotFoundException('File not found on disk');
+      throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
 
     const mimeType = version.mimeType || 'application/octet-stream';
 
-    // File types the browser (or our frontend JS libraries) can render inline
     const browserPreviewable = [
       'image/jpeg', 'image/png', 'image/gif', 'image/webp',
       'application/pdf',
@@ -168,7 +166,9 @@ export class DocumentsController {
 
     if (!isBrowserPreviewable) {
       return res.status(400).json({
-        message: `Preview not available for ${mimeType} files. Please download to view.`,
+        message: await this.i18n.translate('documents.PREVIEW_NOT_AVAILABLE', {
+          args: { mimeType },
+        }),
         downloadUrl: `/api/documents/${id}/download`,
       });
     }
@@ -199,7 +199,7 @@ export class DocumentsController {
     const version = await this.documentsService.getVersion(id, versionId, user);
     const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
     if (!this.fileStorageService.fileExists(version.filePath)) {
-      throw new NotFoundException('File not found on disk');
+      throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
     return res.download(
       absPath,
@@ -221,15 +221,15 @@ export class DocumentsController {
     return this.documentsService.getAttachments(id, user);
   }
 
-@Post(':id/attachments')
-@UseInterceptors(FilesInterceptor('files', 10, multerOptions))
-addAttachment(
-  @Param('id', ParseIntPipe) id: number,
-  @UploadedFiles() files: Express.Multer.File[],
-  @CurrentUser() user: AuthUser,
-) {
-  return this.documentsService.addAttachment(id, files, user);
-}
+  @Post(':id/attachments')
+  @UseInterceptors(FilesInterceptor('files', 10, multerOptions))
+  addAttachment(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.documentsService.addAttachment(id, files, user);
+  }
 
   @Get('attachments/:attachmentId/download')
   async downloadAttachment(
@@ -245,7 +245,7 @@ addAttachment(
       attachment.filePath,
     );
     if (!this.fileStorageService.fileExists(attachment.filePath)) {
-      throw new NotFoundException('File not found on disk');
+      throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
     return res.download(absPath, attachment.fileName);
   }

@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Get,
@@ -18,11 +17,15 @@ import { multerOptions } from '../../common/utils/file-upload.util';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { I18nService } from 'nestjs-i18n';
 
 @Controller('profile')
 @UseGuards(JwtAuthGuard)
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+  constructor(
+    private readonly profileService: ProfileService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get()
   getProfile(@CurrentUser('userId') userId: number) {
@@ -30,7 +33,7 @@ export class ProfileController {
   }
 
   @Put()
-  updateProfile(
+  async updateProfile(
     @CurrentUser('userId') userId: number,
     @Body() dto: UpdateProfileDto,
   ) {
@@ -39,24 +42,24 @@ export class ProfileController {
 
   @Patch('change-password')
   @SkipPasswordCheck()
-  changePassword(
+  async changePassword(
     @CurrentUser('userId') userId: number,
     @Body() dto: ChangePasswordDto,
   ) {
     if (dto.newPassword !== dto.confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
+      throw new BadRequestException(await this.i18n.translate('profile.PASSWORDS_DO_NOT_MATCH'));
     }
     return this.profileService.changePassword(userId, dto);
   }
 
   @Patch('upload-picture')
   @UseInterceptors(FileInterceptor('file', multerOptions))
-  uploadProfilePicture(
+  async uploadProfilePicture(
     @CurrentUser('userId') userId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException(await this.i18n.translate('profile.NO_FILE_UPLOADED'));
     }
     return this.profileService.uploadProfilePicture(userId, file);
   }

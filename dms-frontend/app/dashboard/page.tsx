@@ -8,9 +8,11 @@ import { dashboardApi } from '@/lib/endpoints';
 import { DashboardData } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { formatBytes, formatDateTime } from '@/lib/format';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function DashboardBody() {
   const { user } = useAuth();
+  const { t } = useLocale();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -27,16 +29,16 @@ function DashboardBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Overview</span>
-          <h1 className="page-title">Welcome back, {user?.name?.split(' ')[0]}</h1>
+          <span className="page-eyebrow">{t('dashboard.overview')}</span>
+          <h1 className="page-title">{t('dashboard.welcomeBack', { name: user?.name?.split(' ')[0] })}</h1>
           <p className="page-subtitle">
             {user?.role}
-            {user?.department ? ` in ${user.department}` : ' · all departments'}
+            {user?.department ? t('dashboard.inDepartment', { department: user.department }) : t('dashboard.allDepartments')}
           </p>
         </div>
         <div className="page-actions">
           <Link href="/documents" className="btn btn-primary">
-            Go to documents
+            {t('dashboard.goToDocuments')}
           </Link>
         </div>
       </div>
@@ -50,22 +52,22 @@ function DashboardBody() {
       ) : data?.role === 'Admin' ? (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">Total users</div>
+            <div className="stat-label">{t('dashboard.totalUsers')}</div>
             <div className="stat-value">{data.totalUsers}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Total documents</div>
+            <div className="stat-label">{t('dashboard.totalDocuments')}</div>
             <div className="stat-value">{data.totalDocuments}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Storage used</div>
+            <div className="stat-label">{t('dashboard.storageUsed')}</div>
             <div className="stat-value">{formatBytes(data.storageUsedBytes)}</div>
           </div>
         </div>
       ) : data?.role === 'Manager' ? (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">Department documents</div>
+            <div className="stat-label">{t('dashboard.departmentDocuments')}</div>
             <div className="stat-value">{data.departmentDocuments}</div>
           </div>
         </div>
@@ -73,20 +75,20 @@ function DashboardBody() {
         <>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-label">My documents</div>
+              <div className="stat-label">{t('dashboard.myDocuments')}</div>
               <div className="stat-value">{data.myDocuments}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Storage used</div>
+              <div className="stat-label">{t('dashboard.storageUsed')}</div>
               <div className="stat-value">{formatBytes(data.storageUsedBytes)}</div>
             </div>
           </div>
 
-          <h2 style={{ fontSize: 16, marginBottom: 12 }}>Recent documents</h2>
+          <h2 style={{ fontSize: 16, marginBottom: 12 }}>{t('dashboard.recentDocuments')}</h2>
           {data.recentDocuments.length === 0 ? (
             <div className="card card-pad">
               <p style={{ color: 'var(--color-muted)' }}>
-                You haven&apos;t uploaded any documents yet.
+                {t('dashboard.noDocumentsYet')}
               </p>
             </div>
           ) : (
@@ -94,10 +96,10 @@ function DashboardBody() {
               <table>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Folder</th>
-                    <th>Category</th>
-                    <th>Updated</th>
+                    <th>{t('dashboard.name')}</th>
+                    <th>{t('dashboard.folder')}</th>
+                    <th>{t('dashboard.category')}</th>
+                    <th>{t('dashboard.updated')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,4 +132,3 @@ export default function DashboardPage() {
     </RequireAuth>
   );
 }
-

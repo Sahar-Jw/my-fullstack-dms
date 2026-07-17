@@ -6,12 +6,14 @@ import Modal from '@/components/Modal';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import EmptyState from '@/components/EmptyState';
 import { departmentsApi } from '@/lib/endpoints';
-import { Department } from '@/lib/types';
+import { Department, RoleName } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function DepartmentsBody() {
   const { notify } = useToast();
+  const { t } = useLocale();
   const [items, setItems] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,10 +63,10 @@ function DepartmentsBody() {
     try {
       if (form.id) {
         await departmentsApi.update(form.id, { name: form.name, description: form.description });
-        notify('Department updated.', 'success');
+        notify(t('departments.updated'), 'success');
       } else {
         await departmentsApi.create({ name: form.name, description: form.description });
-        notify('Department created.', 'success');
+        notify(t('departments.created'), 'success');
       }
       setModalOpen(false);
       load();
@@ -80,7 +82,7 @@ function DepartmentsBody() {
     setConfirmLoading(true);
     try {
       await departmentsApi.remove(confirmTarget.id);
-      notify('Department deleted.', 'success');
+      notify(t('departments.deleted'), 'success');
       setConfirmTarget(null);
       load();
     } catch (e) {
@@ -94,13 +96,13 @@ function DepartmentsBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Administration</span>
-          <h1 className="page-title">Departments</h1>
-          <p className="page-subtitle">Departments scope folders, documents, and staff.</p>
+          <span className="page-eyebrow">{t('departments.eyebrow')}</span>
+          <h1 className="page-title">{t('departments.title')}</h1>
+          <p className="page-subtitle">{t('departments.subtitle')}</p>
         </div>
         <div className="page-actions">
           <button className="btn btn-primary" onClick={openCreate}>
-            + New department
+            {t('departments.newDepartment')}
           </button>
         </div>
       </div>
@@ -112,14 +114,14 @@ function DepartmentsBody() {
           <div className="spinner" />
         </div>
       ) : items.length === 0 ? (
-        <EmptyState title="No departments yet" message="Create your first department." />
+        <EmptyState title={t('departments.noDepartmentsYet')} message={t('departments.createFirst')} />
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Description</th>
+                <th>{t('departments.name')}</th>
+                <th>{t('departments.description')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -131,13 +133,13 @@ function DepartmentsBody() {
                   <td>
                     <div className="row-actions">
                       <button className="btn btn-secondary btn-sm" onClick={() => openEdit(d)}>
-                        Edit
+                        {t('departments.edit')}
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={() => setConfirmTarget(d)}
                       >
-                        Delete
+                        {t('departments.delete')}
                       </button>
                     </div>
                   </td>
@@ -150,15 +152,15 @@ function DepartmentsBody() {
 
       {modalOpen && (
         <Modal
-          title={form.id ? 'Edit department' : 'New department'}
+          title={form.id ? t('departments.editDepartment') : t('departments.newDepartmentTitle')}
           onClose={() => setModalOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t('departments.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? t('departments.saving') : t('departments.save')}
               </button>
             </>
           }
@@ -166,7 +168,7 @@ function DepartmentsBody() {
           <form onSubmit={handleSubmit}>
             {formError && <div className="banner banner-danger">{formError}</div>}
             <div className="field">
-              <label>Name</label>
+              <label>{t('departments.name')}</label>
               <input
                 className="input"
                 required
@@ -175,7 +177,7 @@ function DepartmentsBody() {
               />
             </div>
             <div className="field">
-              <label>Description</label>
+              <label>{t('departments.description')}</label>
               <input
                 className="input"
                 value={form.description}
@@ -188,9 +190,9 @@ function DepartmentsBody() {
 
       {confirmTarget && (
         <ConfirmDialog
-          title="Delete department"
-          message={`Delete ${confirmTarget.name}? This is blocked if it still has users assigned.`}
-          confirmLabel="Delete"
+          title={t('departments.deleteDepartment')}
+          message={t('departments.deleteConfirm', { name: confirmTarget.name })}
+          confirmLabel={t('departments.delete')}
           danger
           loading={confirmLoading}
           onConfirm={handleDelete}
@@ -203,7 +205,7 @@ function DepartmentsBody() {
 
 export default function DepartmentsPage() {
   return (
-    <RequireAuth allow={['Admin']}>
+    <RequireAuth allow={[RoleName.Admin]}>
       <DepartmentsBody />
     </RequireAuth>
   );

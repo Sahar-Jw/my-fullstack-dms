@@ -1776,7 +1776,7 @@ tbody tr:hover {
 .dropdown-menu {
   position: absolute;
   right: 0;
-  top: calc(100% + 8px);
+  top: calc(100% + 20px);
   width: 280px;
   background: var(--color-surface);
   border-radius: var(--radius-md);
@@ -2029,6 +2029,10 @@ tbody tr:hover {
     cursor: pointer;
     text-align: left;
     transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+  }
+
+  [dir="rtl"] .navbar-mobile-logout {
+    text-align: right;
   }
 
   .navbar-mobile-logout:hover {
@@ -2881,4 +2885,78 @@ tbody tr:hover {
     height: 28px;
     font-size: 11px;
   }
+}
+[dir="rtl"] body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+}
+[dir="rtl"] .dropdown-menu {
+  right: -189px;
+  top: calc(100% + 20px);
+}
+/* ============================================================
+   Language Toggle - Fix for Arabic Text
+   ============================================================ */
+
+.navbar-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.navbar-lang-toggle:hover {
+  background: var(--color-surface-sunken);
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.navbar-lang-toggle svg {
+  flex-shrink: 0;
+}
+
+/* ✅ FIX: When Arabic text is shown, maintain LTR layout but allow Arabic text */
+/* .navbar-lang-toggle span {
+  direction: ltr; 
+  unicode-bidi: embed;
+} */
+
+/* The text itself can be RTL/LTR based on language */
+/* .navbar-lang-toggle .arabic-text {
+  direction: rtl;
+  unicode-bidi: embed;
+} */
+
+.navbar-lang-toggle .english-text {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .navbar-lang-toggle span {
+    display: none;
+  }
+  
+  .navbar-lang-toggle {
+    min-width: 36px;
+    padding: 6px;
+    border-radius: 50%;
+  }
+}
+[dir="rtl"] .logs-table thead th,thead th{
+  text-align: right;
+}
+[dir="ltr"] .logs-table thead th,thead th{
+  text-align: left;
 }

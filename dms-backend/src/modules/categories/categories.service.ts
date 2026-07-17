@@ -9,19 +9,17 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
-
-// 🔥 استيراد موديول سجلات الأنشطة والـ Enum الجديد
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
-
-    // 🔥 حقن خدمة الأنشطة هنا داخل الباني
     private readonly activityLogService: ActivityLogService,
+    private readonly i18n: I18nService, // Add i18n service
   ) {}
 
   findAll(): Promise<Category[]> {
@@ -33,7 +31,7 @@ export class CategoriesService {
       where: { id },
     });
     if (!category) {
-      throw new NotFoundException(`Category not found`);
+      throw new NotFoundException(await this.i18n.translate('validation.CATEGORY_NOT_FOUND'));
     }
     return category;
   }
@@ -42,13 +40,15 @@ export class CategoriesService {
     const category = this.categoriesRepository.create(dto);
     const savedCategory = await this.categoriesRepository.save(category);
 
-    // 🔥 تسجيل حركة إنشاء تصنيف جديد باستخدام الـ Enum المخصص
+    // Log with translation
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.CATEGORY_CREATE,
       targetType: 'Category',
       targetId: savedCategory.id,
-      description: `Created new document category: "${savedCategory.name}"`,
+      description: await this.i18n.translate('validation.CATEGORY_CREATE_LOG', {
+        args: { categoryName: savedCategory.name }
+      }),
     });
 
     return savedCategory;
@@ -61,13 +61,23 @@ export class CategoriesService {
     Object.assign(category, dto);
     const updatedCategory = await this.categoriesRepository.save(category);
 
-    // 🔥 تسجيل حركة تعديل التصنيف باستخدام الـ Enum المخصص
+    // Log with translation
+    let description = await this.i18n.translate('validation.CATEGORY_UPDATE_LOG', {
+      args: { oldName }
+    });
+    
+    if (dto.name) {
+      description += ' ' + await this.i18n.translate('validation.CATEGORY_RENAMED_LOG', {
+        args: { newName: dto.name }
+      });
+    }
+
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.CATEGORY_UPDATE,
       targetType: 'Category',
       targetId: id,
-      description: `Updated category "${oldName}"` + (dto.name ? ` (Renamed to: "${dto.name}")` : ''),
+      description,
     });
 
     return updatedCategory;
@@ -79,24 +89,26 @@ export class CategoriesService {
       relations: ['documents'],
     });
     if (!category) {
-      throw new NotFoundException(`Category not found`);
+      throw new NotFoundException(await this.i18n.translate('validation.CATEGORY_NOT_FOUND'));
     }
     if (category.documents && category.documents.length > 0) {
       throw new BadRequestException(
-        'Cannot delete a category that has documents assigned to it',
+        await this.i18n.translate('validation.CATEGORY_HAS_DOCUMENTS'),
       );
     }
 
     const categoryName = category.name;
     await this.categoriesRepository.remove(category);
 
-    // 🔥 تسجيل حركة حذف التصنيف باستخدام الـ Enum المخصص
+    // Log with translation
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(actor),
       action: ActivityAction.CATEGORY_DELETE,
       targetType: 'Category',
       targetId: id,
-      description: `Deleted document category "${categoryName}"`,
+      description: await this.i18n.translate('validation.CATEGORY_DELETE_LOG', {
+        args: { categoryName }
+      }),
     });
   }
 }

@@ -41,7 +41,7 @@ export class AuthController {
   @SkipPasswordCheck()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Req() req: Request) {
+  async logout(@Req() req: Request) {
     return this.authService.logout(req.user ?? null, {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],

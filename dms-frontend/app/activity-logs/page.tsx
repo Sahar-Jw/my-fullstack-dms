@@ -5,40 +5,46 @@ import RequireAuth from '@/components/RequireAuth';
 import { activityLogsApi } from '@/lib/endpoints';
 import { ActivityLog, ActivityAction, PaginatedResult, RoleName } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
-
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  [ActivityAction.LOGIN]: 'Logged in',
-  [ActivityAction.LOGIN_FAILED]: 'Failed login attempt',
-  [ActivityAction.LOGOUT]: 'Logged out',
-  [ActivityAction.REGISTER]: 'Registered account',
-  [ActivityAction.DOCUMENT_UPLOAD]: 'Uploaded document',
-  [ActivityAction.DOCUMENT_DOWNLOAD]: 'Downloaded document',
-  [ActivityAction.DOCUMENT_UPDATE]: 'Updated document',
-  [ActivityAction.DOCUMENT_DELETE]: 'Deleted document',
-  [ActivityAction.DOCUMENT_RESTORE]: 'Restored document',
-  [ActivityAction.DOCUMENT_MOVE]: 'Moved document',
-  [ActivityAction.FOLDER_CREATE]: 'Created folder',
-  [ActivityAction.FOLDER_DELETE]: 'Deleted folder',
-  [ActivityAction.USER_UPDATE]: 'Updated user',
-  [ActivityAction.USER_STATUS_TOGGLE]: 'Toggled user status',
-  [ActivityAction.SETTINGS_UPDATE]: 'Updated system settings',
-  [ActivityAction.ATTACHMENT_UPLOAD]: 'Uploaded attachment',
-  [ActivityAction.ATTACHMENT_DOWNLOAD]: 'Downloaded attachment',
-  [ActivityAction.ATTACHMENT_DELETE]: 'Deleted attachment',
-  [ActivityAction.DEPARTMENT_CREATE]: 'Created department',
-  [ActivityAction.DEPARTMENT_UPDATE]: 'Updated department',
-  [ActivityAction.DEPARTMENT_DELETE]: 'Deleted department',
-  [ActivityAction.CATEGORY_CREATE]: 'Created category',
-  [ActivityAction.CATEGORY_UPDATE]: 'Updated category',
-  [ActivityAction.CATEGORY_DELETE]: 'Deleted category',
-};
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function ActivityLogsBody() {
+  const { t } = useLocale();
   const [result, setResult] = useState<PaginatedResult<ActivityLog> | null>(null);
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState<ActivityAction | ''>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get translated action labels
+  const getActionLabel = (action: ActivityAction): string => {
+    const actionMap: Record<ActivityAction, string> = {
+      [ActivityAction.LOGIN]: t('activityLogs.actions.loggedIn'),
+      [ActivityAction.LOGIN_FAILED]: t('activityLogs.actions.loginFailed'),
+      [ActivityAction.LOGOUT]: t('activityLogs.actions.loggedOut'),
+      [ActivityAction.REGISTER]: t('activityLogs.actions.registered'),
+      [ActivityAction.DOCUMENT_UPLOAD]: t('activityLogs.actions.documentUpload'),
+      [ActivityAction.DOCUMENT_DOWNLOAD]: t('activityLogs.actions.documentDownload'),
+      [ActivityAction.DOCUMENT_UPDATE]: t('activityLogs.actions.documentUpdate'),
+      [ActivityAction.DOCUMENT_DELETE]: t('activityLogs.actions.documentDelete'),
+      [ActivityAction.DOCUMENT_RESTORE]: t('activityLogs.actions.documentRestore'),
+      [ActivityAction.DOCUMENT_MOVE]: t('activityLogs.actions.documentMove'),
+      [ActivityAction.FOLDER_CREATE]: t('activityLogs.actions.folderCreate'),
+      [ActivityAction.FOLDER_DELETE]: t('activityLogs.actions.folderDelete'),
+      [ActivityAction.USER_UPDATE]: t('activityLogs.actions.userUpdate'),
+      [ActivityAction.USER_STATUS_TOGGLE]: t('activityLogs.actions.userStatusToggle'),
+      [ActivityAction.SETTINGS_UPDATE]: t('activityLogs.actions.settingsUpdate'),
+      [ActivityAction.ATTACHMENT_UPLOAD]: t('activityLogs.actions.attachmentUpload'),
+      [ActivityAction.ATTACHMENT_DOWNLOAD]: t('activityLogs.actions.attachmentDownload'),
+      [ActivityAction.ATTACHMENT_DELETE]: t('activityLogs.actions.attachmentDelete'),
+      [ActivityAction.DEPARTMENT_CREATE]: t('activityLogs.actions.departmentCreate'),
+      [ActivityAction.DEPARTMENT_UPDATE]: t('activityLogs.actions.departmentUpdate'),
+      [ActivityAction.DEPARTMENT_DELETE]: t('activityLogs.actions.departmentDelete'),
+      [ActivityAction.CATEGORY_CREATE]: t('activityLogs.actions.categoryCreate'),
+      [ActivityAction.CATEGORY_UPDATE]: t('activityLogs.actions.categoryUpdate'),
+      [ActivityAction.CATEGORY_DELETE]: t('activityLogs.actions.categoryDelete'),
+    };
+    return actionMap[action] || action;
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,13 +67,19 @@ function ActivityLogsBody() {
     load();
   }, [load]);
 
+  // Build action options for the filter dropdown
+  const actionOptions = Object.values(ActivityAction).map((action) => ({
+    value: action,
+    label: getActionLabel(action),
+  }));
+
   return (
     <div className="activity-logs-page">
       {/* Header with filter */}
       <div className="logs-header">
         <div>
-          <h1 className="logs-title">All Activity</h1>
-          <p className="logs-subtitle">Track all user actions across the system</p>
+          <h1 className="logs-title">{t('activityLogs.title')}</h1>
+          <p className="logs-subtitle">{t('activityLogs.subtitle')}</p>
         </div>
         <div className="filter-wrapper">
           <select
@@ -78,9 +90,11 @@ function ActivityLogsBody() {
             }}
             className="filter-select"
           >
-            <option value=""> All actions</option>
-            {Object.entries(ACTION_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
+            <option value=""> {t('activityLogs.allActions')}</option>
+            {actionOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
             ))}
           </select>
         </div>
@@ -96,7 +110,7 @@ function ActivityLogsBody() {
       {loading && (
         <div className="loading-state">
           <div className="loading-spinner"></div>
-          <span>Loading activity logs...</span>
+          <span>{t('activityLogs.loadingLogs')}</span>
         </div>
       )}
 
@@ -107,10 +121,10 @@ function ActivityLogsBody() {
             <table className="logs-table">
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Details</th>
+                  <th>{t('activityLogs.when')}</th>
+                  <th>{t('activityLogs.user')}</th>
+                  <th>{t('activityLogs.action')}</th>
+                  <th>{t('activityLogs.details')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,7 +139,7 @@ function ActivityLogsBody() {
                     </td>
                     <td>
                       <span className="action-badge">
-                        {ACTION_LABELS[log.action] ?? log.action}
+                        {getActionLabel(log.action)}
                       </span>
                     </td>
                     <td className="details-cell">
@@ -137,8 +151,8 @@ function ActivityLogsBody() {
                   <tr>
                     <td colSpan={4} className="empty-state">
                       <div className="empty-icon">📭</div>
-                      <div>No activity found</div>
-                      <div className="empty-hint">Try adjusting your filters</div>
+                      <div>{t('activityLogs.noActivityFound')}</div>
+                      <div className="empty-hint">{t('activityLogs.tryAdjustingFilters')}</div>
                     </td>
                   </tr>
                 )}
@@ -150,16 +164,12 @@ function ActivityLogsBody() {
           <div className="pagination-wrapper">
             <div className="pagination-info">
               <span className="info-text">
-                Page <strong>{result.page}</strong> of <strong>{result.totalPages}</strong>
+                {t('activityLogs.pageOf', { page: result.page, total: result.totalPages })}
               </span>
               <span className="info-divider">•</span>
               <span className="info-text">
-                <strong>{result.total}</strong> total entries
+                {t('activityLogs.totalEntries', { count: result.total })}
               </span>
-              <span className="info-divider">•</span>
-              {/* <span className="info-text">
-                Showing {result.data.length} per page
-              </span> */}
             </div>
             
             <div className="pagination-controls">
@@ -171,7 +181,7 @@ function ActivityLogsBody() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Previous
+                {t('activityLogs.previous')}
               </button>
               
               <div className="page-indicators">
@@ -206,7 +216,7 @@ function ActivityLogsBody() {
                 onClick={() => setPage((p) => p + 1)}
                 className="pagination-btn next-btn"
               >
-                Next
+                {t('activityLogs.next')}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>

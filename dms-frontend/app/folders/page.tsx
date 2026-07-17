@@ -11,6 +11,7 @@ import { Department, FolderTreeNode } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { useAuth } from '@/lib/auth-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function FolderNode({
   node,
@@ -20,6 +21,7 @@ function FolderNode({
   onRename,
   onDelete,
   onOpenDocuments,
+  t,
 }: {
   node: FolderTreeNode;
   depth: number;
@@ -28,6 +30,7 @@ function FolderNode({
   onRename: (node: FolderTreeNode) => void;
   onDelete: (node: FolderTreeNode) => void;
   onOpenDocuments: (node: FolderTreeNode) => void;
+  t: (key: string, opts?: any) => string;
 }) {
   return (
     <li>
@@ -35,19 +38,19 @@ function FolderNode({
         <span className="folder-row-label">
           📁 {node.name}
           <span className="badge badge-muted" style={{ marginLeft: 8 }}>
-            {node.documentCount} {node.documentCount === 1 ? 'document' : 'documents'}
+            {t('common.documentCount', { count: node.documentCount })}
           </span>
         </span>
         {canManage && (
           <span className="folder-row-actions" onClick={(e) => e.stopPropagation()}>
             <button className="btn btn-ghost btn-sm" onClick={() => onAddChild(node)}>
-              + Sub
+              {t('folders.addSub')}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={() => onRename(node)}>
-              Rename
+              {t('folders.rename')}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={() => onDelete(node)}>
-              Delete
+              {t('folders.delete')}
             </button>
           </span>
         )}
@@ -64,6 +67,7 @@ function FolderNode({
               onRename={onRename}
               onDelete={onDelete}
               onOpenDocuments={onOpenDocuments}
+              t={t}
             />
           ))}
         </ul>
@@ -75,6 +79,7 @@ function FolderNode({
 function FoldersBody() {
   const { user } = useAuth();
   const { notify } = useToast();
+  const { t } = useLocale();
   const router = useRouter();
   const canManage = user?.role === 'Admin' || user?.role === 'Manager';
 
@@ -155,10 +160,10 @@ function FoldersBody() {
     try {
       if (form.id) {
         await foldersApi.update(form.id, { name: form.name });
-        notify('Folder renamed.', 'success');
+        notify(t('folders.renamed'), 'success');
       } else {
         if (user?.role === 'Admin' && !form.departmentId) {
-          setFormError('Please choose a department for this folder.');
+          setFormError(t('folders.departmentRequired'));
           setSaving(false);
           return;
         }
@@ -167,7 +172,7 @@ function FoldersBody() {
           parentFolderId: form.parentFolderId ? Number(form.parentFolderId) : undefined,
           departmentId: user?.role === 'Admin' ? Number(form.departmentId) : undefined,
         });
-        notify('Folder created.', 'success');
+        notify(t('folders.created'), 'success');
       }
       setModalOpen(false);
       load();
@@ -183,7 +188,7 @@ function FoldersBody() {
     setConfirmLoading(true);
     try {
       await foldersApi.remove(confirmTarget.id);
-      notify('Folder deleted.', 'success');
+      notify(t('folders.deleted'), 'success');
       setConfirmTarget(null);
       load();
     } catch (e) {
@@ -201,18 +206,16 @@ function FoldersBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Structure</span>
-          <h1 className="page-title">Folders</h1>
+          <span className="page-eyebrow">{t('folders.eyebrow')}</span>
+          <h1 className="page-title">{t('folders.title')}</h1>
           <p className="page-subtitle">
-            {canManage
-              ? 'Organize documents into folders. Click a folder to view its documents.'
-              : 'Browse your department&apos;s folders (view only).'}
+            {canManage ? t('folders.subtitleManage') : t('folders.subtitleView')}
           </p>
         </div>
         {canManage && (
           <div className="page-actions">
             <button className="btn btn-primary" onClick={openCreateRoot}>
-              + New folder
+              {t('folders.newFolder')}
             </button>
           </div>
         )}
@@ -226,8 +229,8 @@ function FoldersBody() {
         </div>
       ) : tree.length === 0 ? (
         <EmptyState
-          title="No folders yet"
-          message={canManage ? 'Create a folder to start organizing documents.' : undefined}
+          title={t('folders.noFoldersYet')}
+          message={canManage ? t('folders.createHint') : undefined}
         />
       ) : (
         <div className="card card-pad">
@@ -242,6 +245,7 @@ function FoldersBody() {
                 onRename={openRename}
                 onDelete={setConfirmTarget}
                 onOpenDocuments={openDocuments}
+                t={t}
               />
             ))}
           </ul>
@@ -250,15 +254,15 @@ function FoldersBody() {
 
       {modalOpen && (
         <Modal
-          title={form.id ? 'Rename folder' : 'New folder'}
+          title={form.id ? t('folders.renameFolder') : t('folders.newFolderTitle')}
           onClose={() => setModalOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t('folders.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? t('folders.saving') : t('folders.save')}
               </button>
             </>
           }
@@ -266,7 +270,7 @@ function FoldersBody() {
           <form onSubmit={handleSubmit}>
             {formError && <div className="banner banner-danger">{formError}</div>}
             <div className="field">
-              <label>Folder name</label>
+              <label>{t('folders.folderName')}</label>
               <input
                 className="input"
                 required
@@ -276,14 +280,14 @@ function FoldersBody() {
             </div>
             {!form.id && user?.role === 'Admin' && (
               <div className="field">
-                <label>Department</label>
+                <label>{t('folders.department')}</label>
                 <select
                   className="select"
                   value={form.departmentId}
                   onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
                   disabled={!!form.parentFolderId}
                 >
-                  <option value="">Select a department…</option>
+                  <option value="">{t('folders.selectDepartment')}</option>
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.name}
@@ -292,7 +296,7 @@ function FoldersBody() {
                 </select>
                 {form.parentFolderId && (
                   <span className="field-hint">
-                    Inherited from the parent folder&apos;s department.
+                    {t('folders.inheritedHint')}
                   </span>
                 )}
               </div>
@@ -303,9 +307,9 @@ function FoldersBody() {
 
       {confirmTarget && (
         <ConfirmDialog
-          title="Delete folder"
-          message={`Delete "${confirmTarget.name}"? Only empty folders (no subfolders or documents) can be deleted.`}
-          confirmLabel="Delete"
+          title={t('folders.deleteFolder')}
+          message={t('folders.deleteConfirm', { name: confirmTarget.name })}
+          confirmLabel={t('folders.delete')}
           danger
           loading={confirmLoading}
           onConfirm={handleDelete}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,11 +9,13 @@ import { errorMessage } from '@/lib/api';
 import { initials } from '@/lib/format';
 import RequireAuth from '@/components/RequireAuth';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { useLocale } from '@/lib/i18n/locale-provider';
 import { Camera, Loader2, User, Mail, Building, Shield, Key, Trash2, Check } from 'lucide-react';
 
 function ProfileBody() {
   const { user, setSession, token, refreshUser } = useAuth();
   const { notify } = useToast();
+  const { t } = useLocale();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<AppUser | null>(null);
@@ -64,7 +65,7 @@ function ProfileBody() {
     setSaving(true);
     setError('');
     try {
-      const updated = await profileApi.update({ name });
+      const updated = await profileApi.update({ name,email });
       setProfile(updated);
       if (user) {
         setSession({
@@ -73,11 +74,12 @@ function ProfileBody() {
           user: {
             ...user,
             name: updated.name,
+            email: updated.email
           },
         });
       }
       await refreshUser();
-      notify('Profile updated successfully!', 'success');
+      notify(t('profile.profileUpdated'), 'success');
     } catch (err) {
       setError(errorMessage(err));
       notify(errorMessage(err), 'error');
@@ -94,12 +96,12 @@ function ProfileBody() {
     const maxSize = 2 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
-      notify('Only JPEG, PNG, GIF, and WEBP images are allowed', 'error');
+      notify(t('profile.onlyImageTypes'), 'error');
       return;
     }
 
     if (file.size > maxSize) {
-      notify('Image size must be less than 2MB', 'error');
+      notify(t('profile.imageTooLarge'), 'error');
       return;
     }
 
@@ -125,7 +127,7 @@ function ProfileBody() {
         });
       }
       await refreshUser();
-      notify('Profile picture updated!', 'success');
+      notify(t('profile.pictureUpdated'), 'success');
     } catch (err) {
       notify(errorMessage(err), 'error');
     } finally {
@@ -155,7 +157,7 @@ function ProfileBody() {
         });
       }
       await refreshUser();
-      notify('Profile picture removed', 'success');
+      notify(t('profile.pictureRemoved'), 'success');
       setShowConfirmDialog(false);
     } catch (err) {
       notify(errorMessage(err), 'error');
@@ -169,12 +171,12 @@ function ProfileBody() {
     setPasswordError('');
     
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match');
+      setPasswordError(t('profile.passwordMismatch'));
       return;
     }
     
     if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError(t('profile.passwordTooShort'));
       return;
     }
 
@@ -185,7 +187,7 @@ function ProfileBody() {
         newPassword,
         confirmPassword,
       });
-      notify('Password changed successfully!', 'success');
+      notify(t('profile.passwordChanged'), 'success');
       setShowPasswordForm(false);
       setCurrentPassword('');
       setNewPassword('');
@@ -228,9 +230,9 @@ function ProfileBody() {
     <div className="profile-page">
       {showConfirmDialog && (
         <ConfirmDialog
-          title="Remove Profile Picture"
-          message="Are you sure you want to remove your profile picture?"
-          confirmLabel="Remove"
+          title={t('profile.removePictureTitle')}
+          message={t('profile.removePictureConfirm')}
+          confirmLabel={t('profile.remove')}
           danger
           loading={confirmLoading}
           onConfirm={confirmRemovePicture}
@@ -239,8 +241,8 @@ function ProfileBody() {
       )}
 
       <div className="profile-header">
-        <h1>Profile Settings</h1>
-        <p>Manage your personal information and preferences</p>
+        <h1>{t('profile.title')}</h1>
+        <p>{t('profile.subtitle')}</p>
       </div>
 
       <div className="profile-grid">
@@ -274,7 +276,7 @@ function ProfileBody() {
                 className="profile-avatar-btn profile-avatar-btn-primary"
               >
                 <Camera size={16} />
-                {profilePicture ? 'Change Photo' : 'Upload Photo'}
+                {profilePicture ? t('profile.changePhoto') : t('profile.uploadPhoto')}
               </button>
               {profilePicture && (
                 <button
@@ -283,7 +285,7 @@ function ProfileBody() {
                   className="profile-avatar-btn profile-avatar-btn-danger"
                 >
                   <Trash2 size={16} />
-                  Remove
+                  {t('profile.remove')}
                 </button>
               )}
             </div>
@@ -305,7 +307,7 @@ function ProfileBody() {
             <div className="profile-form-group">
               <label className="profile-form-label">
                 <User size={18} />
-                Full Name
+                {t('profile.fullName')}
               </label>
               <input
                 type="text"
@@ -319,22 +321,23 @@ function ProfileBody() {
             <div className="profile-form-group">
               <label className="profile-form-label">
                 <Mail size={18} />
-                Email Address
+                {t('profile.emailAddress')}
               </label>
               <input
                 type="email"
-                className="profile-form-input profile-form-input-disabled"
+                className="profile-form-input"
                 value={email}
-                disabled
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              <span className="profile-form-hint">Email cannot be changed</span>
+              <span className="profile-form-hint">{t('profile.emailCannotChange')}</span>
             </div>
 
             <div className="profile-form-row">
               <div className="profile-form-group profile-form-group-half">
                 <label className="profile-form-label">
                   <Shield size={18} />
-                  Role
+                  {t('profile.role')}
                 </label>
                 <input
                   type="text"
@@ -346,7 +349,7 @@ function ProfileBody() {
               <div className="profile-form-group profile-form-group-half">
                 <label className="profile-form-label">
                   <Building size={18} />
-                  Department
+                  {t('profile.department')}
                 </label>
                 <input
                   type="text"
@@ -365,12 +368,12 @@ function ProfileBody() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  {t('profile.saving')}
                 </>
               ) : (
                 <>
                   <Check size={18} />
-                  Save Changes
+                  {t('profile.saveChanges')}
                 </>
               )}
             </button>
@@ -382,15 +385,15 @@ function ProfileBody() {
       <div className="profile-card profile-password-card">
         <div className="profile-password-header">
           <div>
-            <h3 className="profile-password-title">Change Password</h3>
-            <p className="profile-password-desc">Update your password to keep your account secure</p>
+            <h3 className="profile-password-title">{t('profile.changePassword')}</h3>
+            <p className="profile-password-desc">{t('profile.changePasswordDesc')}</p>
           </div>
           <button
             onClick={() => setShowPasswordForm(!showPasswordForm)}
             className="profile-password-toggle"
           >
             <Key size={18} />
-            {showPasswordForm ? 'Cancel' : 'Change Password'}
+            {showPasswordForm ? t('profile.cancel') : t('profile.changePassword')}
           </button>
         </div>
 
@@ -400,7 +403,7 @@ function ProfileBody() {
               <div className="profile-password-error">{passwordError}</div>
             )}
             <div className="profile-form-group">
-              <label className="profile-form-label">Current Password</label>
+              <label className="profile-form-label">{t('profile.currentPassword')}</label>
               <input
                 type="password"
                 className="profile-form-input"
@@ -411,7 +414,7 @@ function ProfileBody() {
             </div>
             <div className="profile-form-row">
               <div className="profile-form-group profile-form-group-half">
-                <label className="profile-form-label">New Password</label>
+                <label className="profile-form-label">{t('profile.newPassword')}</label>
                 <input
                   type="password"
                   className="profile-form-input"
@@ -422,7 +425,7 @@ function ProfileBody() {
                 />
               </div>
               <div className="profile-form-group profile-form-group-half">
-                <label className="profile-form-label">Confirm Password</label>
+                <label className="profile-form-label">{t('profile.confirmPassword')}</label>
                 <input
                   type="password"
                   className="profile-form-input"
@@ -433,7 +436,7 @@ function ProfileBody() {
               </div>
             </div>
             <p className="profile-password-hint">
-              Must be at least 6 characters with uppercase, lowercase, and a number
+              {t('profile.passwordHint')}
             </p>
             <button
               type="submit"
@@ -443,10 +446,10 @@ function ProfileBody() {
               {passwordSaving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
+                  {t('profile.updating')}
                 </>
               ) : (
-                'Update Password'
+                t('profile.updatePassword')
               )}
             </button>
           </form>

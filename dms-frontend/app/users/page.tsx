@@ -5,11 +5,12 @@ import RequireAuth from '@/components/RequireAuth';
 import Modal from '@/components/Modal';
 import EmptyState from '@/components/EmptyState';
 import { usersApi, rolesApi, departmentsApi } from '@/lib/endpoints';
-import { AppUser, Department, Role } from '@/lib/types';
+import { AppUser, Department, Role, RoleName } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { formatDate } from '@/lib/format';
 import { useAuth } from '@/lib/auth-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 interface UserFormState {
   id: number;
@@ -27,19 +28,23 @@ const EMPTY_FORM: UserFormState = {
   departmentId: '',
 };
 
-function userDeleteMessage(message: string, userName: string): string {
+function userDeleteMessage(
+  message: string,
+  userName: string,
+  t: (key: string, opts?: any) => string,
+): string {
   const normalized = message.toLowerCase();
 
   if (normalized.includes('foreign key') && normalized.includes('document_versions')) {
-    return `${userName} cannot be deleted because they uploaded one or more document versions. Disable this user instead to keep the document history and audit trail intact.`;
+    return t('users.cannotDeleteVersions', { name: userName });
   }
 
   if (normalized.includes('foreign key') && normalized.includes('documents')) {
-    return `${userName} cannot be deleted because they are linked to existing documents. Disable this user instead, or reassign those documents first.`;
+    return t('users.cannotDeleteDocuments', { name: userName });
   }
 
   if (normalized.includes('foreign key')) {
-    return `${userName} cannot be deleted because other records still depend on this account. Disable the user instead, or remove/reassign the related records first.`;
+    return t('users.cannotDeleteGeneric', { name: userName });
   }
 
   return message;
@@ -47,6 +52,7 @@ function userDeleteMessage(message: string, userName: string): string {
 
 function UsersBody() {
   const { notify } = useToast();
+  const { t } = useLocale();
   const { user: sessionUser } = useAuth();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -102,7 +108,7 @@ function UsersBody() {
     e.preventDefault();
     setFormError('');
     if (!form.roleId) {
-      setFormError('Please select a role.');
+      setFormError(t('users.roleRequired'));
       return;
     }
     setSaving(true);
@@ -114,7 +120,7 @@ function UsersBody() {
       updateData.departmentId = form.departmentId ? Number(form.departmentId) : null;
 
       await usersApi.update(form.id, updateData);
-      notify('User updated successfully.', 'success');
+      notify(t('users.userUpdated'), 'success');
       setModalOpen(false);
       loadAll();
     } catch (err) {
@@ -128,7 +134,7 @@ function UsersBody() {
   async function toggleStatus(u: AppUser) {
     try {
       await usersApi.toggleStatus(u.id);
-      notify(u.isActive ? 'User deactivated.' : 'User activated.', 'success');
+      notify(u.isActive ? t('users.userDeactivated') : t('users.userActivated'), 'success');
       loadAll();
     } catch (e) {
       notify(errorMessage(e), 'error');
@@ -141,11 +147,11 @@ function UsersBody() {
     setDeleteError('');
     try {
       await usersApi.remove(confirmTarget.id);
-      notify('User deleted.', 'success');
+      notify(t('users.userDeleted'), 'success');
       setConfirmTarget(null);
       loadAll();
     } catch (e) {
-      const message = userDeleteMessage(errorMessage(e), confirmTarget.name);
+      const message = userDeleteMessage(errorMessage(e), confirmTarget.name, t);
       setDeleteError(message);
       notify(message, 'error');
     } finally {
@@ -160,9 +166,9 @@ function UsersBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Administration</span>
-          <h1 className="page-title">Users</h1>
-          <p className="page-subtitle">Manage roles, departments, and account status.</p>
+          <span className="page-eyebrow">{t('users.eyebrow')}</span>
+          <h1 className="page-title">{t('users.title')}</h1>
+          <p className="page-subtitle">{t('users.subtitle')}</p>
         </div>
       </div>
 
@@ -173,43 +179,43 @@ function UsersBody() {
           <div className="spinner" />
         </div>
       ) : users.length === 0 ? (
-        <EmptyState title="No users yet" message="Users will appear here once they register." />
+        <EmptyState title={t('users.noUsersYet')} message={t('users.willAppear')} />
       ) : (
         <div className="table-wrap users-table-wrap">
           <table className="users-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Joined</th>
+                <th>{t('users.name')}</th>
+                <th>{t('users.email')}</th>
+                <th>{t('users.role')}</th>
+                <th>{t('users.department')}</th>
+                <th>{t('users.status')}</th>
+                <th>{t('users.joined')}</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td data-label="Name">{u.name}</td>
-                  <td data-label="Email">{u.email}</td>
-                  <td data-label="Role">
+                  <td data-label={t('users.name')}>{u.name}</td>
+                  <td data-label={t('users.email')}>{u.email}</td>
+                  <td data-label={t('users.role')}>
                     <span className={`badge ${roleBadgeClass(u.role?.name)}`}>{u.role?.name}</span>
                   </td>
-                  <td data-label="Department">{u.department?.name || '-'}</td>
-                  <td data-label="Status">
+                  <td data-label={t('users.department')}>{u.department?.name || '-'}</td>
+                  <td data-label={t('users.status')}>
                     <span className={`badge ${u.isActive ? 'badge-success' : 'badge-danger'}`}>
-                      {u.isActive ? 'Active' : 'Disabled'}
+                      {u.isActive ? t('users.active') : t('users.disabled')}
                     </span>
                   </td>
-                  <td data-label="Joined">{formatDate(u.createdAt)}</td>
+                  <td data-label={t('users.joined')}>{formatDate(u.createdAt)}</td>
                   <td data-label="Actions">
                     <div className="row-actions">
                       <button className="btn btn-secondary btn-sm" onClick={() => openEdit(u)}>
-                        Edit
+                        {t('users.edit')}
                       </button>
                       <button className="btn btn-secondary btn-sm" onClick={() => toggleStatus(u)}>
-                        {u.isActive ? 'Disable' : 'Enable'}
+                        {u.isActive ? t('users.disable') : t('users.enable')}
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
@@ -218,7 +224,7 @@ function UsersBody() {
                           setConfirmTarget(u);
                         }}
                       >
-                        Delete
+                        {t('users.delete')}
                       </button>
                     </div>
                   </td>
@@ -231,15 +237,15 @@ function UsersBody() {
 
       {modalOpen && (
         <Modal
-          title="Edit user"
+          title={t('users.editUser')}
           onClose={() => setModalOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t('users.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Saving...' : 'Save changes'}
+                {saving ? t('users.saving') : t('users.saveChanges')}
               </button>
             </>
           }
@@ -247,7 +253,7 @@ function UsersBody() {
           <form onSubmit={handleSubmit}>
             {formError && <div className="banner banner-danger">{formError}</div>}
             <div className="field">
-              <label>Full name</label>
+              <label>{t('users.fullName')}</label>
               <input
                 className="input"
                 required
@@ -256,7 +262,7 @@ function UsersBody() {
               />
             </div>
             <div className="field">
-              <label>Email</label>
+              <label>{t('users.email')}</label>
               <input
                 className="input"
                 type="email"
@@ -266,14 +272,14 @@ function UsersBody() {
               />
             </div>
             <div className="field">
-              <label>Role</label>
+              <label>{t('users.role')}</label>
               <select
                 className="select"
                 required
                 value={form.roleId}
                 onChange={(e) => setForm({ ...form, roleId: e.target.value })}
               >
-                <option value="">Select a role...</option>
+                <option value="">{t('users.selectRole')}</option>
                 {roles.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -282,13 +288,13 @@ function UsersBody() {
               </select>
             </div>
             <div className="field">
-              <label>Department</label>
+              <label>{t('users.department')}</label>
               <select
                 className="select"
                 value={form.departmentId}
                 onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
               >
-                <option value="">No department (Admin only)</option>
+                <option value="">{t('users.noDepartmentAdminOnly')}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
@@ -302,7 +308,7 @@ function UsersBody() {
 
       {confirmTarget && (
         <Modal
-          title="Delete user"
+          title={t('users.deleteUser')}
           onClose={() => {
             setDeleteError('');
             setConfirmTarget(null);
@@ -317,10 +323,10 @@ function UsersBody() {
                 }}
                 disabled={confirmLoading}
               >
-                Cancel
+                {t('users.cancel')}
               </button>
               <button className="btn btn-danger" onClick={handleDelete} disabled={confirmLoading}>
-                {confirmLoading ? 'Working...' : 'Delete'}
+                {confirmLoading ? t('users.working') : t('users.delete')}
               </button>
             </>
           }
@@ -328,10 +334,10 @@ function UsersBody() {
           {deleteError && <div className="banner banner-danger">{deleteError}</div>}
           {confirmTarget.id === sessionUser?.id && (
             <div className="banner banner-warn">
-              You are trying to delete your own signed-in account. The API may block this.
+              {t('users.ownAccountWarning')}
             </div>
           )}
-          <p>Delete {confirmTarget.name}?</p>
+          <p>{t('users.deleteConfirm', { name: confirmTarget.name })}</p>
         </Modal>
       )}
     </div>
@@ -340,7 +346,7 @@ function UsersBody() {
 
 export default function UsersPage() {
   return (
-    <RequireAuth allow={['Admin']}>
+    <RequireAuth allow={[RoleName.Admin]}>
       <UsersBody />
     </RequireAuth>
   );

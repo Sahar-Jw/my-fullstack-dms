@@ -13,9 +13,11 @@ import { Category, Department, DmsDocument, Folder } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { formatDateTime } from '@/lib/format';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function DocumentsBody() {
   const { notify } = useToast();
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const folderIdParam = searchParams.get('folderId');
@@ -137,11 +139,11 @@ function DocumentsBody() {
     e.preventDefault();
     setUploadError('');
     if (uploadFiles.length === 0) {
-      setUploadError('Please choose at least one file to upload.');
+      setUploadError(t('documents.chooseFileError'));
       return;
     }
     if (!uploadForm.folderId || !uploadForm.categoryId) {
-      setUploadError('Please choose a folder and category.');
+      setUploadError(t('documents.chooseFolderCategoryError'));
       return;
     }
     setUploading(true);
@@ -156,7 +158,7 @@ function DocumentsBody() {
         categoryId: Number(uploadForm.categoryId),
       });
       notify(
-        docs.length > 1 ? `${docs.length} documents uploaded.` : 'Document uploaded.',
+        docs.length > 1 ? t('documents.uploadedMulti', { count: docs.length }) : t('documents.uploadedSingle'),
         'success',
       );
       setUploadOpen(false);
@@ -179,25 +181,25 @@ function DocumentsBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Records</span>
-          <h1 className="page-title">Documents</h1>
+          <span className="page-eyebrow">{t('documents.eyebrow')}</span>
+          <h1 className="page-title">{t('documents.title')}</h1>
           <p className="page-subtitle">
-            {activeFolder ? `Filtered to folder "${activeFolder.name}"` : 'All documents you can access.'}
+            {activeFolder ? t('documents.filteredToFolder', { name: activeFolder.name }) : t('documents.allDocuments')}
           </p>
         </div>
         <div className="page-actions">
           <Link href="/documents/trash" className="btn btn-secondary">
-            Trash
+            {t('documents.trash')}
           </Link>
           <button className="btn btn-primary" onClick={openUpload}>
-            + Upload document
+            {t('documents.uploadDocument')}
           </button>
         </div>
       </div>
 
       {activeFolder && (
         <div className="breadcrumbs">
-          <button onClick={clearFolderFilter}>All documents</button>
+          <button onClick={clearFolderFilter}>{t('documents.allDocumentsBreadcrumb')}</button>
           <span>/</span>
           <span>{activeFolder.name}</span>
         </div>
@@ -206,22 +208,22 @@ function DocumentsBody() {
       <form className="card card-pad" onSubmit={handleSearchSubmit} style={{ marginBottom: 18 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 12 }}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Name</label>
+            <label>{t('documents.name')}</label>
             <input
               className="input"
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
-              placeholder="Search by name…"
+              placeholder={t('documents.searchPlaceholder')}
             />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Category</label>
+            <label>{t('documents.category')}</label>
             <select
               className="select"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <option value="">Any category</option>
+              <option value="">{t('documents.anyCategory')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -230,13 +232,13 @@ function DocumentsBody() {
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Folder</label>
+            <label>{t('documents.folder')}</label>
             <select
               className="select"
               value={folderFilter}
               onChange={(e) => setFolderFilter(e.target.value)}
             >
-              <option value="">Any folder</option>
+              <option value="">{t('documents.anyFolder')}</option>
               {folders.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
@@ -246,13 +248,13 @@ function DocumentsBody() {
           </div>
           {isAdmin && (
             <div className="field" style={{ marginBottom: 0 }}>
-              <label>Department</label>
+              <label>{t('documents.department')}</label>
               <select
                 className="select"
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
               >
-                <option value="">Any department</option>
+                <option value="">{t('documents.anyDepartment')}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
@@ -262,7 +264,7 @@ function DocumentsBody() {
             </div>
           )}
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>From</label>
+            <label>{t('documents.from')}</label>
             <input
               className="input"
               type="date"
@@ -271,7 +273,7 @@ function DocumentsBody() {
             />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>To</label>
+            <label>{t('documents.to')}</label>
             <input
               className="input"
               type="date"
@@ -282,7 +284,7 @@ function DocumentsBody() {
         </div>
         <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
           <button className="btn btn-primary btn-sm" type="submit">
-            Search
+            {t('documents.search')}
           </button>
           <button
             className="btn btn-ghost btn-sm"
@@ -297,7 +299,7 @@ function DocumentsBody() {
               loadDocs(false);
             }}
           >
-            Reset
+            {t('documents.reset')}
           </button>
         </div>
       </form>
@@ -310,11 +312,11 @@ function DocumentsBody() {
         </div>
       ) : docs.length === 0 ? (
         <EmptyState
-          title="No documents found"
-          message="Try adjusting your filters, or upload a new document."
+          title={t('documents.noDocumentsFound')}
+          message={t('documents.tryAdjusting')}
           action={
             <button className="btn btn-primary" onClick={openUpload}>
-              + Upload document
+              {t('documents.uploadDocument')}
             </button>
           }
         />
@@ -337,15 +339,15 @@ function DocumentsBody() {
 
       {uploadOpen && (
         <Modal
-          title="Upload document"
+          title={t('documents.uploadModalTitle')}
           onClose={() => setUploadOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setUploadOpen(false)}>
-                Cancel
+                {t('documents.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
-                {uploading ? 'Uploading…' : 'Upload'}
+                {uploading ? t('documents.uploading') : t('documents.upload')}
               </button>
             </>
           }
@@ -353,24 +355,24 @@ function DocumentsBody() {
           <form onSubmit={handleUpload}>
             {uploadError && <div className="banner banner-danger">{uploadError}</div>}
             <div className="field">
-              <label>File(s)</label>
+              <label>{t('documents.files')}</label>
               <FileDrop files={uploadFiles} onChange={setUploadFiles} multiple />
             </div>
             <div className="field">
               <label>
-                Document name
-                {uploadFiles.length > 1 && ' (ignored for multiple files — each keeps its filename)'}
+                {t('documents.documentName')}
+                {uploadFiles.length > 1 && t('documents.ignoredForMultiple')}
               </label>
               <input
                 className="input"
                 value={uploadForm.name}
                 onChange={(e) => setUploadForm({ ...uploadForm, name: e.target.value })}
-                placeholder={uploadFiles[0]?.name || 'Defaults to file name'}
+                placeholder={uploadFiles[0]?.name || t('documents.defaultsToFileName')}
                 disabled={uploadFiles.length > 1}
               />
             </div>
             <div className="field">
-              <label>Description</label>
+              <label>{t('documents.description')}</label>
               <input
                 className="input"
                 value={uploadForm.description}
@@ -378,14 +380,14 @@ function DocumentsBody() {
               />
             </div>
             <div className="field">
-              <label>Folder</label>
+              <label>{t('documents.folder')}</label>
               <select
                 className="select"
                 required
                 value={uploadForm.folderId}
                 onChange={(e) => setUploadForm({ ...uploadForm, folderId: e.target.value })}
               >
-                <option value="">Select a folder…</option>
+                <option value="">{t('documents.selectFolder')}</option>
                 {folders.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -394,14 +396,14 @@ function DocumentsBody() {
               </select>
             </div>
             <div className="field">
-              <label>Category</label>
+              <label>{t('documents.category')}</label>
               <select
                 className="select"
                 required
                 value={uploadForm.categoryId}
                 onChange={(e) => setUploadForm({ ...uploadForm, categoryId: e.target.value })}
               >
-                <option value="">Select a category…</option>
+                <option value="">{t('documents.selectCategory')}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}

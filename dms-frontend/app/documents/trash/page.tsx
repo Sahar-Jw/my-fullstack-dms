@@ -11,10 +11,12 @@ import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
 import { useAuth } from '@/lib/auth-context';
 import { formatDateTime } from '@/lib/format';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 function TrashBody() {
   const { user } = useAuth();
   const { notify } = useToast();
+  const { t } = useLocale();
   const [docs, setDocs] = useState<DmsDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +42,7 @@ function TrashBody() {
   async function handleRestore(doc: DmsDocument) {
     try {
       await documentsApi.restore(doc.id);
-      notify('Document restored.', 'success');
+      notify(t('trash.restored'), 'success');
       load();
     } catch (e) {
       notify(errorMessage(e), 'error');
@@ -52,7 +54,7 @@ function TrashBody() {
     setConfirmLoading(true);
     try {
       await documentsApi.permanentDelete(permanentTarget.id);
-      notify('Document permanently deleted.', 'success');
+      notify(t('trash.permanentlyDeleted'), 'success');
       setPermanentTarget(null);
       load();
     } catch (e) {
@@ -66,13 +68,13 @@ function TrashBody() {
     <div>
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">Records</span>
-          <h1 className="page-title">Trash</h1>
-          <p className="page-subtitle">Deleted documents can be restored or permanently removed.</p>
+          <span className="page-eyebrow">{t('trash.eyebrow')}</span>
+          <h1 className="page-title">{t('trash.title')}</h1>
+          <p className="page-subtitle">{t('trash.subtitle')}</p>
         </div>
         <div className="page-actions">
           <Link href="/documents" className="btn btn-secondary">
-            Back to documents
+            {t('trash.backToDocuments')}
           </Link>
         </div>
       </div>
@@ -84,16 +86,16 @@ function TrashBody() {
           <div className="spinner" />
         </div>
       ) : docs.length === 0 ? (
-        <EmptyState title="Trash is empty" />
+        <EmptyState title={t('trash.trashEmpty')} />
       ) : (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Folder</th>
-                <th>Owner</th>
-                <th>Deleted</th>
+                <th>{t('trash.name')}</th>
+                <th>{t('trash.folder')}</th>
+                <th>{t('trash.owner')}</th>
+                <th>{t('trash.deleted')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -107,14 +109,14 @@ function TrashBody() {
                   <td>
                     <div className="row-actions">
                       <button className="btn btn-secondary btn-sm" onClick={() => handleRestore(doc)}>
-                        Restore
+                        {t('trash.restore')}
                       </button>
                       {user?.role === 'Admin' && (
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => setPermanentTarget(doc)}
                         >
-                          Delete forever
+                          {t('trash.deleteForever')}
                         </button>
                       )}
                     </div>
@@ -128,9 +130,9 @@ function TrashBody() {
 
       {permanentTarget && (
         <ConfirmDialog
-          title="Permanently delete"
-          message={`Permanently delete "${permanentTarget.name}"? This removes all versions and attachments and cannot be undone.`}
-          confirmLabel="Delete forever"
+          title={t('trash.permanentlyDeleteTitle')}
+          message={t('trash.permanentlyDeleteConfirm', { name: permanentTarget.name })}
+          confirmLabel={t('trash.deleteForever')}
           danger
           loading={confirmLoading}
           onConfirm={handlePermanentDelete}

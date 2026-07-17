@@ -1,37 +1,38 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 import { initials } from '@/lib/format';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Languages } from 'lucide-react';
 
-const NAV_ITEMS: { href: string; label: string; roles?: string[] }[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/documents', label: 'Documents' },
-  { href: '/folders', label: 'Folders' },
-  { href: '/categories', label: 'Categories' },
-  { href: '/departments', label: 'Departments', roles: ['Admin'] },
-  { href: '/users', label: 'Users', roles: ['Admin'] },
-  { href: '/activity-logs', label: 'Activity Logs', roles: ['Admin', 'Manager'] },
+const NAV_ITEMS: { href: string; labelKey: string; roles?: string[] }[] = [
+  { href: '/dashboard', labelKey: 'nav.dashboard' },
+  { href: '/documents', labelKey: 'nav.documents' },
+  { href: '/folders', labelKey: 'nav.folders' },
+  { href: '/categories', labelKey: 'nav.categories' },
+  { href: '/departments', labelKey: 'nav.departments', roles: ['Admin'] },
+  { href: '/users', labelKey: 'nav.users', roles: ['Admin'] },
+  { href: '/activity-logs', labelKey: 'nav.activityLogs', roles: ['Admin', 'Manager'] },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const { user, logout, refreshUser } = useAuth();
+  const { locale, setLocale, t } = useLocale();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
 
-  // ✅ Refresh user data when component mounts (after login)
   useEffect(() => {
     refreshUser();
   }, []);
 
-  // ✅ Also refresh when user object changes (profile updates)
   useEffect(() => {
     if (user?.profilePicture) {
       setImageError(false);
@@ -43,6 +44,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     setDropdownOpen(false);
   }, [pathname]);
 
+  // ✅ Click outside handler for dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -52,6 +54,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // ✅ NEW: Click outside handler for mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the mobile menu AND outside the toggle button
+      const target = event.target as Node;
+      const isMenuClick = mobileMenuRef.current && mobileMenuRef.current.contains(target);
+      const isToggleClick = menuToggleRef.current && menuToggleRef.current.contains(target);
+      
+      // If click is outside both the menu and the toggle, close the menu
+      if (!isMenuClick && !isToggleClick) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.profilePicture]);
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.roles || item.roles.includes(user?.role || ''),
@@ -68,14 +97,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const imageUrl = getProfileImageUrl();
 
   const handleImageError = () => {
-    console.error('❌ Image failed to load, showing initials instead');
     setImageError(true);
   };
 
-  // ✅ Reset image error when user changes
-  useEffect(() => {
-    setImageError(false);
-  }, [user?.profilePicture]);
+  const toggleLocale = () => {
+    setLocale(locale === 'en' ? 'ar' : 'en');
+  };
 
   return (
     <div className="app-shell">
@@ -99,16 +126,25 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   className={`navbar-link${active ? ' active' : ''}`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
           </nav>
 
           <div className="navbar-right">
+            <button
+              className="navbar-lang-toggle"
+              onClick={toggleLocale}
+              title={locale === 'en' ? 'التحويل إلى العربية' : 'Switch to English'}
+              aria-label="Toggle language"
+            >
+              <Languages size={16} />
+              <span>{locale === 'en' ? 'العربية' : 'English'}</span>
+            </button>
+
             <div className="navbar-profile-wrapper">
               <div className="navbar-profile-container">
-                {/* Desktop: clickable button with dropdown */}
                 <button
                   className="navbar-profile-btn desktop-only"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -123,14 +159,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         onError={handleImageError}
                       />
                     ) : (
-                      <span className="navbar-avatar-text">
-                        {initials(user?.name || '')}
-                      </span>
+                      <span className="navbar-avatar-text">{initials(user?.name || '')}</span>
                     )}
                   </div>
                 </button>
 
-                {/* Mobile: just the avatar (not clickable) */}
                 <div className="navbar-avatar mobile-only">
                   {imageUrl ? (
                     <img
@@ -140,9 +173,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       onError={handleImageError}
                     />
                   ) : (
-                    <span className="navbar-avatar-text">
-                      {initials(user?.name || '')}
-                    </span>
+                    <span className="navbar-avatar-text">{initials(user?.name || '')}</span>
                   )}
                 </div>
 
@@ -158,9 +189,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                             onError={handleImageError}
                           />
                         ) : (
-                          <span className="dropdown-avatar-text">
-                            {initials(user?.name || '')}
-                          </span>
+                          <span className="dropdown-avatar-text">{initials(user?.name || '')}</span>
                         )}
                       </div>
                       <div className="dropdown-user-info">
@@ -172,13 +201,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
                     <div className="dropdown-divider" />
 
-                    <Link
-                      href="/profile"
-                      className="dropdown-item"
-                      onClick={() => setDropdownOpen(false)}
-                    >
+                    <Link href="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                       <User className="dropdown-item-icon" size={16} />
-                      Profile Settings
+                      {t('nav.profileSettings')}
                     </Link>
 
                     <div className="dropdown-divider" />
@@ -191,7 +216,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       className="dropdown-item dropdown-item-danger"
                     >
                       <LogOut className="dropdown-item-icon" size={16} />
-                      Logout
+                      {t('nav.logout')}
                     </button>
                   </div>
                 )}
@@ -199,6 +224,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             <button
+              ref={menuToggleRef} // ✅ Add ref to toggle button
               className="navbar-menu-toggle"
               type="button"
               aria-label="Toggle navigation"
@@ -213,7 +239,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {menuOpen && (
-          <div className="navbar-mobile-menu">
+          <div className="navbar-mobile-menu" ref={mobileMenuRef}> {/* ✅ Add ref to mobile menu */}
             {visibleItems.map((item) => {
               const active =
                 item.href === '/dashboard'
@@ -227,19 +253,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   className={`navbar-mobile-link${active ? ' active' : ''}`}
                   onClick={() => setMenuOpen(false)}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
-            
+
             <div className="navbar-mobile-divider" />
-            <Link
-              href="/profile"
-              className="navbar-mobile-link"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link href="/profile" className="navbar-mobile-link" onClick={() => setMenuOpen(false)}>
               <User size={16} className="inline mr-2" />
-              Profile Settings
+              {t('nav.profileSettings')}
             </Link>
             <button
               className="navbar-mobile-logout"
@@ -249,7 +271,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               }}
             >
               <LogOut size={16} className="inline mr-2" />
-              Logout
+              {t('nav.logout')}
             </button>
           </div>
         )}

@@ -1,0 +1,11 @@
+{
+  "ROLE_ADMIN": "System Administrator",
+  "ROLE_MANAGER": "Manager",
+  "ROLE_EMPLOYEE": "Employee",
+  "TOTAL_USERS": "Total Users",
+  "TOTAL_DOCUMENTS": "Total Documents",
+  "STORAGE_USED": "Storage Used",
+  "DEPARTMENT_DOCUMENTS": "Department Documents",
+  "MY_DOCUMENTS": "My Documents",
+  "RECENT_DOCUMENTS": "Recent Documents"
+}

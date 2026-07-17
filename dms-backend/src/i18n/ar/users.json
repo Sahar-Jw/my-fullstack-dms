@@ -1,0 +1,14 @@
+{
+  "USER_NOT_FOUND": "المستخدم غير موجود.",
+  "EMAIL_ALREADY_EXISTS": "يوجد مستخدم مسجل بهذا البريد الإلكتروني بالفعل.",
+  "DEFAULT_ROLE_NOT_CONFIGURED": "الدور الافتراضي غير مُعد.",
+  "INVALID_DEPARTMENT": "القسم غير صحيح.",
+  "PASSWORD_MIN_LENGTH": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+  "ACTIVE": "نشط",
+  "INACTIVE": "غير نشط",
+  "REGISTER_LOG": "قام مستخدم جديد بتسجيل حساب بالبريد الإلكتروني \"{email}\"",
+  "UPDATE_LOG": "تم تحديث بيانات الحساب \"{email}\"",
+  "DELETE_LOG": "تم حذف حساب المستخدم \"{email}\" بشكل نهائي",
+  "STATUS_TOGGLE_LOG": "تم تغيير حالة حساب \"{email}\" إلى {status}",
+  "PASSWORD_CHANGE_LOG": "تم تغيير كلمة المرور للحساب \"{email}\""
+}

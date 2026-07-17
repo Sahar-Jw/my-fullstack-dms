@@ -1,0 +1,4 @@
+{
+  "PASSWORD_CHANGE_REQUIRED": "Password change required before accessing this resource. Please change your password first.",
+  "PERMISSION_DENIED": "You do not have the required permissions to perform this action."
+}

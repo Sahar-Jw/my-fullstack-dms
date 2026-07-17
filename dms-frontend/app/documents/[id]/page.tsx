@@ -19,11 +19,13 @@ import {
   previewTargetForAttachment,
 } from '@/lib/preview';
 import { PreviewTarget } from '@/lib/types';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 type Tab = 'overview' | 'preview' | 'versions' | 'attachments';
 
 function DocumentDetailBody() {
   const { notify } = useToast();
+  const { t } = useLocale();
   const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
@@ -127,7 +129,7 @@ function DocumentDetailBody() {
         categoryId: Number(editForm.categoryId),
       });
       setDoc(updated);
-      notify('Document updated.', 'success');
+      notify(t('documentDetail.updated_toast'), 'success');
       setEditOpen(false);
     } catch (e) {
       setEditError(errorMessage(e));
@@ -150,7 +152,7 @@ function DocumentDetailBody() {
     try {
       await documentsApi.move(id, Number(moveFolderId));
       await loadDoc();
-      notify('Document moved.', 'success');
+      notify(t('documentDetail.moved'), 'success');
       setMoveOpen(false);
     } catch (e) {
       setMoveError(errorMessage(e));
@@ -162,7 +164,7 @@ function DocumentDetailBody() {
   async function handleNewVersionSubmit(e: FormEvent) {
     e.preventDefault();
     if (!newVersionFile) {
-      setVersionError('Please choose a file.');
+      setVersionError(t('documentDetail.chooseFileError'));
       return;
     }
     setVersionSaving(true);
@@ -171,7 +173,7 @@ function DocumentDetailBody() {
       const updated = await documentsApi.updateFile(id, newVersionFile);
       setDoc(updated);
       await loadVersions();
-      notify('New version uploaded.', 'success');
+      notify(t('documentDetail.newVersionUploaded'), 'success');
       setNewVersionOpen(false);
       setNewVersionFile(null);
     } catch (e) {
@@ -186,7 +188,7 @@ function DocumentDetailBody() {
       const updated = await documentsApi.restoreVersion(id, versionId);
       setDoc(updated);
       await loadVersions();
-      notify('Version restored as the latest version.', 'success');
+      notify(t('documentDetail.versionRestored'), 'success');
     } catch (e) {
       notify(errorMessage(e), 'error');
     }
@@ -195,7 +197,7 @@ function DocumentDetailBody() {
   async function handleAttachSubmit(e: FormEvent) {
     e.preventDefault();
     if (attachFiles.length === 0) {
-      setAttachError('Please choose at least one file.');
+      setAttachError(t('documentDetail.attachFilesError'));
       return;
     }
     setAttachSaving(true);
@@ -204,7 +206,7 @@ function DocumentDetailBody() {
       const added = await documentsApi.addAttachment(id, attachFiles);
       await loadAttachments();
       notify(
-        added.length > 1 ? `${added.length} attachments added.` : 'Attachment added.',
+        added.length > 1 ? t('documentDetail.attachmentsAdded', { count: added.length }) : t('documentDetail.attachmentAdded'),
         'success',
       );
       setAttachOpen(false);
@@ -219,7 +221,7 @@ function DocumentDetailBody() {
   async function handleDeleteAttachment(attachmentId: number) {
     try {
       await documentsApi.deleteAttachment(attachmentId);
-      notify('Attachment deleted.', 'success');
+      notify(t('documentDetail.attachmentDeleted'), 'success');
       loadAttachments();
     } catch (e) {
       notify(errorMessage(e), 'error');
@@ -230,7 +232,7 @@ function DocumentDetailBody() {
     setDeleteLoading(true);
     try {
       await documentsApi.softDelete(id);
-      notify('Document moved to trash.', 'success');
+      notify(t('documentDetail.movedToTrash'), 'success');
       router.push('/documents');
     } catch (e) {
       notify(errorMessage(e), 'error');
@@ -249,13 +251,13 @@ function DocumentDetailBody() {
   }
 
   if (error || !doc) {
-    return <div className="banner banner-danger">{error || 'Document not found.'}</div>;
+    return <div className="banner banner-danger">{error || t('documentDetail.documentNotFound')}</div>;
   }
 
   return (
     <div>
       <div className="breadcrumbs">
-        <Link href="/documents">Documents</Link>
+        <Link href="/documents">{t('documentDetail.documentsBreadcrumb')}</Link>
         <span>/</span>
         <span>{doc.name}</span>
       </div>
@@ -265,8 +267,9 @@ function DocumentDetailBody() {
           <span className="page-eyebrow">{doc.category?.name}</span>
           <h1 className="page-title">{doc.name}</h1>
           <p className="page-subtitle">
-            in {doc.folder?.name} · owned by {doc.owner?.name} · updated{' '}
-            {formatDateTime(doc.updatedAt)}
+            {t('documentDetail.inFolder', { folder: doc.folder?.name })}
+            {t('documentDetail.ownedBy', { owner: doc.owner?.name })}
+            {t('documentDetail.updated', { date: formatDateTime(doc.updatedAt) })}
           </p>
         </div>
         <div className="page-actions">
@@ -274,67 +277,67 @@ function DocumentDetailBody() {
             className="btn btn-secondary"
             onClick={() => documentsApi.download(id, doc.name)}
           >
-            Download latest
+            {t('documentDetail.downloadLatest')}
           </button>
           <button className="btn btn-secondary" onClick={openEdit}>
-            Edit metadata
+            {t('documentDetail.editMetadata')}
           </button>
           <button className="btn btn-secondary" onClick={openMove}>
-            Move
+            {t('documentDetail.move')}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleteConfirm(true)}>
-            Delete
+            {t('documentDetail.delete')}
           </button>
         </div>
       </div>
 
       <div className="tabs">
         <button className={`tab${tab === 'overview' ? ' active' : ''}`} onClick={() => setTab('overview')}>
-          Overview
+          {t('documentDetail.overview')}
         </button>
         <button className={`tab${tab === 'preview' ? ' active' : ''}`} onClick={() => setTab('preview')}>
-          Preview
+          {t('documentDetail.preview')}
         </button>
         <button className={`tab${tab === 'versions' ? ' active' : ''}`} onClick={() => setTab('versions')}>
-          Versions ({versions.length})
+          {t('documentDetail.versions')} ({versions.length})
         </button>
         <button
           className={`tab${tab === 'attachments' ? ' active' : ''}`}
           onClick={() => setTab('attachments')}
         >
-          Attachments ({attachments.length})
+          {t('documentDetail.attachments')} ({attachments.length})
         </button>
       </div>
 
       {tab === 'overview' && (
         <div className="card card-pad">
           <div className="field">
-            <label>Description</label>
+            <label>{t('documentDetail.description')}</label>
             <p>{doc.description || '—'}</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16 }}>
             <div>
-              <div className="field-hint">Category</div>
+              <div className="field-hint">{t('documentDetail.category')}</div>
               <p>{doc.category?.name}</p>
             </div>
             <div>
-              <div className="field-hint">Folder</div>
+              <div className="field-hint">{t('documentDetail.folder')}</div>
               <p>{doc.folder?.name}</p>
             </div>
             <div>
-              <div className="field-hint">Department</div>
+              <div className="field-hint">{t('documentDetail.department')}</div>
               <p>{doc.folder?.department?.name}</p>
             </div>
             <div>
-              <div className="field-hint">Owner</div>
+              <div className="field-hint">{t('documentDetail.owner')}</div>
               <p>{doc.owner?.name}</p>
             </div>
             <div>
-              <div className="field-hint">Created</div>
+              <div className="field-hint">{t('documentDetail.created')}</div>
               <p>{formatDateTime(doc.createdAt)}</p>
             </div>
             <div>
-              <div className="field-hint">Last updated</div>
+              <div className="field-hint">{t('documentDetail.lastUpdated')}</div>
               <p>{formatDateTime(doc.updatedAt)}</p>
             </div>
           </div>
@@ -347,7 +350,7 @@ function DocumentDetailBody() {
           return target ? (
             <FilePreview target={target} />
           ) : (
-            <div className="card card-pad">No file uploaded yet.</div>
+            <div className="card card-pad">{t('documentDetail.noFileUploaded')}</div>
           );
         })()}
 
@@ -355,18 +358,18 @@ function DocumentDetailBody() {
         <div>
           <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn btn-primary btn-sm" onClick={() => setNewVersionOpen(true)}>
-              + Upload new version
+              {t('documentDetail.uploadNewVersion')}
             </button>
           </div>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Version</th>
-                  <th>File</th>
-                  <th>Size</th>
-                  <th>Uploaded by</th>
-                  <th>Date</th>
+                  <th>{t('documentDetail.version')}</th>
+                  <th>{t('documentDetail.file')}</th>
+                  <th>{t('documentDetail.size')}</th>
+                  <th>{t('documentDetail.uploadedBy')}</th>
+                  <th>{t('documentDetail.date')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -387,20 +390,20 @@ function DocumentDetailBody() {
                           className="btn btn-secondary btn-sm"
                           onClick={() => setPreviewTarget(previewTargetForVersion(id, v))}
                         >
-                          Preview
+                          {t('documentDetail.previewAction')}
                         </button>
                         <button
                           className="btn btn-secondary btn-sm"
                           onClick={() => documentsApi.downloadVersion(id, v.id, v.originalFileName)}
                         >
-                          Download
+                          {t('documentDetail.download')}
                         </button>
                         {v.versionNumber !== versions[0]?.versionNumber && (
                           <button
                             className="btn btn-secondary btn-sm"
                             onClick={() => handleRestoreVersion(v.id)}
                           >
-                            Restore
+                            {t('documentDetail.restore')}
                           </button>
                         )}
                       </div>
@@ -417,12 +420,12 @@ function DocumentDetailBody() {
         <div>
           <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn btn-primary btn-sm" onClick={() => setAttachOpen(true)}>
-              + Add attachments
+              {t('documentDetail.addAttachments')}
             </button>
           </div>
           {attachments.length === 0 ? (
             <div className="card card-pad" style={{ textAlign: 'center', color: 'var(--color-muted)' }}>
-              No attachments yet.
+              {t('documentDetail.noAttachmentsYet')}
             </div>
           ) : (
             <div className="attachment-grid">
@@ -444,19 +447,19 @@ function DocumentDetailBody() {
                       className="btn btn-secondary btn-sm"
                       onClick={() => setPreviewTarget(previewTargetForAttachment(a))}
                     >
-                      Preview
+                      {t('documentDetail.previewAction')}
                     </button>
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={() => documentsApi.downloadAttachment(a.id, a.fileName)}
                     >
-                      Download
+                      {t('documentDetail.download')}
                     </button>
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={() => handleDeleteAttachment(a.id)}
                     >
-                      Delete
+                      {t('documentDetail.delete')}
                     </button>
                   </div>
                 </div>
@@ -468,15 +471,15 @@ function DocumentDetailBody() {
 
       {editOpen && (
         <Modal
-          title="Edit metadata"
+          title={t('documentDetail.editMetadataTitle')}
           onClose={() => setEditOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setEditOpen(false)}>
-                Cancel
+                {t('documentDetail.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleEditSubmit} disabled={editSaving}>
-                {editSaving ? 'Saving…' : 'Save changes'}
+                {editSaving ? t('documentDetail.saving') : t('documentDetail.saveChanges')}
               </button>
             </>
           }
@@ -484,7 +487,7 @@ function DocumentDetailBody() {
           <form onSubmit={handleEditSubmit}>
             {editError && <div className="banner banner-danger">{editError}</div>}
             <div className="field">
-              <label>Name</label>
+              <label>{t('documentDetail.name')}</label>
               <input
                 className="input"
                 required
@@ -493,7 +496,7 @@ function DocumentDetailBody() {
               />
             </div>
             <div className="field">
-              <label>Description</label>
+              <label>{t('documentDetail.description')}</label>
               <input
                 className="input"
                 value={editForm.description}
@@ -501,7 +504,7 @@ function DocumentDetailBody() {
               />
             </div>
             <div className="field">
-              <label>Category</label>
+              <label>{t('documentDetail.category')}</label>
               <select
                 className="select"
                 value={editForm.categoryId}
@@ -520,15 +523,15 @@ function DocumentDetailBody() {
 
       {moveOpen && (
         <Modal
-          title="Move document"
+          title={t('documentDetail.moveDocumentTitle')}
           onClose={() => setMoveOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setMoveOpen(false)}>
-                Cancel
+                {t('documentDetail.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleMoveSubmit} disabled={moveSaving}>
-                {moveSaving ? 'Moving…' : 'Move'}
+                {moveSaving ? t('documentDetail.moving') : t('documentDetail.move')}
               </button>
             </>
           }
@@ -536,7 +539,7 @@ function DocumentDetailBody() {
           <form onSubmit={handleMoveSubmit}>
             {moveError && <div className="banner banner-danger">{moveError}</div>}
             <div className="field">
-              <label>Destination folder</label>
+              <label>{t('documentDetail.destinationFolder')}</label>
               <select
                 className="select"
                 value={moveFolderId}
@@ -555,19 +558,19 @@ function DocumentDetailBody() {
 
       {newVersionOpen && (
         <Modal
-          title="Upload new version"
+          title={t('documentDetail.uploadNewVersionTitle')}
           onClose={() => setNewVersionOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setNewVersionOpen(false)}>
-                Cancel
+                {t('documentDetail.cancel')}
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleNewVersionSubmit}
                 disabled={versionSaving}
               >
-                {versionSaving ? 'Uploading…' : 'Upload'}
+                {versionSaving ? t('documents.uploading') : t('documents.upload')}
               </button>
             </>
           }
@@ -575,7 +578,7 @@ function DocumentDetailBody() {
           <form onSubmit={handleNewVersionSubmit}>
             {versionError && <div className="banner banner-danger">{versionError}</div>}
             <div className="field">
-              <label>File</label>
+              <label>{t('documentDetail.file')}</label>
               <FileDrop
                 files={newVersionFile ? [newVersionFile] : []}
                 onChange={(files) => setNewVersionFile(files[0] || null)}
@@ -587,15 +590,15 @@ function DocumentDetailBody() {
 
       {attachOpen && (
         <Modal
-          title="Add attachments"
+          title={t('documentDetail.addAttachmentsTitle')}
           onClose={() => setAttachOpen(false)}
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setAttachOpen(false)}>
-                Cancel
+                {t('documentDetail.cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleAttachSubmit} disabled={attachSaving}>
-                {attachSaving ? 'Uploading…' : 'Add'}
+                {attachSaving ? t('documents.uploading') : t('documentDetail.add')}
               </button>
             </>
           }
@@ -603,7 +606,7 @@ function DocumentDetailBody() {
           <form onSubmit={handleAttachSubmit}>
             {attachError && <div className="banner banner-danger">{attachError}</div>}
             <div className="field">
-              <label>File(s)</label>
+              <label>{t('documents.files')}</label>
               <FileDrop files={attachFiles} onChange={setAttachFiles} multiple />
             </div>
           </form>
@@ -612,11 +615,11 @@ function DocumentDetailBody() {
 
       {previewTarget && (
         <Modal
-          title={`Preview: ${previewTarget.filename}`}
+          title={t('documentDetail.previewTitle', { filename: previewTarget.filename })}
           onClose={() => setPreviewTarget(null)}
           footer={
             <button className="btn btn-secondary" onClick={() => setPreviewTarget(null)}>
-              Close
+              {t('documentDetail.close')}
             </button>
           }
         >
@@ -626,9 +629,9 @@ function DocumentDetailBody() {
 
       {deleteConfirm && (
         <ConfirmDialog
-          title="Delete document"
-          message={`Move "${doc.name}" to trash? You can restore it later from the trash.`}
-          confirmLabel="Move to trash"
+          title={t('documentDetail.deleteDocumentTitle')}
+          message={t('documentDetail.deleteConfirm', { name: doc.name })}
+          confirmLabel={t('documentDetail.moveToTrash')}
           danger
           loading={deleteLoading}
           onConfirm={handleSoftDelete}

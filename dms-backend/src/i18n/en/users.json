@@ -1,0 +1,14 @@
+{
+  "USER_NOT_FOUND": "User not found.",
+  "EMAIL_ALREADY_EXISTS": "A user with this email already exists.",
+  "DEFAULT_ROLE_NOT_CONFIGURED": "Default role is not configured.",
+  "INVALID_DEPARTMENT": "Invalid department.",
+  "PASSWORD_MIN_LENGTH": "Password must be at least 6 characters long.",
+  "ACTIVE": "Active",
+  "INACTIVE": "Inactive",
+  "REGISTER_LOG": "New user self-registered account with email \"{email}\"",
+  "UPDATE_LOG": "Updated profile details for account \"{email}\"",
+  "DELETE_LOG": "Permanently deleted user account \"{email}\"",
+  "STATUS_TOGGLE_LOG": "Toggled account status for \"{email}\". Current status: {status}",
+  "PASSWORD_CHANGE_LOG": "Changed password for account \"{email}\""
+}

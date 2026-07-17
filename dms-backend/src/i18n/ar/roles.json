@@ -1,0 +1,6 @@
+{
+  "ROLE_NOT_FOUND": "الدور غير موجود.",
+  "ROLE_ADMIN": "مدير النظام",
+  "ROLE_MANAGER": "مدير",
+  "ROLE_EMPLOYEE": "موظف"
+}

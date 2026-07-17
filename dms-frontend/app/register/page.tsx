@@ -7,10 +7,12 @@ import { authApi, departmentsApi } from '@/lib/endpoints';
 import { Department } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { useLocale } from '@/lib/i18n/locale-provider';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { setSession } = useAuth();
+  const { t } = useLocale();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,16 +29,17 @@ export default function RegisterPage() {
     departmentsApi
       .list()
       .then(setDepartments)
-      .catch(() => setDeptError('Could not load departments. Try refreshing the page.'));
+      .catch(() => setDeptError(t('auth.departmentsLoadError')));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function validate() {
-    if (!name.trim()) return 'Please enter your full name.';
-    if (!email.trim()) return 'Please enter your email.';
-    if (!departmentId) return 'Please select your department.';
-    if (!password) return 'Please enter a password.';
-    if (password.length < 8) return 'Password must be at least 8 characters.';
-    if (password !== confirmPassword) return 'Passwords do not match.';
+    if (!name.trim()) return t('auth.validation.nameRequired');
+    if (!email.trim()) return t('auth.validation.emailRequired');
+    if (!departmentId) return t('auth.validation.departmentRequired');
+    if (!password) return t('auth.validation.passwordRequired');
+    if (password.length < 8) return t('auth.validation.passwordTooShort');
+    if (password !== confirmPassword) return t('auth.validation.passwordMismatch');
     return '';
   }
 
@@ -70,20 +73,20 @@ export default function RegisterPage() {
   return (
     <div className="auth-screen">
       <Link href="/" className="auth-home-link">
-        ← Back to home
+        {t('common.backToHome')}
       </Link>
 
       <div className="auth-card">
         <div className="auth-mark" />
-        <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Register to access your department&apos;s documents.</p>
+        <h1 className="auth-title">{t('auth.registerTitle')}</h1>
+        <p className="auth-subtitle">{t('auth.registerSubtitle')}</p>
 
         {error && <div className="banner banner-danger">{error}</div>}
         {deptError && <div className="banner banner-danger">{deptError}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="name">Full name</label>
+            <label htmlFor="name">{t('auth.fullName')}</label>
             <input
               id="name"
               className="input"
@@ -97,7 +100,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               className="input"
@@ -111,7 +114,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="department">Department</label>
+            <label htmlFor="department">{t('auth.department')}</label>
             <select
               id="department"
               className="select"
@@ -119,7 +122,7 @@ export default function RegisterPage() {
               value={departmentId}
               onChange={(e) => setDepartmentId(e.target.value)}
             >
-              <option value="">Select your department...</option>
+              <option value="">{t('auth.selectDepartment')}</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -129,7 +132,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               className="input"
@@ -143,7 +146,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="confirmPassword">Confirm password</label>
+            <label htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
             <input
               id="confirmPassword"
               className="input"
@@ -157,13 +160,13 @@ export default function RegisterPage() {
           </div>
 
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Register'}
+            {submitting ? t('auth.creating') : t('auth.registerButton')}
           </button>
 
           <div style={{ marginTop: 14, textAlign: 'center' }}>
-            <span style={{ color: 'var(--color-muted)', fontSize: 13 }}>Already have an account? </span>
+            <span style={{ color: 'var(--color-muted)', fontSize: 13 }}>{t('auth.haveAccount')}</span>
             <Link className="link-btn" href="/login">
-              Sign in
+              {t('auth.signInLink')}
             </Link>
           </div>
         </form>

@@ -1,0 +1,10 @@
+{
+  "INTERNAL_SERVER_ERROR": "An internal server error occurred. Please try again later.",
+  "BAD_REQUEST": "Bad request. Please check your input.",
+  "UNAUTHORIZED": "Unauthorized. Please log in first.",
+  "FORBIDDEN": "You do not have permission to perform this action.",
+  "NOT_FOUND": "Resource not found.",
+  "CONFLICT": "Data conflict. Please check your information.",
+  "VALIDATION_ERROR": "Validation error. Please check your input values.",
+  "TOO_MANY_REQUESTS": "Too many requests. Please try again later."
+}

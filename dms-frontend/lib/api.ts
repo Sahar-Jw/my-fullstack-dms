@@ -35,6 +35,10 @@ async function request<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+   if (typeof window !== 'undefined') {
+    const locale = window.localStorage.getItem('dms_locale') || 'en';
+    headers['Accept-Language'] = locale;
+  }
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,

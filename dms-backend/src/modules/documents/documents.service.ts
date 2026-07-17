@@ -20,7 +20,7 @@ import { RoleName } from '../../common/decorators/roles.decorator';
 import { FileStorageService } from './file-storage.service';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
-
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class DocumentsService {
@@ -35,6 +35,7 @@ export class DocumentsService {
     private foldersRepository: Repository<Folder>,
     private fileStorageService: FileStorageService,
     private readonly activityLogService: ActivityLogService,
+    private i18n: I18nService,
   ) {}
 
   // ---------- Permission helpers ----------
@@ -72,7 +73,7 @@ export class DocumentsService {
       relations: ['folder', 'category', 'owner'],
     });
     if (!document) {
-      throw new NotFoundException(`Document not found`);
+      throw new NotFoundException(await this.i18n.translate('documents.DOCUMENT_NOT_FOUND'));
     }
     return document;
   }
@@ -85,14 +86,14 @@ export class DocumentsService {
       where: { id: folderId },
     });
     if (!folder) {
-      throw new NotFoundException(`Folder not found`);
+      throw new NotFoundException(await this.i18n.translate('documents.FOLDER_NOT_FOUND'));
     }
     if (
       user.roleName !== RoleName.ADMIN &&
       folder.departmentId !== user.departmentId
     ) {
       throw new ForbiddenException(
-        'You do not have access to this folder\'s department',
+        await this.i18n.translate('documents.FOLDER_DEPARTMENT_ACCESS_DENIED'),
       );
     }
     return folder;
@@ -147,7 +148,7 @@ export class DocumentsService {
     const document = await this.loadDocumentOrFail(id);
     if (!this.canRead(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to view this document',
+        await this.i18n.translate('documents.DOCUMENT_VIEW_DENIED'),
       );
     }
     return document;
@@ -172,13 +173,10 @@ export class DocumentsService {
       );
     }
 
-    // Department filter — Admin only. Uses a distinct param name
-    // (filterDepartmentId) so it never collides with the :departmentId
-    // binding already used above for Manager/Employee scoping.
     if (dto.departmentId) {
       if (user.roleName !== RoleName.ADMIN) {
         throw new ForbiddenException(
-          'Only Admins can filter documents by department',
+          await this.i18n.translate('documents.DEPARTMENT_FILTER_ADMIN_ONLY'),
         );
       }
       qb.andWhere('folder.department_id = :filterDepartmentId', {
@@ -219,19 +217,13 @@ export class DocumentsService {
 
   // ---------- Mutations ----------
 
-  /**
-   * Creates one or more Documents from an array of uploaded files.
-   * - Single file: uses dto.name (or falls back to the filename) as the document name.
-   * - Multiple files: each file becomes its own Document, named after its filename
-   *   (dto.name is ignored in this case since one name can't apply to N documents).
-   */
-   async create(
+  async create(
     dto: CreateDocumentDto,
     files: Express.Multer.File[],
     user: AuthUser,
   ): Promise<Document[]> {
     if (!files || files.length === 0) {
-      throw new BadRequestException('At least one file is required to upload a document');
+      throw new BadRequestException(await this.i18n.translate('documents.FILE_REQUIRED_FOR_UPLOAD'));
     }
 
     await this.assertFolderAccessible(dto.folderId, user);
@@ -269,21 +261,24 @@ export class DocumentsService {
       const fullyLoadedDoc = await this.loadDocumentOrFail(saved.id);
       createdDocs.push(fullyLoadedDoc);
 
-      // 🔥 تسجيل عملية الرفع في الـ Logs لكل ملف يتم رفعه بنجاح
       await this.activityLogService.log({
         actor: this.activityLogService.fromAuthUser(user),
         action: ActivityAction.DOCUMENT_UPLOAD,
         targetType: 'Document',
         targetId: saved.id,
-        description: `Uploaded document: "${fullyLoadedDoc.name}" into folder: "${fullyLoadedDoc.folder?.name || dto.folderId}"`,
+        description: await this.i18n.translate('documents.UPLOAD_LOG', {
+          args: { 
+            documentName: fullyLoadedDoc.name, 
+            folderName: fullyLoadedDoc.folder?.name || String(dto.folderId) 
+          }
+        }),
       });
     }
 
     return createdDocs;
   }
 
-
-   async update(
+  async update(
     id: number,
     dto: UpdateDocumentDto,
     user: AuthUser,
@@ -291,11 +286,10 @@ export class DocumentsService {
     const document = await this.loadDocumentOrFail(id);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to update this document',
+        await this.i18n.translate('documents.DOCUMENT_UPDATE_DENIED'),
       );
     }
     
-    // حفظ الاسم القديم لاستخدامه في الوصف التسجيلي (اختياري ومفيد للتتبع)
     const oldName = document.name;
 
     Object.assign(document, dto);
@@ -303,31 +297,39 @@ export class DocumentsService {
     
     const updatedDoc = await this.loadDocumentOrFail(id);
 
-    // 🔥 تسجيل عملية التحديث في الـ Logs بنجاح
+    let description = await this.i18n.translate('documents.UPDATE_LOG', {
+      args: { oldName }
+    });
+    
+    if (dto.name) {
+      description += ' ' + await this.i18n.translate('documents.RENAME_LOG', {
+        args: { newName: dto.name }
+      });
+    }
+
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_UPDATE,
       targetType: 'Document',
       targetId: id,
-      description: `Updated document properties for "${oldName}"` + (dto.name ? ` (Renamed to: "${dto.name}")` : ''),
+      description,
     });
 
     return updatedDoc;
   }
 
-
-   async updateFile(
+  async updateFile(
     id: number,
     file: Express.Multer.File,
     user: AuthUser,
   ): Promise<Document> {
     if (!file) {
-      throw new BadRequestException('A file is required');
+      throw new BadRequestException(await this.i18n.translate('documents.FILE_REQUIRED'));
     }
     const document = await this.loadDocumentOrFail(id);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to update this document',
+        await this.i18n.translate('documents.DOCUMENT_UPDATE_DENIED'),
       );
     }
 
@@ -360,13 +362,18 @@ export class DocumentsService {
 
     const updatedDoc = await this.loadDocumentOrFail(id);
 
-    // 🔥 تسجيل رفع نسخة جديدة للمستند
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_UPDATE,
       targetType: 'Document',
       targetId: id,
-      description: `Uploaded a new file version (v${nextVersionNumber}) for document "${updatedDoc.name}": ${file.originalname}`,
+      description: await this.i18n.translate('documents.FILE_UPDATE_LOG', {
+        args: { 
+          versionNumber: nextVersionNumber, 
+          documentName: updatedDoc.name, 
+          fileName: file.originalname 
+        }
+      }),
     });
 
     return updatedDoc;
@@ -378,23 +385,23 @@ export class DocumentsService {
     const isAdmin = user.roleName === RoleName.ADMIN;
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException(
-        'Only the document owner or an Admin can delete this document',
+        await this.i18n.translate('documents.DOCUMENT_DELETE_DENIED'),
       );
     }
     
-    // 🔥 تخزين الاسم الصافي في متغير نصي صريح ومستقل قبل الحفظ لمنع كسر البيانات
     const currentDocName = document.name;
 
     document.isDeleted = true;
     const savedDoc = await this.documentsRepository.save(document);
 
-    // 🔥 تسجيل نقل المستند إلى سلة المحذوفات بشكل واضح وصريح
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_DELETE,
       targetType: 'Document',
       targetId: id,
-      description: `Moved document "${currentDocName}" to trash bin`,
+      description: await this.i18n.translate('documents.SOFT_DELETE_LOG', {
+        args: { documentName: currentDocName }
+      }),
     });
 
     return savedDoc;
@@ -406,35 +413,36 @@ export class DocumentsService {
     const isAdmin = user.roleName === RoleName.ADMIN;
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException(
-        'Only the document owner or an Admin can restore this document',
+        await this.i18n.translate('documents.DOCUMENT_RESTORE_DENIED'),
       );
     }
     
-    // 🔥 تخزين الاسم الصافي في متغير نصي صريح ومستقل قبل الحفظ
     const currentDocName = document.name;
 
     document.isDeleted = false;
     const savedDoc = await this.documentsRepository.save(document);
 
-    // 🔥 تسجيل استعادة المستند من سلة المحذوفات بشكل واضح وصريح
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_RESTORE,
       targetType: 'Document',
       targetId: id,
-      description: `Restored document "${currentDocName}" from trash bin`,
+      description: await this.i18n.translate('documents.RESTORE_LOG', {
+        args: { documentName: currentDocName }
+      }),
     });
 
     return savedDoc;
   }
 
+  // ✅ FIXED: permanentDelete now uses i18n
   async permanentDelete(id: number, user: AuthUser): Promise<void> {
     const document = await this.documentsRepository.findOne({
       where: { id },
       relations: ['versions', 'attachments'],
     });
     if (!document) {
-      throw new NotFoundException(`Document not found`);
+      throw new NotFoundException(await this.i18n.translate('documents.DOCUMENT_NOT_FOUND'));
     }
 
     const documentName = document.name;
@@ -448,18 +456,18 @@ export class DocumentsService {
 
     await this.documentsRepository.remove(document);
 
-    // 🔥 تسجيل الحركة باسم الأدمن الفعلي واستخدام DOCUMENT_DELETE بشكل نظيف وآمن
     await this.activityLogService.log({
-      actor: this.activityLogService.fromAuthUser(user), // 👈 سيسجل اسم وإيميل الأدمن الحالي بدلاً من System
-      action: ActivityAction.DOCUMENT_DELETE, // 👈 إرجاع الإجراء لتصنيفه الأصلي في فلاتر الجدول
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DELETE,
       targetType: 'Document',
       targetId: id,
-      description: `Permanently purged document "${documentName}" from the system and destroyed all its storage files permanently.`,
+      description: await this.i18n.translate('documents.PERMANENT_DELETE_LOG', {
+        args: { documentName }
+      }),
     });
   }
 
-
-   async move(
+  async move(
     id: number,
     dto: MoveDocumentDto,
     user: AuthUser,
@@ -467,7 +475,7 @@ export class DocumentsService {
     const document = await this.loadDocumentOrFail(id);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to move this document',
+        await this.i18n.translate('documents.DOCUMENT_MOVE_DENIED'),
       );
     }
     const targetFolder = await this.assertFolderAccessible(
@@ -480,29 +488,32 @@ export class DocumentsService {
       targetFolder.departmentId !== document.folder.departmentId
     ) {
       throw new ForbiddenException(
-        'Cannot move a document to a folder in a different department',
+        await this.i18n.translate('documents.DOCUMENT_MOVE_DEPARTMENT_MISMATCH'),
       );
     }
 
-    // حفظ اسم المجلد الحالي قبل النقل لاستخدامه في وصف السجل
     const sourceFolderName = document.folder?.name || `Folder #${document.folderId}`;
 
     await this.documentsRepository.update(id, { folderId: dto.folderId });
     
     const movedDoc = await this.loadDocumentOrFail(id);
 
-    // 🔥 تسجيل عملية نقل المستند في الـ Logs بنجاح
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_MOVE,
       targetType: 'Document',
       targetId: id,
-      description: `Moved document "${movedDoc.name}" from folder "${sourceFolderName}" to folder "${targetFolder.name}"`,
+      description: await this.i18n.translate('documents.MOVE_LOG', {
+        args: { 
+          documentName: movedDoc.name, 
+          sourceFolder: sourceFolderName, 
+          targetFolder: targetFolder.name 
+        }
+      }),
     });
 
     return movedDoc;
   }
-
 
   // ---------- Versions ----------
 
@@ -524,7 +535,7 @@ export class DocumentsService {
       where: { id: versionId, documentId: id },
     });
     if (!version) {
-      throw new NotFoundException('Version not found');
+      throw new NotFoundException(await this.i18n.translate('documents.VERSION_NOT_FOUND'));
     }
     return version;
   }
@@ -537,14 +548,14 @@ export class DocumentsService {
     const document = await this.loadDocumentOrFail(id);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to restore a version of this document',
+        await this.i18n.translate('documents.VERSION_RESTORE_DENIED'),
       );
     }
     const targetVersion = await this.versionsRepository.findOne({
       where: { id: versionId, documentId: id },
     });
     if (!targetVersion) {
-      throw new NotFoundException('Version not found');
+      throw new NotFoundException(await this.i18n.translate('documents.VERSION_NOT_FOUND'));
     }
 
     const latestVersion = await this.versionsRepository.findOne({
@@ -588,7 +599,7 @@ export class DocumentsService {
       order: { versionNumber: 'DESC' },
     });
     if (!version) {
-      throw new NotFoundException('This document has no file versions');
+      throw new NotFoundException(await this.i18n.translate('documents.NO_FILE_VERSIONS'));
     }
     return version;
   }
@@ -606,51 +617,18 @@ export class DocumentsService {
     });
   }
 
-  // async addAttachment(
-  //   id: number,
-  //   file: Express.Multer.File,
-  //   user: AuthUser,
-  // ): Promise<DocumentAttachment> {
-  //   if (!file) {
-  //     throw new BadRequestException('A file is required');
-  //   }
-  //   const document = await this.loadDocumentOrFail(id);
-  //   if (!this.canModify(user, document)) {
-  //     throw new ForbiddenException(
-  //       'You do not have permission to add attachments to this document',
-  //     );
-  //   }
-
-  //   const relativePath = this.fileStorageService.saveFile(
-  //     'attachments',
-  //     id,
-  //     file.originalname,
-  //     file.buffer,
-  //   );
-
-  //   const attachment = this.attachmentsRepository.create({
-  //     documentId: id,
-  //     uploadedById: user.userId,
-  //     fileName: file.originalname,
-  //     filePath: relativePath,
-  //     mimeType: file.mimetype,
-  //     fileSize: file.size,
-  //   });
-  //   return this.attachmentsRepository.save(attachment);
-  // }
-
   async addAttachment(
     id: number,
     files: Express.Multer.File[],
     user: AuthUser,
   ): Promise<DocumentAttachment[]> {
     if (!files || files.length === 0) {
-      throw new BadRequestException('At least one file is required');
+      throw new BadRequestException(await this.i18n.translate('documents.ATTACHMENT_FILE_REQUIRED'));
     }
     const document = await this.loadDocumentOrFail(id);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to add attachments to this document',
+        await this.i18n.translate('documents.ATTACHMENT_ADD_DENIED'),
       );
     }
 
@@ -674,19 +652,21 @@ export class DocumentsService {
       const savedAttachment = await this.attachmentsRepository.save(attachment);
       attachments.push(savedAttachment);
 
-      // 🔥 تسجيل كل ملف مرفق يتم رفعه بنجاح داخل السجلات
       await this.activityLogService.log({
         actor: this.activityLogService.fromAuthUser(user),
         action: ActivityAction.DOCUMENT_UPLOAD,
         targetType: 'DocumentAttachment',
         targetId: savedAttachment.id,
-        description: `Uploaded attachment "${savedAttachment.fileName}" to document "${document.name}"`,
+        description: await this.i18n.translate('documents.ATTACHMENT_UPLOAD_LOG', {
+          args: { fileName: savedAttachment.fileName, documentName: document.name }
+        }),
       });
     }
 
     return attachments;
   }
 
+  // ✅ FIXED: getAttachment now uses i18n
   async getAttachment(
     attachmentId: number,
     user: AuthUser,
@@ -695,17 +675,18 @@ export class DocumentsService {
       where: { id: attachmentId },
     });
     if (!attachment) {
-      throw new NotFoundException('Attachment not found');
+      throw new NotFoundException(await this.i18n.translate('documents.ATTACHMENT_NOT_FOUND'));
     }
     const document = await this.findOne(attachment.documentId, user);
     
-    // 🔥 تسجيل حركة تحميل أو استعراض المرفق بنجاح
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_DOWNLOAD,
       targetType: 'DocumentAttachment',
       targetId: attachment.id,
-      description: `Downloaded attachment "${attachment.fileName}" from document "${document.name}"`,
+      description: await this.i18n.translate('documents.ATTACHMENT_DOWNLOAD_LOG', {
+        args: { fileName: attachment.fileName, documentName: document.name }
+      }),
     });
 
     return attachment;
@@ -716,12 +697,12 @@ export class DocumentsService {
       where: { id: attachmentId },
     });
     if (!attachment) {
-      throw new NotFoundException('Attachment not found');
+      throw new NotFoundException(await this.i18n.translate('documents.ATTACHMENT_NOT_FOUND'));
     }
     const document = await this.loadDocumentOrFail(attachment.documentId);
     if (!this.canModify(user, document)) {
       throw new ForbiddenException(
-        'You do not have permission to delete this attachment',
+        await this.i18n.translate('documents.ATTACHMENT_DELETE_DENIED'),
       );
     }
     
@@ -729,16 +710,16 @@ export class DocumentsService {
     this.fileStorageService.deleteFile(attachment.filePath);
     await this.attachmentsRepository.remove(attachment);
 
-    // 🔥 تسجيل حركة حذف المرفق بنجاح
     await this.activityLogService.log({
       actor: this.activityLogService.fromAuthUser(user),
       action: ActivityAction.DOCUMENT_DELETE,
       targetType: 'DocumentAttachment',
       targetId: attachmentId,
-      description: `Deleted attachment "${attachmentName}" from document "${document.name}"`,
+      description: await this.i18n.translate('documents.ATTACHMENT_DELETE_LOG', {
+        args: { fileName: attachmentName, documentName: document.name }
+      }),
     });
   }
-
 
   // ---------- Dashboard support ----------
 

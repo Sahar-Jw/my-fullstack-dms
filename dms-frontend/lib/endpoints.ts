@@ -64,7 +64,7 @@ export const profileApi = {
   get: () => api.get<AppUser>('/profile'),
   
   // Update profile (name only)
-  update: (data: { name?: string }) =>
+  update: (data: { name?: string , email:string}) =>
     api.put<AppUser>('/profile', data),
   
   // Change password

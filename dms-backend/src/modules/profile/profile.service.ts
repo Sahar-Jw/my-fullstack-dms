@@ -1,4 +1,3 @@
-
 import {
   Injectable,
   NotFoundException,
@@ -13,6 +12,7 @@ import * as path from 'path';
 import { User } from '../users/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { I18nService } from 'nestjs-i18n';
 
 const SALT_ROUNDS = 10;
 
@@ -21,6 +21,7 @@ export class ProfileService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private readonly i18n: I18nService,
   ) {}
 
   async getProfile(userId: number): Promise<User> {
@@ -29,7 +30,7 @@ export class ProfileService {
       relations: ['role', 'department'],
     });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(await this.i18n.translate('profile.USER_NOT_FOUND'));
     }
     return user;
   }
@@ -37,8 +38,22 @@ export class ProfileService {
   async updateProfile(userId: number, dto: UpdateProfileDto): Promise<User> {
     const user = await this.getProfile(userId);
     
+    // Update name if provided
     if (dto.name !== undefined) {
       user.name = dto.name;
+    }
+    
+    // Update email if provided
+    if (dto.email !== undefined) {
+      if (dto.email !== user.email) {
+        const existingUser = await this.usersRepository.findOne({
+          where: { email: dto.email },
+        });
+        if (existingUser && existingUser.id !== userId) {
+          throw new BadRequestException(await this.i18n.translate('profile.EMAIL_ALREADY_IN_USE'));
+        }
+        user.email = dto.email;
+      }
     }
     
     return this.usersRepository.save(user);
@@ -49,11 +64,11 @@ export class ProfileService {
     
     const isValid = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isValid) {
-      throw new UnauthorizedException('Current password is incorrect');
+      throw new UnauthorizedException(await this.i18n.translate('profile.CURRENT_PASSWORD_INCORRECT'));
     }
     
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestException(await this.i18n.translate('profile.PASSWORD_SAME_AS_CURRENT'));
     }
     
     const hashedPassword = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
@@ -62,7 +77,7 @@ export class ProfileService {
     user.mustChangePassword = false;
     
     await this.usersRepository.save(user);
-    return { message: 'Password changed successfully' };
+    return { message: await this.i18n.translate('profile.PASSWORD_CHANGED_SUCCESS') };
   }
 
   async uploadProfilePicture(userId: number, file: Express.Multer.File): Promise<User> {
@@ -94,7 +109,7 @@ export class ProfileService {
     // Save file
     fs.writeFileSync(filePath, file.buffer);
     
-    // ✅ STORE ONLY THE FILENAME (not the full path)
+    // Store only the filename
     user.profilePicture = filename;
     await this.usersRepository.save(user);
     
