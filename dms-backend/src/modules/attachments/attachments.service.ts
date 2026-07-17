@@ -13,6 +13,8 @@ import { Document } from '../documents/entities/document.entity';
 import { DocumentsService } from '../documents/documents.service';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { relativeStoredPath } from '../../common/utils/multer.config';
+import { ActivityLogService } from '../activity-logs/activity-log.service';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
 
 const UPLOAD_ROOT = process.env.UPLOAD_ROOT || './uploads';
 
@@ -24,6 +26,7 @@ export class AttachmentsService {
     @InjectRepository(Document)
     private documentsRepository: Repository<Document>,
     private documentsService: DocumentsService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   private async getDocumentOrFail(documentId: number): Promise<Document> {
@@ -64,7 +67,19 @@ export class AttachmentsService {
       }),
     );
 
-    return this.attachmentsRepository.save(attachments);
+    const savedAttachments = await this.attachmentsRepository.save(attachments);
+
+    // 🔥 تعديل: استخدام DOCUMENT_UPLOAD لتظهر كعملية رفع واضحة ومستقلة في جدول الأنشطة
+    const fileNames = savedAttachments.map(a => a.fileName).join(', ');
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_UPLOAD, // 👈 تم التغيير هنا لتعمل بشكل فوري ومباشر
+      targetType: 'Document',
+      targetId: document.id,
+      description: `Uploaded attachment(s) to document "${document.name}": [${fileNames}]`,
+    });
+
+    return savedAttachments;
   }
 
   // UC-13 (متابعة) / FR-27: عرض قائمة المرفقات الخاصة بالوثيقة
@@ -99,6 +114,14 @@ export class AttachmentsService {
       throw new ForbiddenException('You are not authorized to download this attachment');
     }
 
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DOWNLOAD,
+      targetType: 'Attachment',
+      targetId: attachment.id,
+      description: `Downloaded attachment "${attachment.fileName}" from document "${attachment.document.name}"`,
+    });
+
     return {
       fullPath: join(UPLOAD_ROOT, attachment.filePath),
       fileName: attachment.fileName,
@@ -129,6 +152,16 @@ export class AttachmentsService {
     }
 
     await this.attachmentsRepository.remove(attachment);
+
+    // 🔥 تعديل: استخدام DOCUMENT_DELETE لتظهر كعملية حذف مرفق داخل المستند
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DELETE, // 👈 تم التغيير هنا لتعمل بشكل فوري ومباشر
+      targetType: 'Document',
+      targetId: attachment.document.id,
+      description: `Deleted attachment "${attachment.fileName}" from document "${attachment.document.name}"`,
+    });
+
     return { message: 'Attachment deleted successfully' };
   }
 }

@@ -12,6 +12,9 @@ import {
   FolderTreeNode,
   LoginResponse,
   Role,
+  ActivityAction,
+  PaginatedResult,
+  ActivityLog,
 } from './types';
 
 // ---------- Auth ----------
@@ -202,4 +205,20 @@ export const documentsApi = {
 // ---------- Dashboard ----------
 export const dashboardApi = {
   get: () => api.get<DashboardData>('/dashboard'),
+};
+
+
+// lib/endpoints.ts (addition)
+export interface ActivityLogQueryParams {
+  page?: number;
+  limit?: number;
+  action?: ActivityAction;
+  userId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export const activityLogsApi = {
+  list: (params: ActivityLogQueryParams = {}) =>
+    api.get<PaginatedResult<ActivityLog>>('/activity-logs', params as Record<string, any>),
 };

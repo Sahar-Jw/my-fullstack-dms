@@ -7,6 +7,7 @@ import { Folder } from '../folders/entities/folder.entity';
 import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
 import { FileStorageService } from './file-storage.service';
+import { ActivityLogModule } from '../activity-logs/activity-log.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FileStorageService } from './file-storage.service';
       DocumentAttachment,
       Folder,
     ]),
+    ActivityLogModule
   ],
   providers: [DocumentsService, FileStorageService],
   controllers: [DocumentsController],

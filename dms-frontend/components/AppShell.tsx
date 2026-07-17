@@ -15,6 +15,7 @@ const NAV_ITEMS: { href: string; label: string; roles?: string[] }[] = [
   { href: '/categories', label: 'Categories' },
   { href: '/departments', label: 'Departments', roles: ['Admin'] },
   { href: '/users', label: 'Users', roles: ['Admin'] },
+  { href: '/activity-logs', label: 'Activity Logs', roles: ['Admin', 'Manager'] },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

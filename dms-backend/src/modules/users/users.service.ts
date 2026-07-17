@@ -12,6 +12,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { RolesService } from '../roles/roles.service';
 import { DepartmentsService } from '../departments/departments.service';
 import { RoleName } from '../../common/decorators/roles.decorator';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
+
+// 1. استيراد موديول سجلات الأنشطة
+import { ActivityLogService } from '../activity-logs/activity-log.service';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
 
 const SALT_ROUNDS = 10;
 const DEFAULT_ROLE_NAME = RoleName.EMPLOYEE;
@@ -23,6 +28,9 @@ export class UsersService {
     private usersRepository: Repository<User>,
     private rolesService: RolesService,
     private departmentsService: DepartmentsService,
+    
+    // 2. حقن خدمة الأنشطة هنا
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   findAll(): Promise<User[]> {
@@ -59,12 +67,9 @@ export class UsersService {
 
     const defaultRole = await this.rolesService.findByName(DEFAULT_ROLE_NAME);
     if (!defaultRole) {
-      // Table isn't seeded — fail loudly rather than let someone in with roleId null.
       throw new BadRequestException('Default role is not configured');
     }
     if (defaultRole.name !== RoleName.EMPLOYEE) {
-      // Tripwire: guards against a future refactor accidentally handing out
-      // Admin/Manager via self-registration by changing one constant.
       throw new Error('DEFAULT_ROLE_NAME must resolve to the Employee role');
     }
 
@@ -83,13 +88,31 @@ export class UsersService {
       roleId: defaultRole.id,
       departmentId: dto.departmentId,
       isActive: true,
-      mustChangePassword: false, // user set their own password, no reset needed
+      mustChangePassword: false,
     });
 
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    // 🔥 3. تسجيل عملية إنشاء حساب موظف جديد (تسجيل ذاتي)
+    await this.activityLogService.log({
+      actor: {
+        id: savedUser.id,
+        name: savedUser.name,
+        email: savedUser.email,
+        role: RoleName.EMPLOYEE,
+        departmentId: savedUser.departmentId,
+      },
+      action: ActivityAction.REGISTER,
+      targetType: 'User',
+      targetId: savedUser.id,
+      description: `New user self-registered account with email "${savedUser.email}"`,
+    });
+
+    return savedUser;
   }
 
-  async update(id: number, dto: UpdateUserDto): Promise<User> {
+  // أضفنا معامل `actor` هنا لنعرف أي أدمن قام بالتعديل
+  async update(id: number, dto: UpdateUserDto, actor?: AuthUser): Promise<User> {
     const user = await this.findOne(id);
 
     if (dto.email && dto.email !== user.email) {
@@ -106,22 +129,53 @@ export class UsersService {
     if (dto.departmentId !== undefined) patch.departmentId = dto.departmentId;
 
     await this.usersRepository.update(id, patch);
+    const updatedUser = await this.findOne(id);
 
-    return this.findOne(id);
+    // 🔥 4. تسجيل تعديل بيانات مستخدم بواسطة الأدمن
+    await this.activityLogService.log({
+      actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
+      action: ActivityAction.USER_UPDATE,
+      targetType: 'User',
+      targetId: id,
+      description: `Updated profile details for account "${user.email}"`,
+    });
+
+    return updatedUser;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, actor?: AuthUser): Promise<void> {
     const user = await this.findOne(id);
+    const userEmail = user.email;
     await this.usersRepository.remove(user);
+
+    // 🔥 5. تسجيل حذف الحساب بالكامل
+    await this.activityLogService.log({
+      actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
+      action: ActivityAction.USER_UPDATE,
+      targetType: 'User',
+      targetId: id,
+      description: `Permanently deleted user account "${userEmail}"`,
+    });
   }
 
-  async toggleStatus(id: number): Promise<User> {
+  async toggleStatus(id: number, actor?: AuthUser): Promise<User> {
     const user = await this.findOne(id);
     user.isActive = !user.isActive;
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    // 🔥 6. تسجيل تجميد أو تفعيل حساب الموظف في الـ Logs
+    await this.activityLogService.log({
+      actor: actor ? this.activityLogService.fromAuthUser(actor) : null,
+      action: ActivityAction.USER_STATUS_TOGGLE,
+      targetType: 'User',
+      targetId: id,
+      description: `Toggled account status for "${user.email}". Current status: ${savedUser.isActive ? 'Active' : 'Inactive'}`,
+    });
+
+    return savedUser;
   }
 
-  async updatePassword(id: number, newPassword: string): Promise<User> {
+  async updatePassword(id: number, newPassword: string, actor?: AuthUser): Promise<User> {
     if (!newPassword || newPassword.length < 6) {
       throw new BadRequestException(
         'Password must be at least 6 characters long',
@@ -131,7 +185,19 @@ export class UsersService {
     user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
     user.mustChangePassword = false;
     user.passwordChangedAt = new Date();
-    return this.usersRepository.save(user);
+    
+    const savedUser = await this.usersRepository.save(user);
+
+    // 🔥 7. تسجيل حركة تغيير كلمة المرور للحساب
+    await this.activityLogService.log({
+      actor: actor ? this.activityLogService.fromAuthUser(actor) : user ? { id: user.id, name: user.name, email: user.email, role: RoleName.EMPLOYEE, departmentId: user.departmentId } : null,
+      action: ActivityAction.PASSWORD_CHANGED,
+      targetType: 'User',
+      targetId: id,
+      description: `Changed password for account "${user.email}"`,
+    });
+
+    return savedUser;
   }
 
   async validatePassword(user: User, password: string): Promise<boolean> {

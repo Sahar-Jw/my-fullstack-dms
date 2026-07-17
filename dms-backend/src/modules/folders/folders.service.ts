@@ -12,11 +12,18 @@ import { UpdateFolderDto } from './dto/update-folder.dto';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { RoleName } from '../../common/decorators/roles.decorator';
 
+// 1. استيراد خدمات الأنشطة والـ Enum
+import { ActivityLogService } from '../activity-logs/activity-log.service';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
+
 @Injectable()
 export class FoldersService {
   constructor(
     @InjectRepository(Folder)
     private foldersRepository: Repository<Folder>,
+
+    // 2. حقن خدمة الأنشطة هنا داخل الباني
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   private assertCanManage(user: AuthUser, departmentId: number) {
@@ -118,7 +125,59 @@ export class FoldersService {
     return folder;
   }
 
-  async create(dto: CreateFolderDto, user: AuthUser): Promise<Folder> {
+  // async create(dto: CreateFolderDto, user: AuthUser): Promise<Folder> {
+  //   let departmentId: number;
+
+  //   if (user.roleName === RoleName.ADMIN) {
+  //     if (!dto.departmentId) {
+  //       throw new BadRequestException(
+  //         'departmentId is required when an Admin creates a folder',
+  //       );
+  //     }
+  //     departmentId = dto.departmentId;
+  //   } else {
+  //     departmentId = user.departmentId;
+  //   }
+
+  //   this.assertCanManage(user, departmentId);
+
+  //   if (dto.parentFolderId) {
+  //     const parent = await this.foldersRepository.findOne({
+  //       where: { id: dto.parentFolderId },
+  //     });
+  //     if (!parent) {
+  //       throw new NotFoundException('Parent folder not found');
+  //     }
+  //     if (parent.departmentId !== departmentId) {
+  //       throw new BadRequestException(
+  //         'Parent folder must belong to the same department',
+  //       );
+  //     }
+  //   }
+
+  //   const folder = this.foldersRepository.create({
+  //     name: dto.name,
+  //     parentFolderId: dto.parentFolderId ?? null,
+  //     departmentId,
+  //     createdById: user.userId,
+  //   });
+
+  //   const savedFolder = await this.foldersRepository.save(folder);
+
+  //   // 🔥 3. تسجيل عملية إنشاء مجلد جديد في الـ Logs
+  //   await this.activityLogService.log({
+  //     actor: this.activityLogService.fromAuthUser(user),
+  //     action: ActivityAction.FOLDER_CREATE,
+  //     targetType: 'Folder',
+  //     targetId: savedFolder.id,
+  //     description: `Created folder "${savedFolder.name}" in department #${departmentId}` + 
+  //       (dto.parentFolderId ? ` under parent folder #${dto.parentFolderId}` : ''),
+  //   });
+
+  //   return savedFolder;
+  // }
+
+    async create(dto: CreateFolderDto, user: AuthUser): Promise<Folder> {
     let departmentId: number;
 
     if (user.roleName === RoleName.ADMIN) {
@@ -155,8 +214,36 @@ export class FoldersService {
       createdById: user.userId,
     });
 
-    return this.foldersRepository.save(folder);
+    const savedFolder = await this.foldersRepository.save(folder);
+
+    // 1. 🔥 جلب اسم القسم والملف الأب بالكامل عبر استخدام الـ relations المباشرة لفك شفرة الأسماء النصية
+    const fullyLoadedFolder = await this.foldersRepository.findOne({
+      where: { id: savedFolder.id },
+      relations: ['parentFolder'], // 👈 أضفنا علاقة parentFolder هنا لجلب الاسم الأب النصي
+    });
+
+    const departmentName = fullyLoadedFolder?.department?.name || `Department #${departmentId}`;
+    
+    // 2. التقاط اسم المجلد الأب إذا كان متوفراً في الطلب
+    let parentDetails = '';
+    if (dto.parentFolderId) {
+      const parentName = fullyLoadedFolder?.parentFolder?.name || `Folder #${dto.parentFolderId}`;
+      parentDetails = ` under parent folder "${parentName}"`; // 👈 صياغة الاسم داخل علامات اقتباس
+    }
+
+    // 3. 🔥 تسجيل عملية إنشاء المجلد مع عرض الاسم النصي للقسم والمجلد الأب في جدول الأنشطة
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.FOLDER_CREATE,
+      targetType: 'Folder',
+      targetId: savedFolder.id,
+      description: `Created folder "${savedFolder.name}" in department "${departmentName}"${parentDetails}`,
+    });
+
+    return savedFolder;
   }
+
+
 
   async update(
     id: number,
@@ -165,12 +252,31 @@ export class FoldersService {
   ): Promise<Folder> {
     const folder = await this.findOne(id, user);
     this.assertCanManage(user, folder.departmentId);
+    
+    const oldName = folder.name;
     folder.name = dto.name;
-    return this.foldersRepository.save(folder);
+    const updatedFolder = await this.foldersRepository.save(folder);
+
+    // 🔥 4. تسجيل تعديل اسم المجلد في الـ Logs
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.SETTINGS_UPDATE, // نستخدم SETTINGS_UPDATE أو تحديث عام لتتبع التعديلات الإدارية للمجلدات
+      targetType: 'Folder',
+      targetId: id,
+      description: `Renamed folder from "${oldName}" to "${dto.name}"`,
+    });
+
+    return updatedFolder;
   }
 
-  async remove(id: number, user: AuthUser): Promise<void> {
-    const folder = await this.findOne(id, user);
+   async remove(id: number, user: AuthUser): Promise<void> {
+    // 1. استخدام دالة findOne المباشرة من الـ repository لقراءة المجلد مع علاقات الـ eager المتاحة تلقائياً
+    const folder = await this.foldersRepository.findOne({ where: { id } });
+    if (!folder) {
+      throw new NotFoundException(`Folder with id ${id} not found`);
+    }
+
+    // التحقق من الصلاحيات الإدارية كالمعتاد
     this.assertCanManage(user, folder.departmentId);
 
     const childCount = await this.foldersRepository.count({
@@ -195,6 +301,22 @@ export class FoldersService {
       );
     }
 
+    const folderName = folder.name;
+    
+    // 2. 🔥 التقاط الاسم النصي الصريح للقسم بفضل ميزة الـ eager المدمجة في الـ Entity الخاص بك
+    const departmentName = folder.department?.name || `Department #${folder.departmentId}`;
+    
     await this.foldersRepository.remove(folder);
+
+    // 🔥 3. تسجيل عملية الحذف وعرض الاسم النصي (مثل "Finance" أو "Frontend") مباشرة داخل جدول الأنشطة
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.FOLDER_DELETE,
+      targetType: 'Folder',
+      targetId: id,
+      description: `Deleted folder "${folderName}" from department "${departmentName}"`, // 👈 ستعرض الاسم الحقيقي الآن فوراً
+    });
   }
+
+
 }

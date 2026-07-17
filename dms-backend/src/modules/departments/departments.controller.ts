@@ -14,9 +14,14 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
+// 🔥 استيراد الديكوريتور والإنترفيس الخاص بالمستخدم الحالي لالتقاط بيانات الأدمن
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
+
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
+  
   @Public()
   @Get()
   findAll() {
@@ -30,8 +35,11 @@ export class DepartmentsController {
 
   @Post()
   @Roles(RoleName.ADMIN)
-  create(@Body() dto: CreateDepartmentDto) {
-    return this.departmentsService.create(dto);
+  create(
+    @Body() dto: CreateDepartmentDto,
+    @CurrentUser() actor: AuthUser // 🔥 استخراج الأدمن الحالي
+  ) {
+    return this.departmentsService.create(dto, actor);
   }
 
   @Put(':id')
@@ -39,13 +47,17 @@ export class DepartmentsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateDepartmentDto,
+    @CurrentUser() actor: AuthUser // 🔥 استخراج الأدمن الحالي
   ) {
-    return this.departmentsService.update(id, dto);
+    return this.departmentsService.update(id, dto, actor);
   }
 
   @Delete(':id')
   @Roles(RoleName.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.departmentsService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() actor: AuthUser // 🔥 استخراج الأدمن الحالي
+  ) {
+    return this.departmentsService.remove(id, actor);
   }
 }

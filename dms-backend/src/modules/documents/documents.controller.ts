@@ -28,6 +28,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
 import * as fs from 'fs';
+import { LogActivity } from '../activity-logs/decorators/log-activity.decorator';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
 
 @Controller('documents')
 export class DocumentsController {
@@ -85,8 +87,12 @@ export class DocumentsController {
     return this.documentsService.updateFile(id, file, user);
   }
 
-  @Delete(':id')
-  softDelete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+ @Delete(':id')
+  softDelete(
+    @Param('id', ParseIntPipe) id: number, 
+    @CurrentUser() user: AuthUser
+  ) {
+    // نكتفي باستدعاء الخدمة، والخدمة ستقوم بتسجيل الاسم النصي النظيف تلقائياً وبأمان في قاعدة البيانات
     return this.documentsService.softDelete(id, user);
   }
 
@@ -95,11 +101,16 @@ export class DocumentsController {
     return this.documentsService.restore(id, user);
   }
 
-  @Delete(':id/permanent')
+   @Delete(':id/permanent')
   @Roles(RoleName.ADMIN)
-  permanentDelete(@Param('id', ParseIntPipe) id: number) {
-    return this.documentsService.permanentDelete(id);
+  permanentDelete(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser 
+  ) {
+    // تمرير الأدمن كمعامل ثانٍ صريح للخدمة
+    return this.documentsService.permanentDelete(id, user); 
   }
+
 
   @Patch(':id/move')
   move(

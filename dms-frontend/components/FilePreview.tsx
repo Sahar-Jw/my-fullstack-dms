@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx';
 
 interface FilePreviewProps {
   target: PreviewTarget;
+  // Add optional prop to control showing download buttons
+  showDownloadButton?: boolean;
 }
 
 const PDF_TYPE = 'application/pdf';
@@ -23,7 +25,7 @@ function getToken(): string | null {
   return typeof window !== 'undefined' ? window.localStorage.getItem('dms_token') : null;
 }
 
-export default function FilePreview({ target }: FilePreviewProps) {
+export default function FilePreview({ target, showDownloadButton = true }: FilePreviewProps) {
   const { previewPath, filename, mimeType } = target;
   const [state, setState] = useState<PreviewLoadState>('idle');
   const [error, setError] = useState('');
@@ -141,6 +143,33 @@ export default function FilePreview({ target }: FilePreviewProps) {
     };
   }, [previewPath, isDocx, isExcel, isUnviewableImage]);
 
+  // Handle download with proper authentication
+  const handleDownload = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}${previewPath}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setError('Failed to download file');
+    }
+  };
+
   const downloadUrl = `${API_URL}${previewPath}`;
 
   return (
@@ -158,9 +187,11 @@ export default function FilePreview({ target }: FilePreviewProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-red-600 font-medium">{error}</p>
-          <a href={downloadUrl} download={filename} className="btn btn-primary mt-3">
-            Download {filename}
-          </a>
+          {showDownloadButton && (
+            <button onClick={handleDownload} className="btn btn-primary mt-3">
+              Download {filename}
+            </button>
+          )}
         </div>
       )}
 
@@ -171,9 +202,11 @@ export default function FilePreview({ target }: FilePreviewProps) {
               ? `${mime.split('/')[1]?.toUpperCase()} images can't be previewed in the browser.`
               : 'Preview not available for this file type.'}
           </p>
-          <a href={downloadUrl} download={filename} className="file-preview-download-link">
-            Download {filename}
-          </a>
+          {showDownloadButton && (
+            <button onClick={handleDownload} className="file-preview-download-link">
+              Download {filename}
+            </button>
+          )}
         </div>
       )}
 
@@ -198,16 +231,14 @@ export default function FilePreview({ target }: FilePreviewProps) {
         />
       )}
 
-      {/* Excel Preview */}
+      {/* Excel Preview - Download button removed to avoid duplication */}
       {isExcel && state === 'ready' && excelData.length > 0 && (
         <div className="file-preview-excel">
           <div className="excel-header">
             <h3 className="text-sm font-medium text-gray-700">
-              {filename} ({excelData.length} rows)
+              📊 {filename} ({excelData.length} rows)
             </h3>
-            <a href={downloadUrl} download={filename} className="btn btn-secondary btn-sm">
-              Download
-            </a>
+            {/* Download button removed - parent component handles downloads */}
           </div>
           <div className="excel-table-wrapper">
             <table className="excel-table">

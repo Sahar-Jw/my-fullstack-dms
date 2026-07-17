@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -19,23 +20,32 @@ export class AuthController {
   @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() dto: RegisterDto, @Req() req: Request) {
+    return this.authService.register(dto, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Req() req: Request) {
+    return this.authService.login(dto, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @UseGuards(JwtAuthGuard)
   @SkipPasswordCheck()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout() {
-    return this.authService.logout();
+  logout(@Req() req: Request) {
+    return this.authService.logout(req.user ?? null, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -45,21 +55,31 @@ export class AuthController {
   changePassword(
     @CurrentUser('userId') userId: number,
     @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
   ) {
-    return this.authService.changePassword(userId, dto);
+    return this.authService.changePassword(userId, dto, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('reset-password')
-  requestReset(@Body() dto: RequestResetPasswordDto) {
-    return this.authService.requestPasswordReset(dto.email);
+  requestReset(@Body() dto: RequestResetPasswordDto, @Req() req: Request) {
+    return this.authService.requestPasswordReset(dto.email, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('reset-password/complete')
-  completeReset(@Body() dto: CompleteResetPasswordDto) {
-    return this.authService.completePasswordReset(dto.token, dto.newPassword);
+  completeReset(@Body() dto: CompleteResetPasswordDto, @Req() req: Request) {
+    return this.authService.completePasswordReset(dto.token, dto.newPassword, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 }

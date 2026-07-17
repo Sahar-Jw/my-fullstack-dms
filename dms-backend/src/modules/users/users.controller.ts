@@ -12,6 +12,10 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
 
+// 1. استيراد الديكوريتور والإنترفيس الخاص بالمستخدم الحالي المتوفرين في مشروعك
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
+
 @Controller('users')
 @Roles(RoleName.ADMIN)
 export class UsersController {
@@ -28,17 +32,27 @@ export class UsersController {
   }
 
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(id, dto);
+  update(
+    @Param('id', ParseIntPipe) id: number, 
+    @Body() dto: UpdateUserDto,
+    @CurrentUser() admin: AuthUser, // 2. استخراج بيانات الأدمن الحالي الذي ينفذ الطلب
+  ) {
+    return this.usersService.update(id, dto, admin); // 3. تمرير الأدمن كمعامل ثالث للخدمة
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() admin: AuthUser, // 2. استخراج بيانات الأدمن هنا أيضاً
+  ) {
+    return this.usersService.remove(id, admin); // 3. تمرير الأدمن للخدمة
   }
 
   @Patch(':id/toggle-status')
-  toggleStatus(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.toggleStatus(id);
+  toggleStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() admin: AuthUser, // 2. استخراج بيانات الأدمن هنا أيضاً
+  ) {
+    return this.usersService.toggleStatus(id, admin); // 3. تمرير الأدمن للخدمة
   }
 }

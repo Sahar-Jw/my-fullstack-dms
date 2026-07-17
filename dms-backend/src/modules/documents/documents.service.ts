@@ -18,6 +18,9 @@ import { MoveDocumentDto } from './dto/move-document.dto';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { RoleName } from '../../common/decorators/roles.decorator';
 import { FileStorageService } from './file-storage.service';
+import { ActivityLogService } from '../activity-logs/activity-log.service';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
+
 
 @Injectable()
 export class DocumentsService {
@@ -31,6 +34,7 @@ export class DocumentsService {
     @InjectRepository(Folder)
     private foldersRepository: Repository<Folder>,
     private fileStorageService: FileStorageService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   // ---------- Permission helpers ----------
@@ -221,7 +225,7 @@ export class DocumentsService {
    * - Multiple files: each file becomes its own Document, named after its filename
    *   (dto.name is ignored in this case since one name can't apply to N documents).
    */
-  async create(
+   async create(
     dto: CreateDocumentDto,
     files: Express.Multer.File[],
     user: AuthUser,
@@ -262,13 +266,24 @@ export class DocumentsService {
       });
       await this.versionsRepository.save(version);
 
-      createdDocs.push(await this.loadDocumentOrFail(saved.id));
+      const fullyLoadedDoc = await this.loadDocumentOrFail(saved.id);
+      createdDocs.push(fullyLoadedDoc);
+
+      // 🔥 تسجيل عملية الرفع في الـ Logs لكل ملف يتم رفعه بنجاح
+      await this.activityLogService.log({
+        actor: this.activityLogService.fromAuthUser(user),
+        action: ActivityAction.DOCUMENT_UPLOAD,
+        targetType: 'Document',
+        targetId: saved.id,
+        description: `Uploaded document: "${fullyLoadedDoc.name}" into folder: "${fullyLoadedDoc.folder?.name || dto.folderId}"`,
+      });
     }
 
     return createdDocs;
   }
 
-  async update(
+
+   async update(
     id: number,
     dto: UpdateDocumentDto,
     user: AuthUser,
@@ -279,12 +294,29 @@ export class DocumentsService {
         'You do not have permission to update this document',
       );
     }
+    
+    // حفظ الاسم القديم لاستخدامه في الوصف التسجيلي (اختياري ومفيد للتتبع)
+    const oldName = document.name;
+
     Object.assign(document, dto);
     await this.documentsRepository.save(document);
-    return this.loadDocumentOrFail(id);
+    
+    const updatedDoc = await this.loadDocumentOrFail(id);
+
+    // 🔥 تسجيل عملية التحديث في الـ Logs بنجاح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_UPDATE,
+      targetType: 'Document',
+      targetId: id,
+      description: `Updated document properties for "${oldName}"` + (dto.name ? ` (Renamed to: "${dto.name}")` : ''),
+    });
+
+    return updatedDoc;
   }
 
-  async updateFile(
+
+   async updateFile(
     id: number,
     file: Express.Multer.File,
     user: AuthUser,
@@ -326,7 +358,18 @@ export class DocumentsService {
     document.updatedAt = new Date();
     await this.documentsRepository.save(document);
 
-    return this.loadDocumentOrFail(id);
+    const updatedDoc = await this.loadDocumentOrFail(id);
+
+    // 🔥 تسجيل رفع نسخة جديدة للمستند
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_UPDATE,
+      targetType: 'Document',
+      targetId: id,
+      description: `Uploaded a new file version (v${nextVersionNumber}) for document "${updatedDoc.name}": ${file.originalname}`,
+    });
+
+    return updatedDoc;
   }
 
   async softDelete(id: number, user: AuthUser): Promise<Document> {
@@ -338,8 +381,23 @@ export class DocumentsService {
         'Only the document owner or an Admin can delete this document',
       );
     }
+    
+    // 🔥 تخزين الاسم الصافي في متغير نصي صريح ومستقل قبل الحفظ لمنع كسر البيانات
+    const currentDocName = document.name;
+
     document.isDeleted = true;
-    return this.documentsRepository.save(document);
+    const savedDoc = await this.documentsRepository.save(document);
+
+    // 🔥 تسجيل نقل المستند إلى سلة المحذوفات بشكل واضح وصريح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DELETE,
+      targetType: 'Document',
+      targetId: id,
+      description: `Moved document "${currentDocName}" to trash bin`,
+    });
+
+    return savedDoc;
   }
 
   async restore(id: number, user: AuthUser): Promise<Document> {
@@ -351,11 +409,26 @@ export class DocumentsService {
         'Only the document owner or an Admin can restore this document',
       );
     }
+    
+    // 🔥 تخزين الاسم الصافي في متغير نصي صريح ومستقل قبل الحفظ
+    const currentDocName = document.name;
+
     document.isDeleted = false;
-    return this.documentsRepository.save(document);
+    const savedDoc = await this.documentsRepository.save(document);
+
+    // 🔥 تسجيل استعادة المستند من سلة المحذوفات بشكل واضح وصريح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_RESTORE,
+      targetType: 'Document',
+      targetId: id,
+      description: `Restored document "${currentDocName}" from trash bin`,
+    });
+
+    return savedDoc;
   }
 
-  async permanentDelete(id: number): Promise<void> {
+  async permanentDelete(id: number, user: AuthUser): Promise<void> {
     const document = await this.documentsRepository.findOne({
       where: { id },
       relations: ['versions', 'attachments'],
@@ -363,6 +436,8 @@ export class DocumentsService {
     if (!document) {
       throw new NotFoundException(`Document not found`);
     }
+
+    const documentName = document.name;
 
     for (const version of document.versions || []) {
       this.fileStorageService.deleteFile(version.filePath);
@@ -372,9 +447,19 @@ export class DocumentsService {
     }
 
     await this.documentsRepository.remove(document);
+
+    // 🔥 تسجيل الحركة باسم الأدمن الفعلي واستخدام DOCUMENT_DELETE بشكل نظيف وآمن
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user), // 👈 سيسجل اسم وإيميل الأدمن الحالي بدلاً من System
+      action: ActivityAction.DOCUMENT_DELETE, // 👈 إرجاع الإجراء لتصنيفه الأصلي في فلاتر الجدول
+      targetType: 'Document',
+      targetId: id,
+      description: `Permanently purged document "${documentName}" from the system and destroyed all its storage files permanently.`,
+    });
   }
 
-  async move(
+
+   async move(
     id: number,
     dto: MoveDocumentDto,
     user: AuthUser,
@@ -399,9 +484,25 @@ export class DocumentsService {
       );
     }
 
+    // حفظ اسم المجلد الحالي قبل النقل لاستخدامه في وصف السجل
+    const sourceFolderName = document.folder?.name || `Folder #${document.folderId}`;
+
     await this.documentsRepository.update(id, { folderId: dto.folderId });
-    return this.loadDocumentOrFail(id);
+    
+    const movedDoc = await this.loadDocumentOrFail(id);
+
+    // 🔥 تسجيل عملية نقل المستند في الـ Logs بنجاح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_MOVE,
+      targetType: 'Document',
+      targetId: id,
+      description: `Moved document "${movedDoc.name}" from folder "${sourceFolderName}" to folder "${targetFolder.name}"`,
+    });
+
+    return movedDoc;
   }
+
 
   // ---------- Versions ----------
 
@@ -539,42 +640,52 @@ export class DocumentsService {
   // }
 
   async addAttachment(
-  id: number,
-  files: Express.Multer.File[],
-  user: AuthUser,
-): Promise<DocumentAttachment[]> {
-  if (!files || files.length === 0) {
-    throw new BadRequestException('At least one file is required');
-  }
-  const document = await this.loadDocumentOrFail(id);
-  if (!this.canModify(user, document)) {
-    throw new ForbiddenException(
-      'You do not have permission to add attachments to this document',
-    );
-  }
+    id: number,
+    files: Express.Multer.File[],
+    user: AuthUser,
+  ): Promise<DocumentAttachment[]> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one file is required');
+    }
+    const document = await this.loadDocumentOrFail(id);
+    if (!this.canModify(user, document)) {
+      throw new ForbiddenException(
+        'You do not have permission to add attachments to this document',
+      );
+    }
 
-  const attachments: DocumentAttachment[] = [];
-  for (const file of files) {
-    const relativePath = this.fileStorageService.saveFile(
-      'attachments',
-      id,
-      file.originalname,
-      file.buffer,
-    );
+    const attachments: DocumentAttachment[] = [];
+    for (const file of files) {
+      const relativePath = this.fileStorageService.saveFile(
+        'attachments',
+        id,
+        file.originalname,
+        file.buffer,
+      );
 
-    const attachment = this.attachmentsRepository.create({
-      documentId: id,
-      uploadedById: user.userId,
-      fileName: file.originalname,
-      filePath: relativePath,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-    });
-    attachments.push(await this.attachmentsRepository.save(attachment));
+      const attachment = this.attachmentsRepository.create({
+        documentId: id,
+        uploadedById: user.userId,
+        fileName: file.originalname,
+        filePath: relativePath,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      });
+      const savedAttachment = await this.attachmentsRepository.save(attachment);
+      attachments.push(savedAttachment);
+
+      // 🔥 تسجيل كل ملف مرفق يتم رفعه بنجاح داخل السجلات
+      await this.activityLogService.log({
+        actor: this.activityLogService.fromAuthUser(user),
+        action: ActivityAction.DOCUMENT_UPLOAD,
+        targetType: 'DocumentAttachment',
+        targetId: savedAttachment.id,
+        description: `Uploaded attachment "${savedAttachment.fileName}" to document "${document.name}"`,
+      });
+    }
+
+    return attachments;
   }
-
-  return attachments;
-}
 
   async getAttachment(
     attachmentId: number,
@@ -586,7 +697,17 @@ export class DocumentsService {
     if (!attachment) {
       throw new NotFoundException('Attachment not found');
     }
-    await this.findOne(attachment.documentId, user);
+    const document = await this.findOne(attachment.documentId, user);
+    
+    // 🔥 تسجيل حركة تحميل أو استعراض المرفق بنجاح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DOWNLOAD,
+      targetType: 'DocumentAttachment',
+      targetId: attachment.id,
+      description: `Downloaded attachment "${attachment.fileName}" from document "${document.name}"`,
+    });
+
     return attachment;
   }
 
@@ -603,9 +724,21 @@ export class DocumentsService {
         'You do not have permission to delete this attachment',
       );
     }
+    
+    const attachmentName = attachment.fileName;
     this.fileStorageService.deleteFile(attachment.filePath);
     await this.attachmentsRepository.remove(attachment);
+
+    // 🔥 تسجيل حركة حذف المرفق بنجاح
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(user),
+      action: ActivityAction.DOCUMENT_DELETE,
+      targetType: 'DocumentAttachment',
+      targetId: attachmentId,
+      description: `Deleted attachment "${attachmentName}" from document "${document.name}"`,
+    });
   }
+
 
   // ---------- Dashboard support ----------
 

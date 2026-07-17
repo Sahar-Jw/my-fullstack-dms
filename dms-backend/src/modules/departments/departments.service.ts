@@ -8,12 +8,20 @@ import { Repository } from 'typeorm';
 import { Department } from './entities/department.entity';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { AuthUser } from '../../common/interfaces/auth-user.interface';
+
+// 🔥 استيراد موديول سجلات الأنشطة والـ Enum الجديد لعمليات الأقسام
+import { ActivityLogService } from '../activity-logs/activity-log.service';
+import { ActivityAction } from '../activity-logs/activity-action.enum';
 
 @Injectable()
 export class DepartmentsService {
   constructor(
     @InjectRepository(Department)
     private departmentsRepository: Repository<Department>,
+
+    // 🔥 حقن خدمة الأنشطة هنا داخل الباني
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   findAll(): Promise<Department[]> {
@@ -30,18 +38,42 @@ export class DepartmentsService {
     return department;
   }
 
-  create(dto: CreateDepartmentDto): Promise<Department> {
+  async create(dto: CreateDepartmentDto, actor: AuthUser): Promise<Department> {
     const department = this.departmentsRepository.create(dto);
-    return this.departmentsRepository.save(department);
+    const savedDept = await this.departmentsRepository.save(department);
+
+    // 🔥 تسجيل حركة إنشاء قسم جديد
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(actor),
+      action: ActivityAction.DEPARTMENT_CREATE,
+      targetType: 'Department',
+      targetId: savedDept.id,
+      description: `Created new department: "${savedDept.name}"`,
+    });
+
+    return savedDept;
   }
 
-  async update(id: number, dto: UpdateDepartmentDto): Promise<Department> {
+  async update(id: number, dto: UpdateDepartmentDto, actor: AuthUser): Promise<Department> {
     const department = await this.findOne(id);
+    const oldName = department.name;
+
     Object.assign(department, dto);
-    return this.departmentsRepository.save(department);
+    const updatedDept = await this.departmentsRepository.save(department);
+
+    // 🔥 تسجيل حركة تعديل بيانات أو اسم القسم
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(actor),
+      action: ActivityAction.DEPARTMENT_UPDATE,
+      targetType: 'Department',
+      targetId: id,
+      description: `Updated department "${oldName}"` + (dto.name ? ` (Renamed to: "${dto.name}")` : ''),
+    });
+
+    return updatedDept;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, actor: AuthUser): Promise<void> {
     const department = await this.findOne(id);
     const usersCount = await this.departmentsRepository
       .createQueryBuilder('d')
@@ -54,6 +86,17 @@ export class DepartmentsService {
         'Cannot delete a department that still has users assigned to it',
       );
     }
+
+    const deptName = department.name;
     await this.departmentsRepository.remove(department);
+
+    // 🔥 تسجيل حركة حذف القسم نهائياً
+    await this.activityLogService.log({
+      actor: this.activityLogService.fromAuthUser(actor),
+      action: ActivityAction.DEPARTMENT_DELETE,
+      targetType: 'Department',
+      targetId: id,
+      description: `Deleted department "${deptName}"`,
+    });
   }
 }
