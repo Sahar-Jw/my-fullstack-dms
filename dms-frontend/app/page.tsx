@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 import { Languages } from 'lucide-react';
 
 
@@ -13,7 +14,7 @@ export default function LandingPage() {
   const { token, mustChangePassword, loading } = useAuth();
   const router = useRouter();
   const { locale, setLocale, t } = useLocale();
-
+  const { settings, logoUrl } = useSettings();
 
 
   const toggleLocale = () => {
@@ -49,8 +50,12 @@ export default function LandingPage() {
       <header className="landing-nav">
         <div className="landing-nav-inner">
           <div className="landing-brand">
-            <span className="auth-mark" style={{ width: 28, height: 28 }} />
-            <span className="landing-brand-name">{t('landing.brandName')}</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={settings?.siteName || 'Logo'} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
+            ) : (
+              <span className="auth-mark" style={{ width: 28, height: 28 }} />
+            )}
+            <span className="landing-brand-name">{settings?.siteName || t('landing.brandName')}</span>
           </div>
           <div className="landing-nav-actions">
             <Link className="link-btn" href="/login">

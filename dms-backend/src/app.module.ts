@@ -23,6 +23,8 @@ import { JwtAuthGuard } from './common/guards/auth.guard';
 import { PasswordChangeGuard } from './common/guards/password-change.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ProfileModule } from './modules/profile/profile.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { HttpExceptionFilter } from './common/filters/exceptions.filter';
 
 @Module({
   imports: [
@@ -68,6 +70,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     DocumentsModule,
     AttachmentsModule,
     DashboardModule,
+    SettingsModule,
   ],
   providers: [
     {
@@ -86,6 +89,7 @@ import { ProfileModule } from './modules/profile/profile.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    HttpExceptionFilter
   ],
 })
 export class AppModule {}

@@ -4,6 +4,7 @@ import './globals.css';
 import { LocaleProvider } from '@/lib/i18n/locale-provider';
 import { AuthProvider } from '@/lib/auth-context';
 import { ToastProvider } from '@/lib/toast-context';
+import { SettingsProvider } from '@/lib/settings-context';
 
 export const metadata: Metadata = {
   title: 'Ledger — Document Management',
@@ -23,9 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LocaleProvider>
-          <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </AuthProvider>
+          <SettingsProvider>
+            <AuthProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </AuthProvider>
+          </SettingsProvider>
         </LocaleProvider>
       </body>
     </html>

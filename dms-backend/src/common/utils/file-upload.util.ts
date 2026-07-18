@@ -55,9 +55,39 @@ export const profilePictureMulterOptions = {
 };
 
 
+// Logo / favicon uploads for the global Settings feature. Favicons are
+// commonly .ico (mimetype is inconsistent across browsers — sometimes
+// image/x-icon, sometimes application/octet-stream) so the extension check
+// carries more weight here than for regular document uploads.
+export const settingsAssetMulterOptions = {
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB is plenty for a logo/favicon
+  },
+  fileFilter: (req: any, file: Express.Multer.File, cb: any) => {
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.webp', '.gif', '.ico'];
+    const ext = extname(file.originalname).toLowerCase();
+
+    if (allowedExtensions.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(
+        new BadRequestException(
+          'Only PNG, JPG, SVG, WEBP, GIF, or ICO files are allowed (max 2MB)',
+        ),
+        false,
+      );
+    }
+  },
+  storage: memoryStorage(),
+};
+
+// Hard ceiling Multer enforces before any of our own code runs — a safety
+// net against abuse, independent of the admin-configured limit below.
+export const MAX_UPLOAD_CEILING_MB = 200;
+
 export const multerOptions = {
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: MAX_UPLOAD_CEILING_MB * 1024 * 1024,
   },
   fileFilter: (req: any, file: Express.Multer.File, cb: any) => {
     const isAllowedMimeType = ALLOWED_MIME_TYPES.includes(file.mimetype);

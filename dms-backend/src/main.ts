@@ -1,3 +1,4 @@
+// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -28,7 +29,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // ✅ THIS IS CRITICAL - Serve static files from uploads folder
+  // Serve static files from uploads folder
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
@@ -42,11 +43,12 @@ async function bootstrap() {
     }),
   );
 
-  // I18nValidationExceptionFilter only catches validation-pipe errors and
-  // translates their messages; HttpExceptionFilter still handles everything
-  // else exactly as before. Registration order doesn't matter here since
-  // the two filters target different exception types.
-  app.useGlobalFilters(new HttpExceptionFilter(), new I18nValidationExceptionFilter());
+  // ✅ Now this works because HttpExceptionFilter is registered in AppModule
+  app.useGlobalFilters(
+    app.get(HttpExceptionFilter),
+    new I18nValidationExceptionFilter()
+  );
+  
   app.enableCors();
 
   const port = process.env.PORT || 5000;

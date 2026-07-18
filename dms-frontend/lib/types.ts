@@ -1,5 +1,26 @@
 // lib/types.ts
 
+export interface Setting {
+  id: number;
+  siteName: string;
+  logoPath: string | null;
+  faviconPath: string | null;
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
+  themeColor: string;
+  maxUploadSizeMb: number;
+  updatedAt: string;
+}
+
+export interface DictionaryEntry {
+  id: number;
+  key: string;
+  en: string;
+  ar: string;
+  updatedAt: string;
+}
+
 export enum RoleName {
   Admin = 'Admin',
   Manager = 'Manager',

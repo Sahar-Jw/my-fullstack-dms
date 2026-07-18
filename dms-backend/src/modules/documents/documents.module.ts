@@ -7,7 +7,9 @@ import { Folder } from '../folders/entities/folder.entity';
 import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
 import { FileStorageService } from './file-storage.service';
+import { UploadSizeInterceptor } from '../../common/interceptors/upload-size.interceptor';
 import { ActivityLogModule } from '../activity-logs/activity-log.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -17,9 +19,10 @@ import { ActivityLogModule } from '../activity-logs/activity-log.module';
       DocumentAttachment,
       Folder,
     ]),
-    ActivityLogModule
+    ActivityLogModule,
+    SettingsModule,
   ],
-  providers: [DocumentsService, FileStorageService],
+  providers: [DocumentsService, FileStorageService, UploadSizeInterceptor],
   controllers: [DocumentsController],
   exports: [DocumentsService],
 })

@@ -1,0 +1,2047 @@
+[
+  {
+    "key": "activityLogs.action",
+    "en": "Action",
+    "ar": "الإجراء"
+  },
+  {
+    "key": "activityLogs.actions.attachmentDelete",
+    "en": "Deleted attachment",
+    "ar": "حذف مرفق"
+  },
+  {
+    "key": "activityLogs.actions.attachmentDownload",
+    "en": "Downloaded attachment",
+    "ar": "تنزيل مرفق"
+  },
+  {
+    "key": "activityLogs.actions.attachmentUpload",
+    "en": "Uploaded attachment",
+    "ar": "رفع مرفق"
+  },
+  {
+    "key": "activityLogs.actions.categoryCreate",
+    "en": "Created category",
+    "ar": "إنشاء فئة"
+  },
+  {
+    "key": "activityLogs.actions.categoryDelete",
+    "en": "Deleted category",
+    "ar": "حذف فئة"
+  },
+  {
+    "key": "activityLogs.actions.categoryUpdate",
+    "en": "Updated category",
+    "ar": "تحديث فئة"
+  },
+  {
+    "key": "activityLogs.actions.departmentCreate",
+    "en": "Created department",
+    "ar": "إنشاء قسم"
+  },
+  {
+    "key": "activityLogs.actions.departmentDelete",
+    "en": "Deleted department",
+    "ar": "حذف قسم"
+  },
+  {
+    "key": "activityLogs.actions.departmentUpdate",
+    "en": "Updated department",
+    "ar": "تحديث قسم"
+  },
+  {
+    "key": "activityLogs.actions.documentDelete",
+    "en": "Deleted document",
+    "ar": "حذف مستند"
+  },
+  {
+    "key": "activityLogs.actions.documentDownload",
+    "en": "Downloaded document",
+    "ar": "تنزيل مستند"
+  },
+  {
+    "key": "activityLogs.actions.documentMove",
+    "en": "Moved document",
+    "ar": "نقل مستند"
+  },
+  {
+    "key": "activityLogs.actions.documentRestore",
+    "en": "Restored document",
+    "ar": "استعادة مستند"
+  },
+  {
+    "key": "activityLogs.actions.documentUpdate",
+    "en": "Updated document",
+    "ar": "تحديث مستند"
+  },
+  {
+    "key": "activityLogs.actions.documentUpload",
+    "en": "Uploaded document",
+    "ar": "رفع مستند"
+  },
+  {
+    "key": "activityLogs.actions.folderCreate",
+    "en": "Created folder",
+    "ar": "إنشاء مجلد"
+  },
+  {
+    "key": "activityLogs.actions.folderDelete",
+    "en": "Deleted folder",
+    "ar": "حذف مجلد"
+  },
+  {
+    "key": "activityLogs.actions.loggedIn",
+    "en": "Logged in",
+    "ar": "تسجيل الدخول"
+  },
+  {
+    "key": "activityLogs.actions.loggedOut",
+    "en": "Logged out",
+    "ar": "تسجيل الخروج"
+  },
+  {
+    "key": "activityLogs.actions.loginFailed",
+    "en": "Failed login attempt",
+    "ar": "محاولة تسجيل دخول فاشلة"
+  },
+  {
+    "key": "activityLogs.actions.registered",
+    "en": "Registered account",
+    "ar": "تسجيل حساب"
+  },
+  {
+    "key": "activityLogs.actions.settingsUpdate",
+    "en": "Updated system settings",
+    "ar": "تحديث إعدادات النظام"
+  },
+  {
+    "key": "activityLogs.actions.userStatusToggle",
+    "en": "Toggled user status",
+    "ar": "تغيير حالة مستخدم"
+  },
+  {
+    "key": "activityLogs.actions.userUpdate",
+    "en": "Updated user",
+    "ar": "تحديث مستخدم"
+  },
+  {
+    "key": "activityLogs.allActions",
+    "en": "All actions",
+    "ar": "كل الإجراءات"
+  },
+  {
+    "key": "activityLogs.details",
+    "en": "Details",
+    "ar": "التفاصيل"
+  },
+  {
+    "key": "activityLogs.loadingLogs",
+    "en": "Loading activity logs...",
+    "ar": "جارٍ تحميل سجلات النشاط..."
+  },
+  {
+    "key": "activityLogs.next",
+    "en": "Next",
+    "ar": "التالي"
+  },
+  {
+    "key": "activityLogs.noActivity",
+    "en": "No activity found.",
+    "ar": "لا يوجد نشاط."
+  },
+  {
+    "key": "activityLogs.noActivityFound",
+    "en": "No activity found",
+    "ar": "لم يتم العثور على نشاط"
+  },
+  {
+    "key": "activityLogs.page",
+    "en": "Page {{current}} of {{total}} ({{count}} total)",
+    "ar": "صفحة {{current}} من {{total}} ({{count}} إجمالي)"
+  },
+  {
+    "key": "activityLogs.pageOf",
+    "en": "Page {{page}} of {{total}}",
+    "ar": "صفحة {{page}} من {{total}}"
+  },
+  {
+    "key": "activityLogs.prev",
+    "en": "Prev",
+    "ar": "السابق"
+  },
+  {
+    "key": "activityLogs.previous",
+    "en": "Previous",
+    "ar": "السابق"
+  },
+  {
+    "key": "activityLogs.subtitle",
+    "en": "Track all user actions across the system",
+    "ar": "تتبّع جميع إجراءات المستخدمين عبر النظام"
+  },
+  {
+    "key": "activityLogs.title",
+    "en": "All Activity",
+    "ar": "كل النشاطات"
+  },
+  {
+    "key": "activityLogs.totalEntries",
+    "en": "{{count}} total entries",
+    "ar": "{{count}} إدخال إجمالي"
+  },
+  {
+    "key": "activityLogs.tryAdjustingFilters",
+    "en": "Try adjusting your filters",
+    "ar": "حاول تعديل عوامل التصفية"
+  },
+  {
+    "key": "activityLogs.user",
+    "en": "User",
+    "ar": "المستخدم"
+  },
+  {
+    "key": "activityLogs.when",
+    "en": "When",
+    "ar": "الوقت"
+  },
+  {
+    "key": "auth.confirmPassword",
+    "en": "Confirm password",
+    "ar": "تأكيد كلمة المرور"
+  },
+  {
+    "key": "auth.creating",
+    "en": "Creating…",
+    "ar": "جارٍ الإنشاء…"
+  },
+  {
+    "key": "auth.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "auth.departmentsLoadError",
+    "en": "Could not load departments. Try refreshing the page.",
+    "ar": "تعذر تحميل الأقسام. حاول تحديث الصفحة."
+  },
+  {
+    "key": "auth.email",
+    "en": "Email",
+    "ar": "البريد الإلكتروني"
+  },
+  {
+    "key": "auth.fullName",
+    "en": "Full name",
+    "ar": "الاسم الكامل"
+  },
+  {
+    "key": "auth.haveAccount",
+    "en": "Already have an account? ",
+    "ar": "لديك حساب بالفعل؟ "
+  },
+  {
+    "key": "auth.noAccount",
+    "en": "Don't have an account? ",
+    "ar": "ليس لديك حساب؟ "
+  },
+  {
+    "key": "auth.password",
+    "en": "Password",
+    "ar": "كلمة المرور"
+  },
+  {
+    "key": "auth.registerButton",
+    "en": "Register",
+    "ar": "تسجيل"
+  },
+  {
+    "key": "auth.registerLink",
+    "en": "Register",
+    "ar": "سجّل"
+  },
+  {
+    "key": "auth.registerSubtitle",
+    "en": "Register to access your department's documents.",
+    "ar": "سجّل للوصول إلى مستندات قسمك."
+  },
+  {
+    "key": "auth.registerTitle",
+    "en": "Create your account",
+    "ar": "أنشئ حسابك"
+  },
+  {
+    "key": "auth.selectDepartment",
+    "en": "Select your department...",
+    "ar": "اختر قسمك..."
+  },
+  {
+    "key": "auth.signInButton",
+    "en": "Sign in",
+    "ar": "تسجيل الدخول"
+  },
+  {
+    "key": "auth.signInLink",
+    "en": "Sign in",
+    "ar": "تسجيل الدخول"
+  },
+  {
+    "key": "auth.signInSubtitle",
+    "en": "Your department's document system.",
+    "ar": "نظام مستندات قسمك."
+  },
+  {
+    "key": "auth.signInTitle",
+    "en": "Sign in to Ledger",
+    "ar": "تسجيل الدخول إلى Ledger"
+  },
+  {
+    "key": "auth.signingIn",
+    "en": "Signing in…",
+    "ar": "جارٍ تسجيل الدخول…"
+  },
+  {
+    "key": "auth.validation.departmentRequired",
+    "en": "Please select your department.",
+    "ar": "يرجى اختيار قسمك."
+  },
+  {
+    "key": "auth.validation.emailRequired",
+    "en": "Please enter your email.",
+    "ar": "يرجى إدخال بريدك الإلكتروني."
+  },
+  {
+    "key": "auth.validation.nameRequired",
+    "en": "Please enter your full name.",
+    "ar": "يرجى إدخال اسمك الكامل."
+  },
+  {
+    "key": "auth.validation.passwordMismatch",
+    "en": "Passwords do not match.",
+    "ar": "كلمتا المرور غير متطابقتين."
+  },
+  {
+    "key": "auth.validation.passwordRequired",
+    "en": "Please enter a password.",
+    "ar": "يرجى إدخال كلمة مرور."
+  },
+  {
+    "key": "auth.validation.passwordTooShort",
+    "en": "Password must be at least 8 characters.",
+    "ar": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل."
+  },
+  {
+    "key": "categories.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "categories.created",
+    "en": "Category created.",
+    "ar": "تم إنشاء الفئة."
+  },
+  {
+    "key": "categories.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "categories.deleteCategory",
+    "en": "Delete category",
+    "ar": "حذف الفئة"
+  },
+  {
+    "key": "categories.deleteConfirm",
+    "en": "Delete {{name}}? This is blocked while documents still use it.",
+    "ar": "هل تريد حذف {{name}}؟ يُمنع هذا ما دامت هناك مستندات تستخدمها."
+  },
+  {
+    "key": "categories.deleted",
+    "en": "Category deleted.",
+    "ar": "تم حذف الفئة."
+  },
+  {
+    "key": "categories.description",
+    "en": "Description",
+    "ar": "الوصف"
+  },
+  {
+    "key": "categories.edit",
+    "en": "Edit",
+    "ar": "تعديل"
+  },
+  {
+    "key": "categories.editCategory",
+    "en": "Edit category",
+    "ar": "تعديل الفئة"
+  },
+  {
+    "key": "categories.eyebrow",
+    "en": "Classification",
+    "ar": "التصنيف"
+  },
+  {
+    "key": "categories.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "categories.newCategory",
+    "en": "+ New category",
+    "ar": "+ فئة جديدة"
+  },
+  {
+    "key": "categories.newCategoryTitle",
+    "en": "New category",
+    "ar": "فئة جديدة"
+  },
+  {
+    "key": "categories.noCategoriesYet",
+    "en": "No categories yet",
+    "ar": "لا توجد فئات بعد"
+  },
+  {
+    "key": "categories.save",
+    "en": "Save",
+    "ar": "حفظ"
+  },
+  {
+    "key": "categories.saving",
+    "en": "Saving…",
+    "ar": "جارٍ الحفظ…"
+  },
+  {
+    "key": "categories.subtitle",
+    "en": "Every document belongs to exactly one category.",
+    "ar": "ينتمي كل مستند إلى فئة واحدة بالضبط."
+  },
+  {
+    "key": "categories.title",
+    "en": "Categories",
+    "ar": "الفئات"
+  },
+  {
+    "key": "categories.updated",
+    "en": "Category updated.",
+    "ar": "تم تحديث الفئة."
+  },
+  {
+    "key": "common.backToHome",
+    "en": "← Back to home",
+    "ar": "→ العودة إلى الرئيسية"
+  },
+  {
+    "key": "common.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "common.close",
+    "en": "Close",
+    "ar": "إغلاق"
+  },
+  {
+    "key": "common.confirm",
+    "en": "Confirm",
+    "ar": "تأكيد"
+  },
+  {
+    "key": "common.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "common.description",
+    "en": "Description",
+    "ar": "الوصف"
+  },
+  {
+    "key": "common.documentCount_few",
+    "en": "",
+    "ar": "{{count}} مستندات"
+  },
+  {
+    "key": "common.documentCount_many",
+    "en": "",
+    "ar": "{{count}} مستندًا"
+  },
+  {
+    "key": "common.documentCount_one",
+    "en": "{{count}} document",
+    "ar": "مستند واحد"
+  },
+  {
+    "key": "common.documentCount_other",
+    "en": "{{count}} documents",
+    "ar": "{{count}} مستند"
+  },
+  {
+    "key": "common.documentCount_two",
+    "en": "",
+    "ar": "مستندان"
+  },
+  {
+    "key": "common.documentCount_zero",
+    "en": "",
+    "ar": "لا توجد مستندات"
+  },
+  {
+    "key": "common.edit",
+    "en": "Edit",
+    "ar": "تعديل"
+  },
+  {
+    "key": "common.loading",
+    "en": "Loading...",
+    "ar": "جارٍ التحميل..."
+  },
+  {
+    "key": "common.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "common.save",
+    "en": "Save",
+    "ar": "حفظ"
+  },
+  {
+    "key": "common.saving",
+    "en": "Saving…",
+    "ar": "جارٍ الحفظ…"
+  },
+  {
+    "key": "common.working",
+    "en": "Working…",
+    "ar": "جارٍ التنفيذ…"
+  },
+  {
+    "key": "dashboard.allDepartments",
+    "en": " · all departments",
+    "ar": " · جميع الأقسام"
+  },
+  {
+    "key": "dashboard.category",
+    "en": "Category",
+    "ar": "الفئة"
+  },
+  {
+    "key": "dashboard.departmentDocuments",
+    "en": "Department documents",
+    "ar": "مستندات القسم"
+  },
+  {
+    "key": "dashboard.folder",
+    "en": "Folder",
+    "ar": "المجلد"
+  },
+  {
+    "key": "dashboard.goToDocuments",
+    "en": "Go to documents",
+    "ar": "الذهاب إلى المستندات"
+  },
+  {
+    "key": "dashboard.inDepartment",
+    "en": " in {{department}}",
+    "ar": " في {{department}}"
+  },
+  {
+    "key": "dashboard.myDocuments",
+    "en": "My documents",
+    "ar": "مستنداتي"
+  },
+  {
+    "key": "dashboard.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "dashboard.noDocumentsYet",
+    "en": "You haven't uploaded any documents yet.",
+    "ar": "لم ترفع أي مستندات بعد."
+  },
+  {
+    "key": "dashboard.overview",
+    "en": "Overview",
+    "ar": "نظرة عامة"
+  },
+  {
+    "key": "dashboard.recentDocuments",
+    "en": "Recent documents",
+    "ar": "المستندات الأخيرة"
+  },
+  {
+    "key": "dashboard.storageUsed",
+    "en": "Storage used",
+    "ar": "المساحة المستخدمة"
+  },
+  {
+    "key": "dashboard.totalDocuments",
+    "en": "Total documents",
+    "ar": "إجمالي المستندات"
+  },
+  {
+    "key": "dashboard.totalUsers",
+    "en": "Total users",
+    "ar": "إجمالي المستخدمين"
+  },
+  {
+    "key": "dashboard.updated",
+    "en": "Updated",
+    "ar": "آخر تحديث"
+  },
+  {
+    "key": "dashboard.welcomeBack",
+    "en": "Welcome back, {{name}}",
+    "ar": "مرحبًا بعودتك، {{name}}"
+  },
+  {
+    "key": "departments.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "departments.createFirst",
+    "en": "Create your first department.",
+    "ar": "أنشئ أول قسم لديك."
+  },
+  {
+    "key": "departments.created",
+    "en": "Department created.",
+    "ar": "تم إنشاء القسم."
+  },
+  {
+    "key": "departments.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "departments.deleteConfirm",
+    "en": "Delete {{name}}? This is blocked if it still has users assigned.",
+    "ar": "هل تريد حذف {{name}}؟ يُمنع هذا إذا كان لا يزال يضم مستخدمين."
+  },
+  {
+    "key": "departments.deleteDepartment",
+    "en": "Delete department",
+    "ar": "حذف القسم"
+  },
+  {
+    "key": "departments.deleted",
+    "en": "Department deleted.",
+    "ar": "تم حذف القسم."
+  },
+  {
+    "key": "departments.description",
+    "en": "Description",
+    "ar": "الوصف"
+  },
+  {
+    "key": "departments.edit",
+    "en": "Edit",
+    "ar": "تعديل"
+  },
+  {
+    "key": "departments.editDepartment",
+    "en": "Edit department",
+    "ar": "تعديل القسم"
+  },
+  {
+    "key": "departments.eyebrow",
+    "en": "Administration",
+    "ar": "الإدارة"
+  },
+  {
+    "key": "departments.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "departments.newDepartment",
+    "en": "+ New department",
+    "ar": "+ قسم جديد"
+  },
+  {
+    "key": "departments.newDepartmentTitle",
+    "en": "New department",
+    "ar": "قسم جديد"
+  },
+  {
+    "key": "departments.noDepartmentsYet",
+    "en": "No departments yet",
+    "ar": "لا توجد أقسام بعد"
+  },
+  {
+    "key": "departments.save",
+    "en": "Save",
+    "ar": "حفظ"
+  },
+  {
+    "key": "departments.saving",
+    "en": "Saving…",
+    "ar": "جارٍ الحفظ…"
+  },
+  {
+    "key": "departments.subtitle",
+    "en": "Departments scope folders, documents, and staff.",
+    "ar": "تحدد الأقسام نطاق المجلدات والمستندات والموظفين."
+  },
+  {
+    "key": "departments.title",
+    "en": "Departments",
+    "ar": "الأقسام"
+  },
+  {
+    "key": "departments.updated",
+    "en": "Department updated.",
+    "ar": "تم تحديث القسم."
+  },
+  {
+    "key": "documentDetail.add",
+    "en": "Add",
+    "ar": "إضافة"
+  },
+  {
+    "key": "documentDetail.addAttachments",
+    "en": "+ Add attachments",
+    "ar": "+ إضافة مرفقات"
+  },
+  {
+    "key": "documentDetail.addAttachmentsTitle",
+    "en": "Add attachments",
+    "ar": "إضافة مرفقات"
+  },
+  {
+    "key": "documentDetail.attachFilesError",
+    "en": "Please choose at least one file.",
+    "ar": "يرجى اختيار ملف واحد على الأقل."
+  },
+  {
+    "key": "documentDetail.attachmentAdded",
+    "en": "Attachment added.",
+    "ar": "تمت إضافة المرفق."
+  },
+  {
+    "key": "documentDetail.attachmentDeleted",
+    "en": "Attachment deleted.",
+    "ar": "تم حذف المرفق."
+  },
+  {
+    "key": "documentDetail.attachments",
+    "en": "Attachments",
+    "ar": "المرفقات"
+  },
+  {
+    "key": "documentDetail.attachmentsAdded",
+    "en": "{{count}} attachments added.",
+    "ar": "تمت إضافة {{count}} مرفقات."
+  },
+  {
+    "key": "documentDetail.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "documentDetail.category",
+    "en": "Category",
+    "ar": "الفئة"
+  },
+  {
+    "key": "documentDetail.chooseFileError",
+    "en": "Please choose a file.",
+    "ar": "يرجى اختيار ملف."
+  },
+  {
+    "key": "documentDetail.close",
+    "en": "Close",
+    "ar": "إغلاق"
+  },
+  {
+    "key": "documentDetail.created",
+    "en": "Created",
+    "ar": "تاريخ الإنشاء"
+  },
+  {
+    "key": "documentDetail.date",
+    "en": "Date",
+    "ar": "التاريخ"
+  },
+  {
+    "key": "documentDetail.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "documentDetail.deleteConfirm",
+    "en": "Move \"{{name}}\" to trash? You can restore it later from the trash.",
+    "ar": "هل تريد نقل \"{{name}}\" إلى سلة المحذوفات؟ يمكنك استعادته لاحقًا من سلة المحذوفات."
+  },
+  {
+    "key": "documentDetail.deleteDocumentTitle",
+    "en": "Delete document",
+    "ar": "حذف المستند"
+  },
+  {
+    "key": "documentDetail.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "documentDetail.description",
+    "en": "Description",
+    "ar": "الوصف"
+  },
+  {
+    "key": "documentDetail.destinationFolder",
+    "en": "Destination folder",
+    "ar": "المجلد الوجهة"
+  },
+  {
+    "key": "documentDetail.documentNotFound",
+    "en": "Document not found.",
+    "ar": "المستند غير موجود."
+  },
+  {
+    "key": "documentDetail.documentsBreadcrumb",
+    "en": "Documents",
+    "ar": "المستندات"
+  },
+  {
+    "key": "documentDetail.download",
+    "en": "Download",
+    "ar": "تنزيل"
+  },
+  {
+    "key": "documentDetail.downloadLatest",
+    "en": "Download latest",
+    "ar": "تنزيل الأحدث"
+  },
+  {
+    "key": "documentDetail.editMetadata",
+    "en": "Edit metadata",
+    "ar": "تعديل البيانات الوصفية"
+  },
+  {
+    "key": "documentDetail.editMetadataTitle",
+    "en": "Edit metadata",
+    "ar": "تعديل البيانات الوصفية"
+  },
+  {
+    "key": "documentDetail.file",
+    "en": "File",
+    "ar": "الملف"
+  },
+  {
+    "key": "documentDetail.folder",
+    "en": "Folder",
+    "ar": "المجلد"
+  },
+  {
+    "key": "documentDetail.inFolder",
+    "en": "in {{folder}}",
+    "ar": "في {{folder}}"
+  },
+  {
+    "key": "documentDetail.lastUpdated",
+    "en": "Last updated",
+    "ar": "آخر تحديث"
+  },
+  {
+    "key": "documentDetail.move",
+    "en": "Move",
+    "ar": "نقل"
+  },
+  {
+    "key": "documentDetail.moveDocumentTitle",
+    "en": "Move document",
+    "ar": "نقل المستند"
+  },
+  {
+    "key": "documentDetail.moveToTrash",
+    "en": "Move to trash",
+    "ar": "نقل إلى سلة المحذوفات"
+  },
+  {
+    "key": "documentDetail.moved",
+    "en": "Document moved.",
+    "ar": "تم نقل المستند."
+  },
+  {
+    "key": "documentDetail.movedToTrash",
+    "en": "Document moved to trash.",
+    "ar": "تم نقل المستند إلى سلة المحذوفات."
+  },
+  {
+    "key": "documentDetail.moving",
+    "en": "Moving…",
+    "ar": "جارٍ النقل…"
+  },
+  {
+    "key": "documentDetail.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "documentDetail.newVersionUploaded",
+    "en": "New version uploaded.",
+    "ar": "تم رفع إصدار جديد."
+  },
+  {
+    "key": "documentDetail.noAttachmentsYet",
+    "en": "No attachments yet.",
+    "ar": "لا توجد مرفقات بعد."
+  },
+  {
+    "key": "documentDetail.noFileUploaded",
+    "en": "No file uploaded yet.",
+    "ar": "لم يُرفع أي ملف بعد."
+  },
+  {
+    "key": "documentDetail.overview",
+    "en": "Overview",
+    "ar": "نظرة عامة"
+  },
+  {
+    "key": "documentDetail.ownedBy",
+    "en": " · owned by {{owner}}",
+    "ar": " · بملكية {{owner}}"
+  },
+  {
+    "key": "documentDetail.owner",
+    "en": "Owner",
+    "ar": "المالك"
+  },
+  {
+    "key": "documentDetail.preview",
+    "en": "Preview",
+    "ar": "معاينة"
+  },
+  {
+    "key": "documentDetail.previewAction",
+    "en": "Preview",
+    "ar": "معاينة"
+  },
+  {
+    "key": "documentDetail.previewTitle",
+    "en": "Preview: {{filename}}",
+    "ar": "معاينة: {{filename}}"
+  },
+  {
+    "key": "documentDetail.restore",
+    "en": "Restore",
+    "ar": "استعادة"
+  },
+  {
+    "key": "documentDetail.saveChanges",
+    "en": "Save changes",
+    "ar": "حفظ التغييرات"
+  },
+  {
+    "key": "documentDetail.saving",
+    "en": "Saving…",
+    "ar": "جارٍ الحفظ…"
+  },
+  {
+    "key": "documentDetail.size",
+    "en": "Size",
+    "ar": "الحجم"
+  },
+  {
+    "key": "documentDetail.updated",
+    "en": " · updated {{date}}",
+    "ar": " · آخر تحديث {{date}}"
+  },
+  {
+    "key": "documentDetail.updated_toast",
+    "en": "Document updated.",
+    "ar": "تم تحديث المستند."
+  },
+  {
+    "key": "documentDetail.uploadNewVersion",
+    "en": "+ Upload new version",
+    "ar": "+ رفع إصدار جديد"
+  },
+  {
+    "key": "documentDetail.uploadNewVersionTitle",
+    "en": "Upload new version",
+    "ar": "رفع إصدار جديد"
+  },
+  {
+    "key": "documentDetail.uploadedBy",
+    "en": "Uploaded by",
+    "ar": "رفعه"
+  },
+  {
+    "key": "documentDetail.version",
+    "en": "Version",
+    "ar": "الإصدار"
+  },
+  {
+    "key": "documentDetail.versionRestored",
+    "en": "Version restored as the latest version.",
+    "ar": "تمت استعادة الإصدار ليصبح الأحدث."
+  },
+  {
+    "key": "documentDetail.versions",
+    "en": "Versions",
+    "ar": "الإصدارات"
+  },
+  {
+    "key": "documents.allDocuments",
+    "en": "All documents you can access.",
+    "ar": "جميع المستندات التي يمكنك الوصول إليها."
+  },
+  {
+    "key": "documents.allDocumentsBreadcrumb",
+    "en": "All documents",
+    "ar": "جميع المستندات"
+  },
+  {
+    "key": "documents.anyCategory",
+    "en": "Any category",
+    "ar": "أي فئة"
+  },
+  {
+    "key": "documents.anyDepartment",
+    "en": "Any department",
+    "ar": "أي قسم"
+  },
+  {
+    "key": "documents.anyFolder",
+    "en": "Any folder",
+    "ar": "أي مجلد"
+  },
+  {
+    "key": "documents.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "documents.category",
+    "en": "Category",
+    "ar": "الفئة"
+  },
+  {
+    "key": "documents.chooseFileError",
+    "en": "Please choose at least one file to upload.",
+    "ar": "يرجى اختيار ملف واحد على الأقل للرفع."
+  },
+  {
+    "key": "documents.chooseFolderCategoryError",
+    "en": "Please choose a folder and category.",
+    "ar": "يرجى اختيار مجلد وفئة."
+  },
+  {
+    "key": "documents.defaultsToFileName",
+    "en": "Defaults to file name",
+    "ar": "يُستخدم اسم الملف افتراضيًا"
+  },
+  {
+    "key": "documents.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "documents.description",
+    "en": "Description",
+    "ar": "الوصف"
+  },
+  {
+    "key": "documents.documentName",
+    "en": "Document name",
+    "ar": "اسم المستند"
+  },
+  {
+    "key": "documents.eyebrow",
+    "en": "Records",
+    "ar": "السجلات"
+  },
+  {
+    "key": "documents.files",
+    "en": "File(s)",
+    "ar": "الملف (الملفات)"
+  },
+  {
+    "key": "documents.filteredToFolder",
+    "en": "Filtered to folder \"{{name}}\"",
+    "ar": "مُصفّى حسب المجلد \"{{name}}\""
+  },
+  {
+    "key": "documents.folder",
+    "en": "Folder",
+    "ar": "المجلد"
+  },
+  {
+    "key": "documents.from",
+    "en": "From",
+    "ar": "من"
+  },
+  {
+    "key": "documents.ignoredForMultiple",
+    "en": " (ignored for multiple files — each keeps its filename)",
+    "ar": " (يُتجاهل عند اختيار عدة ملفات — يحتفظ كل ملف باسمه)"
+  },
+  {
+    "key": "documents.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "documents.noDocumentsFound",
+    "en": "No documents found",
+    "ar": "لم يتم العثور على مستندات"
+  },
+  {
+    "key": "documents.reset",
+    "en": "Reset",
+    "ar": "إعادة تعيين"
+  },
+  {
+    "key": "documents.search",
+    "en": "Search",
+    "ar": "بحث"
+  },
+  {
+    "key": "documents.searchPlaceholder",
+    "en": "Search by name…",
+    "ar": "ابحث بالاسم…"
+  },
+  {
+    "key": "documents.selectCategory",
+    "en": "Select a category…",
+    "ar": "اختر فئة…"
+  },
+  {
+    "key": "documents.selectFolder",
+    "en": "Select a folder…",
+    "ar": "اختر مجلدًا…"
+  },
+  {
+    "key": "documents.title",
+    "en": "Documents",
+    "ar": "المستندات"
+  },
+  {
+    "key": "documents.to",
+    "en": "To",
+    "ar": "إلى"
+  },
+  {
+    "key": "documents.trash",
+    "en": "Trash",
+    "ar": "سلة المحذوفات"
+  },
+  {
+    "key": "documents.tryAdjusting",
+    "en": "Try adjusting your filters, or upload a new document.",
+    "ar": "حاول تعديل عوامل التصفية، أو ارفع مستندًا جديدًا."
+  },
+  {
+    "key": "documents.upload",
+    "en": "Upload",
+    "ar": "رفع"
+  },
+  {
+    "key": "documents.uploadDocument",
+    "en": "+ Upload document",
+    "ar": "+ رفع مستند"
+  },
+  {
+    "key": "documents.uploadModalTitle",
+    "en": "Upload document",
+    "ar": "رفع مستند"
+  },
+  {
+    "key": "documents.uploadedMulti",
+    "en": "{{count}} documents uploaded.",
+    "ar": "تم رفع {{count}} مستندات."
+  },
+  {
+    "key": "documents.uploadedSingle",
+    "en": "Document uploaded.",
+    "ar": "تم رفع المستند."
+  },
+  {
+    "key": "documents.uploading",
+    "en": "Uploading…",
+    "ar": "جارٍ الرفع…"
+  },
+  {
+    "key": "filePreview.downloadFailed",
+    "en": "Failed to download file",
+    "ar": "فشل تنزيل الملف"
+  },
+  {
+    "key": "filePreview.downloadFile",
+    "en": "Download {{filename}}",
+    "ar": "تنزيل {{filename}}"
+  },
+  {
+    "key": "filePreview.excelEmpty",
+    "en": "Excel file is empty",
+    "ar": "ملف إكسل فارغ"
+  },
+  {
+    "key": "filePreview.excelParseFailed",
+    "en": "Failed to parse Excel file",
+    "ar": "فشل تحليل ملف إكسل"
+  },
+  {
+    "key": "filePreview.loadFailed",
+    "en": "Failed to load preview",
+    "ar": "فشل تحميل المعاينة"
+  },
+  {
+    "key": "filePreview.loadingPreview",
+    "en": "Loading preview…",
+    "ar": "جارٍ تحميل المعاينة…"
+  },
+  {
+    "key": "filePreview.notAvailable",
+    "en": "Preview not available for this file type.",
+    "ar": "المعاينة غير متاحة لهذا النوع من الملفات."
+  },
+  {
+    "key": "filePreview.showingRows",
+    "en": "Showing first 100 rows of {{count}}",
+    "ar": "عرض أول 100 صف من أصل {{count}}"
+  },
+  {
+    "key": "filePreview.unviewableImage",
+    "en": "{{type}} images can't be previewed in the browser.",
+    "ar": "لا يمكن معاينة صور {{type}} في المتصفح."
+  },
+  {
+    "key": "folders.addSub",
+    "en": "+ Sub",
+    "ar": "+ مجلد فرعي"
+  },
+  {
+    "key": "folders.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "folders.createHint",
+    "en": "Create a folder to start organizing documents.",
+    "ar": "أنشئ مجلدًا لبدء تنظيم المستندات."
+  },
+  {
+    "key": "folders.created",
+    "en": "Folder created.",
+    "ar": "تم إنشاء المجلد."
+  },
+  {
+    "key": "folders.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "folders.deleteConfirm",
+    "en": "Delete \"{{name}}\"? Only empty folders (no subfolders or documents) can be deleted.",
+    "ar": "هل تريد حذف \"{{name}}\"؟ يمكن حذف المجلدات الفارغة فقط (بلا مجلدات فرعية أو مستندات)."
+  },
+  {
+    "key": "folders.deleteFolder",
+    "en": "Delete folder",
+    "ar": "حذف المجلد"
+  },
+  {
+    "key": "folders.deleted",
+    "en": "Folder deleted.",
+    "ar": "تم حذف المجلد."
+  },
+  {
+    "key": "folders.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "folders.departmentRequired",
+    "en": "Please choose a department for this folder.",
+    "ar": "يرجى اختيار قسم لهذا المجلد."
+  },
+  {
+    "key": "folders.eyebrow",
+    "en": "Structure",
+    "ar": "الهيكلة"
+  },
+  {
+    "key": "folders.folderName",
+    "en": "Folder name",
+    "ar": "اسم المجلد"
+  },
+  {
+    "key": "folders.inheritedHint",
+    "en": "Inherited from the parent folder's department.",
+    "ar": "موروث من قسم المجلد الرئيسي."
+  },
+  {
+    "key": "folders.newFolder",
+    "en": "+ New folder",
+    "ar": "+ مجلد جديد"
+  },
+  {
+    "key": "folders.newFolderTitle",
+    "en": "New folder",
+    "ar": "مجلد جديد"
+  },
+  {
+    "key": "folders.noFoldersYet",
+    "en": "No folders yet",
+    "ar": "لا توجد مجلدات بعد"
+  },
+  {
+    "key": "folders.rename",
+    "en": "Rename",
+    "ar": "إعادة تسمية"
+  },
+  {
+    "key": "folders.renameFolder",
+    "en": "Rename folder",
+    "ar": "إعادة تسمية المجلد"
+  },
+  {
+    "key": "folders.renamed",
+    "en": "Folder renamed.",
+    "ar": "تمت إعادة تسمية المجلد."
+  },
+  {
+    "key": "folders.save",
+    "en": "Save",
+    "ar": "حفظ"
+  },
+  {
+    "key": "folders.saving",
+    "en": "Saving…",
+    "ar": "جارٍ الحفظ…"
+  },
+  {
+    "key": "folders.selectDepartment",
+    "en": "Select a department…",
+    "ar": "اختر قسمًا…"
+  },
+  {
+    "key": "folders.subtitleManage",
+    "en": "Organize documents into folders. Click a folder to view its documents.",
+    "ar": "نظّم المستندات داخل مجلدات. انقر على مجلد لعرض مستنداته."
+  },
+  {
+    "key": "folders.subtitleView",
+    "en": "Browse your department's folders (view only).",
+    "ar": "تصفّح مجلدات قسمك (للعرض فقط)."
+  },
+  {
+    "key": "folders.title",
+    "en": "Folders",
+    "ar": "المجلدات"
+  },
+  {
+    "key": "landing.brandName",
+    "en": "Ledger",
+    "ar": ""
+  },
+  {
+    "key": "landing.createAccount",
+    "en": "Create your account",
+    "ar": "أنشئ حسابك"
+  },
+  {
+    "key": "landing.ctaTitle",
+    "en": "Ready to get your documents in order?",
+    "ar": "هل أنت مستعد لتنظيم مستنداتك؟"
+  },
+  {
+    "key": "landing.eyebrow",
+    "en": "Document Management",
+    "ar": "إدارة المستندات"
+  },
+  {
+    "key": "landing.feature1Body",
+    "en": "Every document lives in a folder tied to your team, so people only see what's relevant to them.",
+    "ar": "يوجد كل مستند داخل مجلد خاص بفريقك، بحيث يرى الأشخاص فقط ما يتعلق بعملهم."
+  },
+  {
+    "key": "landing.feature1Title",
+    "en": "Organized by department",
+    "ar": "منظّم حسب القسم"
+  },
+  {
+    "key": "landing.feature2Body",
+    "en": "Upload a new version of a file without losing the old one — restore any prior version whenever you need it.",
+    "ar": "ارفع نسخة جديدة من الملف دون فقدان القديمة — واستعد أي نسخة سابقة متى احتجت إليها."
+  },
+  {
+    "key": "landing.feature2Title",
+    "en": "Version history built in",
+    "ar": "سجل إصدارات مدمج"
+  },
+  {
+    "key": "landing.feature3Body",
+    "en": "Admins manage accounts and permissions; everyone else just sees the documents that matter to their work.",
+    "ar": "يدير المسؤولون الحسابات والصلاحيات؛ بينما يرى الباقون فقط المستندات المهمة لعملهم."
+  },
+  {
+    "key": "landing.feature3Title",
+    "en": "Role-based access",
+    "ar": "صلاحيات حسب الدور"
+  },
+  {
+    "key": "landing.footer",
+    "en": "© {{year}} Ledger. All rights reserved.",
+    "ar": "© {{year}} Ledger. جميع الحقوق محفوظة."
+  },
+  {
+    "key": "landing.getStarted",
+    "en": "Get started",
+    "ar": "ابدأ الآن"
+  },
+  {
+    "key": "landing.heroSubtitle",
+    "en": "Ledger gives your team a single place to upload, version, and share files — with role-based access so the right people see the right documents.",
+    "ar": "يمنح Ledger فريقك مكانًا واحدًا لرفع الملفات وإدارة نسخها ومشاركتها — مع صلاحيات وصول تعتمد على الدور، بحيث يرى كل شخص ما يخصه فقط."
+  },
+  {
+    "key": "landing.heroTitle",
+    "en": "Keep every department's documents organized, secure, and easy to find.",
+    "ar": "حافظ على تنظيم مستندات كل قسم، بأمان وسهولة في الوصول."
+  },
+  {
+    "key": "landing.signIn",
+    "en": "Sign in",
+    "ar": "تسجيل الدخول"
+  },
+  {
+    "key": "nav.activityLogs",
+    "en": "Activity Logs",
+    "ar": "سجل النشاطات"
+  },
+  {
+    "key": "nav.categories",
+    "en": "Categories",
+    "ar": "الفئات"
+  },
+  {
+    "key": "nav.dashboard",
+    "en": "Dashboard",
+    "ar": "لوحة التحكم"
+  },
+  {
+    "key": "nav.departments",
+    "en": "Departments",
+    "ar": "الأقسام"
+  },
+  {
+    "key": "nav.documents",
+    "en": "Documents",
+    "ar": "المستندات"
+  },
+  {
+    "key": "nav.folders",
+    "en": "Folders",
+    "ar": "المجلدات"
+  },
+  {
+    "key": "nav.logout",
+    "en": "Logout",
+    "ar": "تسجيل الخروج"
+  },
+  {
+    "key": "nav.profileSettings",
+    "en": "Profile Settings",
+    "ar": "إعدادات الملف الشخصي"
+  },
+  {
+    "key": "nav.settings",
+    "en": "Settings",
+    "ar": "الإعدادات"
+  },
+  {
+    "key": "nav.users",
+    "en": "Users",
+    "ar": "المستخدمون"
+  },
+  {
+    "key": "profile.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "profile.changePassword",
+    "en": "Change Password",
+    "ar": "تغيير كلمة المرور"
+  },
+  {
+    "key": "profile.changePasswordDesc",
+    "en": "Update your password to keep your account secure",
+    "ar": "حدّث كلمة مرورك للحفاظ على أمان حسابك"
+  },
+  {
+    "key": "profile.changePhoto",
+    "en": "Change Photo",
+    "ar": "تغيير الصورة"
+  },
+  {
+    "key": "profile.confirmPassword",
+    "en": "Confirm Password",
+    "ar": "تأكيد كلمة المرور"
+  },
+  {
+    "key": "profile.currentPassword",
+    "en": "Current Password",
+    "ar": "كلمة المرور الحالية"
+  },
+  {
+    "key": "profile.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "profile.emailAddress",
+    "en": "Email Address",
+    "ar": "البريد الإلكتروني"
+  },
+  {
+    "key": "profile.emailCannotChange",
+    "en": "Email cannot be changed",
+    "ar": "لا يمكن تغيير البريد الإلكتروني"
+  },
+  {
+    "key": "profile.fullName",
+    "en": "Full Name",
+    "ar": "الاسم الكامل"
+  },
+  {
+    "key": "profile.imageTooLarge",
+    "en": "Image size must be less than 2MB",
+    "ar": "يجب ألا يتجاوز حجم الصورة 2 ميغابايت"
+  },
+  {
+    "key": "profile.newPassword",
+    "en": "New Password",
+    "ar": "كلمة المرور الجديدة"
+  },
+  {
+    "key": "profile.onlyImageTypes",
+    "en": "Only JPEG, PNG, GIF, and WEBP images are allowed",
+    "ar": "يُسمح فقط بصور JPEG وPNG وGIF وWEBP"
+  },
+  {
+    "key": "profile.passwordChanged",
+    "en": "Password changed successfully!",
+    "ar": "تم تغيير كلمة المرور بنجاح!"
+  },
+  {
+    "key": "profile.passwordHint",
+    "en": "Must be at least 6 characters with uppercase, lowercase, and a number",
+    "ar": "يجب أن تتكون من 6 أحرف على الأقل وتحتوي على حرف كبير وصغير ورقم"
+  },
+  {
+    "key": "profile.passwordMismatch",
+    "en": "Passwords do not match",
+    "ar": "كلمتا المرور غير متطابقتين"
+  },
+  {
+    "key": "profile.passwordTooShort",
+    "en": "Password must be at least 6 characters",
+    "ar": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل"
+  },
+  {
+    "key": "profile.pictureRemoved",
+    "en": "Profile picture removed",
+    "ar": "تمت إزالة الصورة الشخصية"
+  },
+  {
+    "key": "profile.pictureUpdated",
+    "en": "Profile picture updated!",
+    "ar": "تم تحديث الصورة الشخصية!"
+  },
+  {
+    "key": "profile.profileUpdated",
+    "en": "Profile updated successfully!",
+    "ar": "تم تحديث الملف الشخصي بنجاح!"
+  },
+  {
+    "key": "profile.remove",
+    "en": "Remove",
+    "ar": "إزالة"
+  },
+  {
+    "key": "profile.removePictureConfirm",
+    "en": "Are you sure you want to remove your profile picture?",
+    "ar": "هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟"
+  },
+  {
+    "key": "profile.removePictureTitle",
+    "en": "Remove Profile Picture",
+    "ar": "إزالة الصورة الشخصية"
+  },
+  {
+    "key": "profile.role",
+    "en": "Role",
+    "ar": "الدور"
+  },
+  {
+    "key": "profile.saveChanges",
+    "en": "Save Changes",
+    "ar": "حفظ التغييرات"
+  },
+  {
+    "key": "profile.saving",
+    "en": "Saving...",
+    "ar": "جارٍ الحفظ..."
+  },
+  {
+    "key": "profile.subtitle",
+    "en": "Manage your personal information and preferences",
+    "ar": "إدارة معلوماتك الشخصية وتفضيلاتك"
+  },
+  {
+    "key": "profile.title",
+    "en": "Profile Settings",
+    "ar": "إعدادات الملف الشخصي"
+  },
+  {
+    "key": "profile.updatePassword",
+    "en": "Update Password",
+    "ar": "تحديث كلمة المرور"
+  },
+  {
+    "key": "profile.updating",
+    "en": "Updating...",
+    "ar": "جارٍ التحديث..."
+  },
+  {
+    "key": "profile.uploadPhoto",
+    "en": "Upload Photo",
+    "ar": "رفع صورة"
+  },
+  {
+    "key": "requireAuth.accessRestricted",
+    "en": "Access restricted",
+    "ar": "الوصول مقيّد"
+  },
+  {
+    "key": "requireAuth.noPermission",
+    "en": "Your role ({{role}}) does not have permission to view this page.",
+    "ar": "لا يملك دورك ({{role}}) صلاحية عرض هذه الصفحة."
+  },
+  {
+    "key": "settings.brandingSection",
+    "en": "Branding",
+    "ar": "الهوية البصرية"
+  },
+  {
+    "key": "settings.dictionaryAr",
+    "en": "Arabic (RTL)",
+    "ar": "العربية"
+  },
+  {
+    "key": "settings.dictionaryEn",
+    "en": "English",
+    "ar": "الإنجليزية"
+  },
+  {
+    "key": "settings.dictionaryKey",
+    "en": "Key",
+    "ar": "المفتاح"
+  },
+  {
+    "key": "settings.dictionarySearch",
+    "en": "Search keys or text...",
+    "ar": "ابحث عن مفتاح أو نص..."
+  },
+  {
+    "key": "settings.dictionarySection",
+    "en": "Bilingual Dictionary",
+    "ar": "القاموس ثنائي اللغة"
+  },
+  {
+    "key": "settings.dictionarySubtitle",
+    "en": "Edit the English and Arabic text used throughout the app.",
+    "ar": "تعديل النصوص الإنجليزية والعربية المستخدمة في التطبيق."
+  },
+  {
+    "key": "settings.eyebrow",
+    "en": "Administration",
+    "ar": "الإدارة"
+  },
+  {
+    "key": "settings.favicon",
+    "en": "Favicon",
+    "ar": "أيقونة المتصفح"
+  },
+  {
+    "key": "settings.faviconHint",
+    "en": "ICO, PNG, or SVG · max 2MB",
+    "ar": "ICO أو PNG أو SVG · بحد أقصى 2 ميجابايت"
+  },
+  {
+    "key": "settings.fileTooLarge",
+    "en": "File exceeds the maximum allowed upload size of {{max}}MB.",
+    "ar": "حجم الملف يتجاوز الحد الأقصى المسموح به وهو {{max}} ميجابايت."
+  },
+  {
+    "key": "settings.generalSection",
+    "en": "General",
+    "ar": "عام"
+  },
+  {
+    "key": "settings.loadError",
+    "en": "Failed to load settings.",
+    "ar": "فشل تحميل الإعدادات."
+  },
+  {
+    "key": "settings.logo",
+    "en": "Site Logo",
+    "ar": "شعار الموقع"
+  },
+  {
+    "key": "settings.logoHint",
+    "en": "PNG, JPG, SVG, WEBP, or GIF · max 2MB",
+    "ar": "PNG أو JPG أو SVG أو WEBP أو GIF · بحد أقصى 2 ميجابايت"
+  },
+  {
+    "key": "settings.maxUploadSize",
+    "en": "Maximum Upload Size (MB)",
+    "ar": "الحد الأقصى لحجم الملف (ميجابايت)"
+  },
+  {
+    "key": "settings.maxUploadSizeHint",
+    "en": "Applies to all document and attachment uploads, up to 200MB.",
+    "ar": "ينطبق على جميع تحميلات المستندات والمرفقات، حتى 200 ميجابايت."
+  },
+  {
+    "key": "settings.metaDescription",
+    "en": "Meta Description",
+    "ar": "وصف الميتا"
+  },
+  {
+    "key": "settings.metaKeywords",
+    "en": "Meta Keywords",
+    "ar": "الكلمات المفتاحية"
+  },
+  {
+    "key": "settings.metaKeywordsHint",
+    "en": "Comma-separated keywords",
+    "ar": "كلمات مفصولة بفواصل"
+  },
+  {
+    "key": "settings.metaTitle",
+    "en": "Meta Title",
+    "ar": "عنوان الميتا"
+  },
+  {
+    "key": "settings.noResults",
+    "en": "No matching entries.",
+    "ar": "لا توجد نتائج مطابقة."
+  },
+  {
+    "key": "settings.saveAll",
+    "en": "Save Settings",
+    "ar": "حفظ الإعدادات"
+  },
+  {
+    "key": "settings.saved",
+    "en": "Settings saved successfully.",
+    "ar": "تم حفظ الإعدادات بنجاح."
+  },
+  {
+    "key": "settings.saving",
+    "en": "Saving...",
+    "ar": "جارٍ الحفظ..."
+  },
+  {
+    "key": "settings.seoSection",
+    "en": "SEO Metadata",
+    "ar": "بيانات تحسين محركات البحث"
+  },
+  {
+    "key": "settings.siteName",
+    "en": "Site Name",
+    "ar": "اسم الموقع"
+  },
+  {
+    "key": "settings.subtitle",
+    "en": "Manage global site configuration, branding, and translations.",
+    "ar": "إدارة الإعدادات العامة للموقع والهوية البصرية والترجمات."
+  },
+  {
+    "key": "settings.themeColor",
+    "en": "Theme Color",
+    "ar": "لون السمة الرئيسي"
+  },
+  {
+    "key": "settings.title",
+    "en": "System Settings",
+    "ar": "إعدادات النظام"
+  },
+  {
+    "key": "settings.uploadFavicon",
+    "en": "Upload favicon",
+    "ar": "رفع الأيقونة"
+  },
+  {
+    "key": "settings.uploadLogo",
+    "en": "Upload logo",
+    "ar": "رفع الشعار"
+  },
+  {
+    "key": "settings.uploadsSection",
+    "en": "Document Uploads",
+    "ar": "تحميل المستندات"
+  },
+  {
+    "key": "trash.backToDocuments",
+    "en": "Back to documents",
+    "ar": "العودة إلى المستندات"
+  },
+  {
+    "key": "trash.deleteForever",
+    "en": "Delete forever",
+    "ar": "حذف نهائي"
+  },
+  {
+    "key": "trash.deleted",
+    "en": "Deleted",
+    "ar": "تاريخ الحذف"
+  },
+  {
+    "key": "trash.eyebrow",
+    "en": "Records",
+    "ar": "السجلات"
+  },
+  {
+    "key": "trash.folder",
+    "en": "Folder",
+    "ar": "المجلد"
+  },
+  {
+    "key": "trash.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "trash.owner",
+    "en": "Owner",
+    "ar": "المالك"
+  },
+  {
+    "key": "trash.permanentlyDeleteConfirm",
+    "en": "Permanently delete \"{{name}}\"? This removes all versions and attachments and cannot be undone.",
+    "ar": "هل تريد حذف \"{{name}}\" نهائيًا؟ سيؤدي هذا إلى إزالة جميع الإصدارات والمرفقات ولا يمكن التراجع عنه."
+  },
+  {
+    "key": "trash.permanentlyDeleteTitle",
+    "en": "Permanently delete",
+    "ar": "حذف نهائي"
+  },
+  {
+    "key": "trash.permanentlyDeleted",
+    "en": "Document permanently deleted.",
+    "ar": "تم حذف المستند نهائيًا."
+  },
+  {
+    "key": "trash.restore",
+    "en": "Restore",
+    "ar": "استعادة"
+  },
+  {
+    "key": "trash.restored",
+    "en": "Document restored.",
+    "ar": "تمت استعادة المستند."
+  },
+  {
+    "key": "trash.subtitle",
+    "en": "Deleted documents can be restored or permanently removed.",
+    "ar": "يمكن استعادة المستندات المحذوفة أو حذفها نهائيًا."
+  },
+  {
+    "key": "trash.title",
+    "en": "Trash",
+    "ar": "سلة المحذوفات"
+  },
+  {
+    "key": "trash.trashEmpty",
+    "en": "Trash is empty",
+    "ar": "سلة المحذوفات فارغة"
+  },
+  {
+    "key": "users.active",
+    "en": "Active",
+    "ar": "نشط"
+  },
+  {
+    "key": "users.cancel",
+    "en": "Cancel",
+    "ar": "إلغاء"
+  },
+  {
+    "key": "users.cannotDeleteDocuments",
+    "en": "{{name}} cannot be deleted because they are linked to existing documents. Disable this user instead, or reassign those documents first.",
+    "ar": "لا يمكن حذف {{name}} لارتباطه بمستندات موجودة. عطّل هذا المستخدم بدلاً من ذلك، أو أعد إسناد تلك المستندات أولاً."
+  },
+  {
+    "key": "users.cannotDeleteGeneric",
+    "en": "{{name}} cannot be deleted because other records still depend on this account. Disable the user instead, or remove/reassign the related records first.",
+    "ar": "لا يمكن حذف {{name}} لأن سجلات أخرى ما زالت مرتبطة بهذا الحساب. عطّل المستخدم بدلاً من ذلك، أو احذف/أعد إسناد السجلات المرتبطة أولاً."
+  },
+  {
+    "key": "users.cannotDeleteVersions",
+    "en": "{{name}} cannot be deleted because they uploaded one or more document versions. Disable this user instead to keep the document history and audit trail intact.",
+    "ar": "لا يمكن حذف {{name}} لأنه رفع نسخة واحدة أو أكثر من المستندات. عطّل هذا المستخدم بدلاً من ذلك للحفاظ على سجل المستندات وسجل التدقيق."
+  },
+  {
+    "key": "users.delete",
+    "en": "Delete",
+    "ar": "حذف"
+  },
+  {
+    "key": "users.deleteConfirm",
+    "en": "Delete {{name}}?",
+    "ar": "هل تريد حذف {{name}}؟"
+  },
+  {
+    "key": "users.deleteUser",
+    "en": "Delete user",
+    "ar": "حذف المستخدم"
+  },
+  {
+    "key": "users.department",
+    "en": "Department",
+    "ar": "القسم"
+  },
+  {
+    "key": "users.disable",
+    "en": "Disable",
+    "ar": "تعطيل"
+  },
+  {
+    "key": "users.disabled",
+    "en": "Disabled",
+    "ar": "معطّل"
+  },
+  {
+    "key": "users.edit",
+    "en": "Edit",
+    "ar": "تعديل"
+  },
+  {
+    "key": "users.editUser",
+    "en": "Edit user",
+    "ar": "تعديل المستخدم"
+  },
+  {
+    "key": "users.email",
+    "en": "Email",
+    "ar": "البريد الإلكتروني"
+  },
+  {
+    "key": "users.enable",
+    "en": "Enable",
+    "ar": "تفعيل"
+  },
+  {
+    "key": "users.eyebrow",
+    "en": "Administration",
+    "ar": "الإدارة"
+  },
+  {
+    "key": "users.fullName",
+    "en": "Full name",
+    "ar": "الاسم الكامل"
+  },
+  {
+    "key": "users.joined",
+    "en": "Joined",
+    "ar": "تاريخ الانضمام"
+  },
+  {
+    "key": "users.name",
+    "en": "Name",
+    "ar": "الاسم"
+  },
+  {
+    "key": "users.noDepartmentAdminOnly",
+    "en": "No department (Admin only)",
+    "ar": "بلا قسم (للمسؤول فقط)"
+  },
+  {
+    "key": "users.noUsersYet",
+    "en": "No users yet",
+    "ar": "لا يوجد مستخدمون بعد"
+  },
+  {
+    "key": "users.ownAccountWarning",
+    "en": "You are trying to delete your own signed-in account. The API may block this.",
+    "ar": "أنت تحاول حذف حسابك الحالي. قد يمنع النظام هذا الإجراء."
+  },
+  {
+    "key": "users.role",
+    "en": "Role",
+    "ar": "الدور"
+  },
+  {
+    "key": "users.roleRequired",
+    "en": "Please select a role.",
+    "ar": "يرجى اختيار دور."
+  },
+  {
+    "key": "users.saveChanges",
+    "en": "Save changes",
+    "ar": "حفظ التغييرات"
+  },
+  {
+    "key": "users.saving",
+    "en": "Saving...",
+    "ar": "جارٍ الحفظ..."
+  },
+  {
+    "key": "users.selectRole",
+    "en": "Select a role...",
+    "ar": "اختر دورًا..."
+  },
+  {
+    "key": "users.status",
+    "en": "Status",
+    "ar": "الحالة"
+  },
+  {
+    "key": "users.subtitle",
+    "en": "Manage roles, departments, and account status.",
+    "ar": "إدارة الأدوار والأقسام وحالة الحسابات."
+  },
+  {
+    "key": "users.title",
+    "en": "Users",
+    "ar": "المستخدمون"
+  },
+  {
+    "key": "users.userActivated",
+    "en": "User activated.",
+    "ar": "تم تفعيل المستخدم."
+  },
+  {
+    "key": "users.userDeactivated",
+    "en": "User deactivated.",
+    "ar": "تم تعطيل المستخدم."
+  },
+  {
+    "key": "users.userDeleted",
+    "en": "User deleted.",
+    "ar": "تم حذف المستخدم."
+  },
+  {
+    "key": "users.userUpdated",
+    "en": "User updated successfully.",
+    "ar": "تم تحديث المستخدم بنجاح."
+  },
+  {
+    "key": "users.willAppear",
+    "en": "Users will appear here once they register.",
+    "ar": "سيظهر المستخدمون هنا بمجرد تسجيلهم."
+  },
+  {
+    "key": "users.working",
+    "en": "Working...",
+    "ar": "جارٍ التنفيذ..."
+  }
+]

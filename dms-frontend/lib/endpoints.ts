@@ -15,6 +15,8 @@ import {
   ActivityAction,
   PaginatedResult,
   ActivityLog,
+  Setting,
+  DictionaryEntry,
 } from './types';
 
 // ---------- Auth ----------
@@ -200,6 +202,37 @@ export const documentsApi = {
     api.blobUrl(`/documents/attachments/${attachmentId}/download`),
   deleteAttachment: (attachmentId: number) =>
     api.delete(`/documents/attachments/${attachmentId}`),
+};
+
+// ---------- Settings ----------
+export interface UpdateSettingsPayload {
+  siteName?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  themeColor?: string;
+  maxUploadSizeMb?: number;
+  logo?: File | null;
+  favicon?: File | null;
+  dictionary?: { key: string; en: string; ar: string }[];
+}
+
+export const settingsApi = {
+  get: () => api.get<Setting>('/settings'),
+  getDictionary: () => api.get<DictionaryEntry[]>('/settings/dictionary'),
+  update: (data: UpdateSettingsPayload) => {
+    const fd = new FormData();
+    if (data.siteName !== undefined) fd.append('siteName', data.siteName);
+    if (data.metaTitle !== undefined) fd.append('metaTitle', data.metaTitle);
+    if (data.metaDescription !== undefined) fd.append('metaDescription', data.metaDescription);
+    if (data.metaKeywords !== undefined) fd.append('metaKeywords', data.metaKeywords);
+    if (data.themeColor !== undefined) fd.append('themeColor', data.themeColor);
+    if (data.maxUploadSizeMb !== undefined) fd.append('maxUploadSizeMb', String(data.maxUploadSizeMb));
+    if (data.logo) fd.append('logo', data.logo);
+    if (data.favicon) fd.append('favicon', data.favicon);
+    if (data.dictionary) fd.append('dictionary', JSON.stringify(data.dictionary));
+    return api.putForm<Setting>('/settings', fd);
+  },
 };
 
 // ---------- Dashboard ----------

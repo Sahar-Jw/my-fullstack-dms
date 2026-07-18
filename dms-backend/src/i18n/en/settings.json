@@ -1,0 +1,5 @@
+{
+  "SETTINGS_UPDATE_LOG": "Updated system settings.",
+  "FILE_TOO_LARGE": "File exceeds the maximum allowed upload size of {max}MB.",
+  "SETTINGS_NOT_FOUND": "System settings could not be found."
+}

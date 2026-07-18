@@ -8,7 +8,8 @@
     "users": "المستخدمون",
     "activityLogs": "سجل النشاطات",
     "profileSettings": "إعدادات الملف الشخصي",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "settings": "الإعدادات"
   },
   "activityLogs": {
     "title": "كل النشاطات",
@@ -408,5 +409,40 @@
       "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
       "passwordMismatch": "كلمتا المرور غير متطابقتين."
     }
+  },
+  "settings": {
+    "eyebrow": "الإدارة",
+    "title": "إعدادات النظام",
+    "subtitle": "إدارة الإعدادات العامة للموقع والهوية البصرية والترجمات.",
+    "saveAll": "حفظ الإعدادات",
+    "saving": "جارٍ الحفظ...",
+    "saved": "تم حفظ الإعدادات بنجاح.",
+    "generalSection": "عام",
+    "siteName": "اسم الموقع",
+    "brandingSection": "الهوية البصرية",
+    "logo": "شعار الموقع",
+    "favicon": "أيقونة المتصفح",
+    "uploadLogo": "رفع الشعار",
+    "uploadFavicon": "رفع الأيقونة",
+    "logoHint": "PNG أو JPG أو SVG أو WEBP أو GIF · بحد أقصى 2 ميجابايت",
+    "faviconHint": "ICO أو PNG أو SVG · بحد أقصى 2 ميجابايت",
+    "themeColor": "لون السمة الرئيسي",
+    "seoSection": "بيانات تحسين محركات البحث",
+    "metaTitle": "عنوان الميتا",
+    "metaDescription": "وصف الميتا",
+    "metaKeywords": "الكلمات المفتاحية",
+    "metaKeywordsHint": "كلمات مفصولة بفواصل",
+    "uploadsSection": "تحميل المستندات",
+    "maxUploadSize": "الحد الأقصى لحجم الملف (ميجابايت)",
+    "maxUploadSizeHint": "ينطبق على جميع تحميلات المستندات والمرفقات، حتى 200 ميجابايت.",
+    "dictionarySection": "القاموس ثنائي اللغة",
+    "dictionarySubtitle": "تعديل النصوص الإنجليزية والعربية المستخدمة في التطبيق.",
+    "dictionarySearch": "ابحث عن مفتاح أو نص...",
+    "dictionaryKey": "المفتاح",
+    "dictionaryEn": "الإنجليزية",
+    "dictionaryAr": "العربية",
+    "noResults": "لا توجد نتائج مطابقة.",
+    "loadError": "فشل تحميل الإعدادات.",
+    "fileTooLarge": "حجم الملف يتجاوز الحد الأقصى المسموح به وهو {{max}} ميجابايت."
   }
 }

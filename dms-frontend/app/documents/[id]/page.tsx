@@ -20,12 +20,14 @@ import {
 } from '@/lib/preview';
 import { PreviewTarget } from '@/lib/types';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 
 type Tab = 'overview' | 'preview' | 'versions' | 'attachments';
 
 function DocumentDetailBody() {
   const { notify } = useToast();
   const { t } = useLocale();
+  const { maxUploadSizeBytes, maxUploadSizeMb } = useSettings();
   const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
@@ -167,6 +169,13 @@ function DocumentDetailBody() {
       setVersionError(t('documentDetail.chooseFileError'));
       return;
     }
+    if (newVersionFile.size > maxUploadSizeBytes) {
+      setVersionError(
+        t('settings.fileTooLarge', { max: maxUploadSizeMb }) +
+          ` (${formatBytes(newVersionFile.size)})`,
+      );
+      return;
+    }
     setVersionSaving(true);
     setVersionError('');
     try {
@@ -198,6 +207,14 @@ function DocumentDetailBody() {
     e.preventDefault();
     if (attachFiles.length === 0) {
       setAttachError(t('documentDetail.attachFilesError'));
+      return;
+    }
+    const oversized = attachFiles.find((f) => f.size > maxUploadSizeBytes);
+    if (oversized) {
+      setAttachError(
+        t('settings.fileTooLarge', { max: maxUploadSizeMb }) +
+          ` (${oversized.name} · ${formatBytes(oversized.size)})`,
+      );
       return;
     }
     setAttachSaving(true);

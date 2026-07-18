@@ -8,7 +8,8 @@
     "users": "Users",
     "activityLogs": "Activity Logs",
     "profileSettings": "Profile Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "settings": "Settings"
   },
   "activityLogs": {
     "title": "All Activity",
@@ -405,5 +406,40 @@
       "passwordTooShort": "Password must be at least 8 characters.",
       "passwordMismatch": "Passwords do not match."
     }
+  },
+  "settings": {
+    "eyebrow": "Administration",
+    "title": "System Settings",
+    "subtitle": "Manage global site configuration, branding, and translations.",
+    "saveAll": "Save Settings",
+    "saving": "Saving...",
+    "saved": "Settings saved successfully.",
+    "generalSection": "General",
+    "siteName": "Site Name",
+    "brandingSection": "Branding",
+    "logo": "Site Logo",
+    "favicon": "Favicon",
+    "uploadLogo": "Upload logo",
+    "uploadFavicon": "Upload favicon",
+    "logoHint": "PNG, JPG, SVG, WEBP, or GIF · max 2MB",
+    "faviconHint": "ICO, PNG, or SVG · max 2MB",
+    "themeColor": "Theme Color",
+    "seoSection": "SEO Metadata",
+    "metaTitle": "Meta Title",
+    "metaDescription": "Meta Description",
+    "metaKeywords": "Meta Keywords",
+    "metaKeywordsHint": "Comma-separated keywords",
+    "uploadsSection": "Document Uploads",
+    "maxUploadSize": "Maximum Upload Size (MB)",
+    "maxUploadSizeHint": "Applies to all document and attachment uploads, up to 200MB.",
+    "dictionarySection": "Bilingual Dictionary",
+    "dictionarySubtitle": "Edit the English and Arabic text used throughout the app.",
+    "dictionarySearch": "Search keys or text...",
+    "dictionaryKey": "Key",
+    "dictionaryEn": "English",
+    "dictionaryAr": "Arabic (RTL)",
+    "noResults": "No matching entries.",
+    "loadError": "Failed to load settings.",
+    "fileTooLarge": "File exceeds the maximum allowed upload size of {{max}}MB."
   }
 }

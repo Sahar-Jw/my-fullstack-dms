@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 import { initials } from '@/lib/format';
 import { User, LogOut, Languages } from 'lucide-react';
 
@@ -16,11 +17,13 @@ const NAV_ITEMS: { href: string; labelKey: string; roles?: string[] }[] = [
   { href: '/departments', labelKey: 'nav.departments', roles: ['Admin'] },
   { href: '/users', labelKey: 'nav.users', roles: ['Admin'] },
   { href: '/activity-logs', labelKey: 'nav.activityLogs', roles: ['Admin', 'Manager'] },
+  { href: '/settings', labelKey: 'nav.settings', roles: ['Admin'] },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const { user, logout, refreshUser } = useAuth();
   const { locale, setLocale, t } = useLocale();
+  const { settings, logoUrl } = useSettings();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -109,8 +112,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <header className="navbar">
         <div className="navbar-inner">
           <div className="navbar-brand">
-            <div className="auth-mark" />
-            <span className="navbar-brand-text">Ledger</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={settings?.siteName || 'Logo'} className="navbar-brand-logo" />
+            ) : (
+              <div className="auth-mark" />
+            )}
+            <span className="navbar-brand-text">{settings?.siteName || 'Ledger'}</span>
           </div>
 
           <nav className="navbar-links">

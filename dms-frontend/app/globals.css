@@ -1637,6 +1637,13 @@ tbody tr:hover {
   border-radius: var(--radius-sm);
   background: var(--color-brass);
 }
+
+.navbar-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: contain;
+}
 /* .navbar-brand-mark::after {
   content: '';
   position: absolute;

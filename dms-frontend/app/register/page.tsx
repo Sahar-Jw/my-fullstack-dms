@@ -8,11 +8,13 @@ import { Department } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { setSession } = useAuth();
   const { t } = useLocale();
+  const { settings, logoUrl } = useSettings();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -77,7 +79,11 @@ export default function RegisterPage() {
       </Link>
 
       <div className="auth-card">
-        <div className="auth-mark" />
+        {logoUrl ? (
+          <img src={logoUrl} alt={settings?.siteName || 'Logo'} className="navbar-brand-logo" />
+        ) : (
+          <div className="auth-mark" />
+        )}
         <h1 className="auth-title">{t('auth.registerTitle')}</h1>
         <p className="auth-subtitle">{t('auth.registerSubtitle')}</p>
 

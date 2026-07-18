@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { errorMessage } from '@/lib/api';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 
 export default function LoginPage() {
   const { login, token, mustChangePassword, loading } = useAuth();
   const { t } = useLocale();
+  const { settings, logoUrl } = useSettings();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +45,11 @@ export default function LoginPage() {
       </Link>
 
       <div className="auth-card">
-        <div className="auth-mark" />
+        {logoUrl ? (
+          <img src={logoUrl} alt={settings?.siteName || 'Logo'} className="navbar-brand-logo" />
+        ) : (
+          <div className="auth-mark" />
+        )}
         <h1 className="auth-title">{t('auth.signInTitle')}</h1>
         <p className="auth-subtitle">{t('auth.signInSubtitle')}</p>
 

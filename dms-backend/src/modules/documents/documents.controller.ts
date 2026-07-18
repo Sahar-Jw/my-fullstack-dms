@@ -24,6 +24,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { SearchDocumentDto } from './dto/search-document.dto';
 import { MoveDocumentDto } from './dto/move-document.dto';
 import { multerOptions } from '../../common/utils/file-upload.util';
+import { UploadSizeInterceptor } from '../../common/interceptors/upload-size.interceptor';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
@@ -61,7 +62,7 @@ export class DocumentsController {
   }
 
   @Post()
-  @UseInterceptors(FilesInterceptor('files', 10, multerOptions))
+  @UseInterceptors(FilesInterceptor('files', 10, multerOptions), UploadSizeInterceptor)
   create(
     @Body() dto: CreateDocumentDto,
     @UploadedFiles() files: Express.Multer.File[],
@@ -80,7 +81,7 @@ export class DocumentsController {
   }
 
   @Put(':id/update-file')
-  @UseInterceptors(FileInterceptor('file', multerOptions))
+  @UseInterceptors(FileInterceptor('file', multerOptions), UploadSizeInterceptor)
   updateFile(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
@@ -222,7 +223,7 @@ export class DocumentsController {
   }
 
   @Post(':id/attachments')
-  @UseInterceptors(FilesInterceptor('files', 10, multerOptions))
+  @UseInterceptors(FilesInterceptor('files', 10, multerOptions), UploadSizeInterceptor)
   addAttachment(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Express.Multer.File[],

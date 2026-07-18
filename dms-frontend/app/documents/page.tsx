@@ -12,12 +12,14 @@ import { categoriesApi, departmentsApi, documentsApi, foldersApi } from '@/lib/e
 import { Category, Department, DmsDocument, Folder } from '@/lib/types';
 import { errorMessage } from '@/lib/api';
 import { useToast } from '@/lib/toast-context';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatBytes } from '@/lib/format';
 import { useLocale } from '@/lib/i18n/locale-provider';
+import { useSettings } from '@/lib/settings-context';
 
 function DocumentsBody() {
   const { notify } = useToast();
   const { t } = useLocale();
+  const { maxUploadSizeBytes, maxUploadSizeMb } = useSettings();
   const router = useRouter();
   const searchParams = useSearchParams();
   const folderIdParam = searchParams.get('folderId');
@@ -144,6 +146,14 @@ function DocumentsBody() {
     }
     if (!uploadForm.folderId || !uploadForm.categoryId) {
       setUploadError(t('documents.chooseFolderCategoryError'));
+      return;
+    }
+    const oversized = uploadFiles.find((f) => f.size > maxUploadSizeBytes);
+    if (oversized) {
+      setUploadError(
+        t('settings.fileTooLarge', { max: maxUploadSizeMb }) +
+          ` (${oversized.name} · ${formatBytes(oversized.size)})`,
+      );
       return;
     }
     setUploading(true);
