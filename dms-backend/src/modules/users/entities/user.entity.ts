@@ -59,6 +59,17 @@ export class User {
   @Column({ name: 'password_changed_at', type: 'timestamp', nullable: true })
   passwordChangedAt: Date;
 
+  // Only ever stores a SHA-256 hash of the reset token that was emailed to
+  // the user, never the raw token itself. Cleared on successful reset (or
+  // once expired) so a token can only ever be used once.
+  @Exclude()
+  @Column({ name: 'reset_password_token_hash', type: 'varchar', length: 64, nullable: true })
+  resetPasswordTokenHash: string | null;
+
+  @Exclude()
+  @Column({ name: 'reset_password_expires_at', type: 'timestamp', nullable: true })
+  resetPasswordExpiresAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

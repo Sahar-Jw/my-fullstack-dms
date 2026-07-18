@@ -1,0 +1,11 @@
+{
+  "RESET_SUBJECT": "Reset your password",
+  "RESET_PREHEADER": "Use the link below to reset your password. It expires in 30 minutes.",
+  "RESET_GREETING": "Hi {name},",
+  "RESET_INTRO": "We received a request to reset the password for your account. Click the button below to choose a new password.",
+  "RESET_BUTTON": "Reset password",
+  "RESET_LINK_FALLBACK": "If the button doesn't work, copy and paste this link into your browser:",
+  "RESET_EXPIRY_NOTICE": "This link will expire in 30 minutes.",
+  "RESET_IGNORE_NOTICE": "If you didn't request a password reset, you can safely ignore this email — your password will not be changed.",
+  "RESET_FOOTER": "This is an automated message, please don't reply to this email."
+}

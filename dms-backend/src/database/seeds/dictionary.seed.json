@@ -205,6 +205,16 @@
     "ar": "الوقت"
   },
   {
+    "key": "auth.backToSignIn",
+    "en": "Back to sign in",
+    "ar": "العودة إلى تسجيل الدخول"
+  },
+  {
+    "key": "auth.confirmNewPassword",
+    "en": "Confirm new password",
+    "ar": "تأكيد كلمة المرور الجديدة"
+  },
+  {
     "key": "auth.confirmPassword",
     "en": "Confirm password",
     "ar": "تأكيد كلمة المرور"
@@ -230,6 +240,36 @@
     "ar": "البريد الإلكتروني"
   },
   {
+    "key": "auth.forgotPasswordLink",
+    "en": "Forgot password?",
+    "ar": "هل نسيت كلمة المرور؟"
+  },
+  {
+    "key": "auth.forgotPasswordSent",
+    "en": "If an account exists for that email, we've sent a password reset link. Please check your inbox.",
+    "ar": "إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد أرسلنا رابط إعادة تعيين كلمة المرور. يرجى التحقق من بريدك الوارد."
+  },
+  {
+    "key": "auth.forgotPasswordSubmit",
+    "en": "Send reset link",
+    "ar": "إرسال رابط إعادة التعيين"
+  },
+  {
+    "key": "auth.forgotPasswordSubmitting",
+    "en": "Sending…",
+    "ar": "جارٍ الإرسال…"
+  },
+  {
+    "key": "auth.forgotPasswordSubtitle",
+    "en": "Enter your email and we'll send you a link to reset your password.",
+    "ar": "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور."
+  },
+  {
+    "key": "auth.forgotPasswordTitle",
+    "en": "Reset your password",
+    "ar": "إعادة تعيين كلمة المرور"
+  },
+  {
     "key": "auth.fullName",
     "en": "Full name",
     "ar": "الاسم الكامل"
@@ -238,6 +278,11 @@
     "key": "auth.haveAccount",
     "en": "Already have an account? ",
     "ar": "لديك حساب بالفعل؟ "
+  },
+  {
+    "key": "auth.newPassword",
+    "en": "New password",
+    "ar": "كلمة المرور الجديدة"
   },
   {
     "key": "auth.noAccount",
@@ -268,6 +313,36 @@
     "key": "auth.registerTitle",
     "en": "Create your account",
     "ar": "أنشئ حسابك"
+  },
+  {
+    "key": "auth.resetPasswordMissingToken",
+    "en": "This password reset link is invalid or has expired. Please request a new one.",
+    "ar": "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد."
+  },
+  {
+    "key": "auth.resetPasswordSubmit",
+    "en": "Reset password",
+    "ar": "إعادة تعيين كلمة المرور"
+  },
+  {
+    "key": "auth.resetPasswordSubmitting",
+    "en": "Resetting…",
+    "ar": "جارٍ إعادة التعيين…"
+  },
+  {
+    "key": "auth.resetPasswordSubtitle",
+    "en": "Enter and confirm your new password below.",
+    "ar": "أدخل كلمة المرور الجديدة وأكّدها أدناه."
+  },
+  {
+    "key": "auth.resetPasswordSuccess",
+    "en": "Your password has been reset successfully. You can now sign in.",
+    "ar": "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول."
+  },
+  {
+    "key": "auth.resetPasswordTitle",
+    "en": "Choose a new password",
+    "ar": "اختر كلمة مرور جديدة"
   },
   {
     "key": "auth.selectDepartment",

@@ -15,6 +15,8 @@ import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { I18nService } from 'nestjs-i18n';
+import { randomBytes, createHash } from 'crypto';
+import { MailService } from '../mail/mail.service';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -29,6 +31,7 @@ export class AuthService {
     private configService: ConfigService,
     private activityLogService: ActivityLogService,
     private i18n: I18nService,
+    private mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto, meta: RequestMeta = {}) {
@@ -189,18 +192,37 @@ export class AuthService {
     return { message: await this.i18n.translate('validation.PASSWORD_CHANGED_SUCCESS') };
   }
 
-  async requestPasswordReset(email: string, meta: RequestMeta = {}) {
+  // `lang` is the caller's active session language, resolved from the same
+  // Accept-Language header nestjs-i18n uses for everything else, so the
+  // email matches the language the user was browsing in.
+  async requestPasswordReset(email: string, lang: string, meta: RequestMeta = {}) {
+    const genericResponse = {
+      message: await this.i18n.translate('validation.RESET_TOKEN_SENT'),
+    };
+
     const user = await this.usersService.findByEmail(email);
+    // Always return the same message whether or not the account exists —
+    // otherwise this endpoint becomes a way to enumerate registered emails.
     if (!user) {
-      return {
-        message: await this.i18n.translate('validation.RESET_TOKEN_SENT'),
-      };
+      return genericResponse;
     }
 
-    const resetToken = this.jwtService.sign(
-      { sub: user.id, purpose: 'password_reset' },
-      { expiresIn: '15m' },
-    );
+    const rawToken = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    await this.usersService.setPasswordResetToken(user.id, tokenHash, expiresAt);
+
+    const frontendUrl = this.configService.get<string>('frontendUrl');
+    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`;
+    const normalizedLang = lang === 'ar' ? 'ar' : 'en';
+
+    void this.mailService.sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetLink,
+      lang: normalizedLang,
+    });
 
     void this.activityLogService.log({
       actor: this.activityLogService.toActorSnapshot(user),
@@ -209,27 +231,25 @@ export class AuthService {
       userAgent: meta.userAgent,
     });
 
-    return {
-      message: await this.i18n.translate('validation.RESET_TOKEN_SENT'),
-      resetToken,
-    };
+    return genericResponse;
   }
 
   async completePasswordReset(token: string, newPassword: string, meta: RequestMeta = {}) {
-    let payload: any;
-    try {
-      payload = this.jwtService.verify(token);
-    } catch (e) {
+    if (!token) {
       throw new BadRequestException(await this.i18n.translate('validation.INVALID_RESET_TOKEN'));
     }
 
-    if (payload.purpose !== 'password_reset') {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const user = await this.usersService.findByValidResetTokenHash(tokenHash);
+    if (!user) {
       throw new BadRequestException(await this.i18n.translate('validation.INVALID_RESET_TOKEN'));
     }
 
-    await this.usersService.updatePassword(payload.sub, newPassword);
+    await this.usersService.updatePassword(user.id, newPassword);
+    // Single-use: clear the token immediately so it can't be replayed even
+    // if it's still within its expiry window.
+    await this.usersService.clearPasswordResetToken(user.id);
 
-    const user = await this.usersService.findOne(payload.sub);
     void this.activityLogService.log({
       actor: this.activityLogService.toActorSnapshot(user),
       action: ActivityAction.PASSWORD_RESET_COMPLETED,

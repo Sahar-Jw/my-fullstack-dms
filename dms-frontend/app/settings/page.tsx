@@ -332,7 +332,7 @@ function SettingsBody() {
           </div>
         </section>
 
-        <section className="card" style={{ padding: 20 }}>
+        {/* <section className="card" style={{ padding: 20 }}>
           <h2 style={{ marginTop: 0 }}>{t('settings.dictionarySection')}</h2>
           <p className="page-subtitle" style={{ margin: '0 0 12px' }}>
             {t('settings.dictionarySubtitle')}
@@ -389,7 +389,7 @@ function SettingsBody() {
               </tbody>
             </table>
           </div>
-        </section>
+        </section> */}
       </form>
     </div>
   );

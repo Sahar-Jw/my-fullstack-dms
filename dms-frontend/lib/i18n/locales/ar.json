@@ -408,7 +408,22 @@
       "passwordRequired": "يرجى إدخال كلمة مرور.",
       "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
       "passwordMismatch": "كلمتا المرور غير متطابقتين."
-    }
+    },
+    "forgotPasswordLink": "هل نسيت كلمة المرور؟",
+    "forgotPasswordTitle": "إعادة تعيين كلمة المرور",
+    "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+    "forgotPasswordSubmit": "إرسال رابط إعادة التعيين",
+    "forgotPasswordSubmitting": "جارٍ الإرسال…",
+    "forgotPasswordSent": "إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد أرسلنا رابط إعادة تعيين كلمة المرور. يرجى التحقق من بريدك الوارد.",
+    "backToSignIn": "العودة إلى تسجيل الدخول",
+    "resetPasswordTitle": "اختر كلمة مرور جديدة",
+    "resetPasswordSubtitle": "أدخل كلمة المرور الجديدة وأكّدها أدناه.",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "resetPasswordSubmit": "إعادة تعيين كلمة المرور",
+    "resetPasswordSubmitting": "جارٍ إعادة التعيين…",
+    "resetPasswordSuccess": "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.",
+    "resetPasswordMissingToken": "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد."
   },
   "settings": {
     "eyebrow": "الإدارة",

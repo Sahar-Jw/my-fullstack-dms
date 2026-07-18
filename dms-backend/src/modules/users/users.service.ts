@@ -210,4 +210,30 @@ export class UsersService {
   async validatePassword(user: User, password: string): Promise<boolean> {
     return bcrypt.compare(password, user.password);
   }
+
+  // --- Password reset token helpers -------------------------------------
+  // The raw token is only ever emailed to the user; only its hash + expiry
+  // are persisted here, so a leaked database can't be used to reset anyone's
+  // password.
+
+  async setPasswordResetToken(userId: number, tokenHash: string, expiresAt: Date): Promise<void> {
+    await this.usersRepository.update(userId, {
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpiresAt: expiresAt,
+    });
+  }
+
+  async findByValidResetTokenHash(tokenHash: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({ where: { resetPasswordTokenHash: tokenHash } });
+    if (!user || !user.resetPasswordExpiresAt) return null;
+    if (user.resetPasswordExpiresAt.getTime() < Date.now()) return null;
+    return user;
+  }
+
+  async clearPasswordResetToken(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, {
+      resetPasswordTokenHash: null,
+      resetPasswordExpiresAt: null,
+    });
+  }
 }

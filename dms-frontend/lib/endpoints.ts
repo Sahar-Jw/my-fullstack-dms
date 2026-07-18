@@ -29,7 +29,7 @@ export const authApi = {
   changePassword: (currentPassword: string, newPassword: string) =>
     api.patch('/auth/change-password', { currentPassword, newPassword }),
   requestReset: (email: string) =>
-    api.post<{ message: string; resetToken?: string }>('/auth/reset-password', { email }),
+    api.post<{ message: string }>('/auth/reset-password', { email }),
   completeReset: (token: string, newPassword: string) =>
     api.post('/auth/reset-password/complete', { token, newPassword }),
 };

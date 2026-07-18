@@ -12,6 +12,6 @@ export class CompleteResetPasswordDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   newPassword: string;
 }

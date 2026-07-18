@@ -84,6 +84,12 @@ async function applyDictionary() {
     // back to the static translation already loaded in config.ts.
     i18n.addResourceBundle('en', 'translation', unflatten(enBundle), true, true);
     i18n.addResourceBundle('ar', 'translation', unflatten(arBundle), true, true);
+    // addResourceBundle only updates i18next's internal store — it doesn't fire
+    // any of the events react-i18next listens for by default ('languageChanged'
+    // or 'loaded'), so components already mounted with t() never re-render to
+    // pick up the new values. Re-emitting 'languageChanged' for the current
+    // language forces that re-render without actually switching languages.
+    i18n.emit('languageChanged', i18n.language);
   } catch {
     // Dictionary is a progressive enhancement over the static bundle — if it
     // fails to load, the app keeps working with the built-in translations.

@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
+import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -66,8 +67,12 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('reset-password')
-  requestReset(@Body() dto: RequestResetPasswordDto, @Req() req: Request) {
-    return this.authService.requestPasswordReset(dto.email, {
+  requestReset(
+    @Body() dto: RequestResetPasswordDto,
+    @Req() req: Request,
+    @I18n() i18n: I18nContext,
+  ) {
+    return this.authService.requestPasswordReset(dto.email, i18n.lang, {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     });

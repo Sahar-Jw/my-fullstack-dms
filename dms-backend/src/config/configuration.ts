@@ -12,6 +12,15 @@ export default () => ({
     secret: process.env.JWT_SECRET || 'change-this-secret',
     expiresIn: process.env.JWT_EXPIRATION || '1d',
   },
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  mail: {
+    host: process.env.MAIL_HOST || '',
+    port: parseInt(process.env.MAIL_PORT, 10) || 587,
+    secure: process.env.MAIL_SECURE === 'true',
+    user: process.env.MAIL_USER || '',
+    pass: process.env.MAIL_PASS || '',
+    from: process.env.MAIL_FROM || 'DMS <no-reply@dms.local>',
+  },
   fileUpload: {
     path: process.env.FILE_UPLOAD_PATH || './uploads',
     maxSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 10485760,
