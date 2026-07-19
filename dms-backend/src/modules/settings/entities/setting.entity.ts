@@ -34,6 +34,26 @@ export class Setting {
   @Column({ name: 'theme_color', length: 7, default: '#2f5d50' })
   themeColor: string;
 
+  // Full customizable palette. `themeColor` above is the primary/accent
+  // color (buttons, links, active states); the rest let an admin re-skin
+  // the whole site instead of just the one accent. Defaults match the
+  // built-in "Ledger" theme in globals.css so existing sites are unaffected
+  // until someone actually changes them.
+  @Column({ name: 'theme_accent_ink_color', length: 7, default: '#ffffff' })
+  themeAccentInkColor: string;
+
+  @Column({ name: 'theme_secondary_color', length: 7, default: '#b8912f' })
+  themeSecondaryColor: string;
+
+  @Column({ name: 'theme_background_color', length: 7, default: '#f6f5f1' })
+  themeBackgroundColor: string;
+
+  @Column({ name: 'theme_surface_color', length: 7, default: '#ffffff' })
+  themeSurfaceColor: string;
+
+  @Column({ name: 'theme_text_color', length: 7, default: '#1b211d' })
+  themeTextColor: string;
+
   @Column({ name: 'max_upload_size_mb', type: 'int', default: 10 })
   maxUploadSizeMb: number;
 

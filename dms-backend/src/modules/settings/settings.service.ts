@@ -93,6 +93,11 @@ export class SettingsService implements OnModuleInit {
     if (dto.metaDescription !== undefined) settings.metaDescription = dto.metaDescription;
     if (dto.metaKeywords !== undefined) settings.metaKeywords = dto.metaKeywords;
     if (dto.themeColor !== undefined) settings.themeColor = dto.themeColor;
+    if (dto.themeAccentInkColor !== undefined) settings.themeAccentInkColor = dto.themeAccentInkColor;
+    if (dto.themeSecondaryColor !== undefined) settings.themeSecondaryColor = dto.themeSecondaryColor;
+    if (dto.themeBackgroundColor !== undefined) settings.themeBackgroundColor = dto.themeBackgroundColor;
+    if (dto.themeSurfaceColor !== undefined) settings.themeSurfaceColor = dto.themeSurfaceColor;
+    if (dto.themeTextColor !== undefined) settings.themeTextColor = dto.themeTextColor;
     if (dto.maxUploadSizeMb !== undefined) settings.maxUploadSizeMb = dto.maxUploadSizeMb;
 
     if (files.logo) {

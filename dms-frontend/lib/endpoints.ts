@@ -227,6 +227,11 @@ export interface UpdateSettingsPayload {
   metaDescription?: string;
   metaKeywords?: string;
   themeColor?: string;
+  themeAccentInkColor?: string;
+  themeSecondaryColor?: string;
+  themeBackgroundColor?: string;
+  themeSurfaceColor?: string;
+  themeTextColor?: string;
   maxUploadSizeMb?: number;
   logo?: File | null;
   favicon?: File | null;
@@ -243,6 +248,11 @@ export const settingsApi = {
     if (data.metaDescription !== undefined) fd.append('metaDescription', data.metaDescription);
     if (data.metaKeywords !== undefined) fd.append('metaKeywords', data.metaKeywords);
     if (data.themeColor !== undefined) fd.append('themeColor', data.themeColor);
+    if (data.themeAccentInkColor !== undefined) fd.append('themeAccentInkColor', data.themeAccentInkColor);
+    if (data.themeSecondaryColor !== undefined) fd.append('themeSecondaryColor', data.themeSecondaryColor);
+    if (data.themeBackgroundColor !== undefined) fd.append('themeBackgroundColor', data.themeBackgroundColor);
+    if (data.themeSurfaceColor !== undefined) fd.append('themeSurfaceColor', data.themeSurfaceColor);
+    if (data.themeTextColor !== undefined) fd.append('themeTextColor', data.themeTextColor);
     if (data.maxUploadSizeMb !== undefined) fd.append('maxUploadSizeMb', String(data.maxUploadSizeMb));
     if (data.logo) fd.append('logo', data.logo);
     if (data.favicon) fd.append('favicon', data.favicon);

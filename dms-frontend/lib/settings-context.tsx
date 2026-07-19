@@ -35,15 +35,30 @@ function assetUrl(
   return `${ASSET_BASE_URL}/api/settings/${kind}${version}`;
 }
 
-function applyThemeColor(color: string | undefined) {
-  if (!color) return;
+function applyThemeColors(settings: Setting) {
   let styleTag = document.getElementById('dynamic-theme-vars') as HTMLStyleElement | null;
   if (!styleTag) {
     styleTag = document.createElement('style');
     styleTag.id = 'dynamic-theme-vars';
     document.head.appendChild(styleTag);
   }
-  styleTag.textContent = `:root { --color-accent: ${color}; }`;
+  // Only ever sets vars the admin actually has a value for -- falling back
+  // to the built-in "Ledger" theme values in globals.css for anything
+  // missing, so a partially-filled record (or an old DB row from before
+  // these columns existed) never renders with blank/invalid CSS vars.
+  const vars: Record<string, string | undefined> = {
+    '--color-accent': settings.themeColor,
+    '--color-accent-ink': settings.themeAccentInkColor,
+    '--color-brass': settings.themeSecondaryColor,
+    '--color-bg': settings.themeBackgroundColor,
+    '--color-surface': settings.themeSurfaceColor,
+    '--color-ink': settings.themeTextColor,
+  };
+  const declarations = Object.entries(vars)
+    .filter(([, value]) => !!value)
+    .map(([name, value]) => `${name}: ${value};`)
+    .join(' ');
+  styleTag.textContent = `:root { ${declarations} }`;
 }
 
 function applyFavicon(url: string | null) {
@@ -124,7 +139,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       const data = await settingsApi.get();
       setSettings(data);
-      applyThemeColor(data.themeColor);
+      applyThemeColors(data);
       applyMeta(data);
       applyFavicon(assetUrl('favicon', data.faviconMime, data.updatedAt));
       await applyDictionary();

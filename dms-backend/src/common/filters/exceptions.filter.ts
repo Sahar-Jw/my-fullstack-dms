@@ -123,8 +123,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     }
 
-    // Fallback to status-based message
-    return this.getStatusFallback(status);
+    // Fallback: the message wasn't a translation key and didn't match one of
+    // the common lookup phrases above. Most callers (e.g. AuthService) already
+    // translate their own messages before throwing, so `message` at this point
+    // is usually already a perfectly good, human-readable string — keep it
+    // instead of discarding it for a generic status phrase like "Unauthorized".
+    return message;
   }
 
   private getStatusFallback(status: number): string {

@@ -11,6 +11,18 @@ import { useSettings } from '@/lib/settings-context';
 
 const MAX_ASSET_MB = 2;
 
+// Mirrors the built-in "Ledger" theme defaults in globals.css / the Setting
+// entity's column defaults, so "Reset to defaults" doesn't need a round trip
+// to the server.
+const DEFAULT_THEME = {
+  themeColor: '#2f5d50',
+  themeAccentInkColor: '#ffffff',
+  themeSecondaryColor: '#b8912f',
+  themeBackgroundColor: '#f6f5f1',
+  themeSurfaceColor: '#ffffff',
+  themeTextColor: '#1b211d',
+};
+
 type EditedEntry = { en: string; ar: string };
 
 function SettingsBody() {
@@ -28,6 +40,11 @@ function SettingsBody() {
     metaDescription: '',
     metaKeywords: '',
     themeColor: '#2f5d50',
+    themeAccentInkColor: '#ffffff',
+    themeSecondaryColor: '#b8912f',
+    themeBackgroundColor: '#f6f5f1',
+    themeSurfaceColor: '#ffffff',
+    themeTextColor: '#1b211d',
     maxUploadSizeMb: 10,
   });
 
@@ -62,6 +79,11 @@ function SettingsBody() {
       metaDescription: settings.metaDescription || '',
       metaKeywords: settings.metaKeywords || '',
       themeColor: settings.themeColor || '#2f5d50',
+      themeAccentInkColor: settings.themeAccentInkColor || '#ffffff',
+      themeSecondaryColor: settings.themeSecondaryColor || '#b8912f',
+      themeBackgroundColor: settings.themeBackgroundColor || '#f6f5f1',
+      themeSurfaceColor: settings.themeSurfaceColor || '#ffffff',
+      themeTextColor: settings.themeTextColor || '#1b211d',
       maxUploadSizeMb: settings.maxUploadSizeMb || 10,
     });
   }
@@ -130,6 +152,11 @@ function SettingsBody() {
         metaDescription: form.metaDescription,
         metaKeywords: form.metaKeywords,
         themeColor: form.themeColor,
+        themeAccentInkColor: form.themeAccentInkColor,
+        themeSecondaryColor: form.themeSecondaryColor,
+        themeBackgroundColor: form.themeBackgroundColor,
+        themeSurfaceColor: form.themeSurfaceColor,
+        themeTextColor: form.themeTextColor,
         maxUploadSizeMb: Number(form.maxUploadSizeMb),
         logo: logoFile,
         favicon: faviconFile,
@@ -274,7 +301,7 @@ function SettingsBody() {
               <div className="field-hint">{t('settings.faviconHint')}</div>
             </div>
 
-            <div className="field" style={{ minWidth: 160 }}>
+            {/* <div className="field" style={{ minWidth: 160 }}>
               <label>{t('settings.themeColor')}</label>
               <input
                 type="color"
@@ -282,6 +309,113 @@ function SettingsBody() {
                 onChange={(e) => setForm({ ...form, themeColor: e.target.value })}
                 style={{ width: 64, height: 36, padding: 2, border: '1px solid var(--color-border)', borderRadius: 4 }}
               />
+            </div> */}
+          </div>
+        </section>
+
+        <section className="card" style={{ marginBottom: 20, padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <h2 style={{ marginTop: 0, marginBottom: 4 }}>{t('settings.themeSection')}</h2>
+              <p className="page-subtitle" style={{ margin: 0 }}>{t('settings.themeSubtitle')}</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() =>
+                setForm({
+                  ...form,
+                  themeColor: DEFAULT_THEME.themeColor,
+                  themeAccentInkColor: DEFAULT_THEME.themeAccentInkColor,
+                  themeSecondaryColor: DEFAULT_THEME.themeSecondaryColor,
+                  themeBackgroundColor: DEFAULT_THEME.themeBackgroundColor,
+                  themeSurfaceColor: DEFAULT_THEME.themeSurfaceColor,
+                  themeTextColor: DEFAULT_THEME.themeTextColor,
+                })
+              }
+            >
+              {t('settings.themeReset')}
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: 20,
+              marginTop: 16,
+            }}
+          >
+            {(
+              [
+                ['themeColor', 'themePrimary', 'themePrimaryHint'],
+                ['themeAccentInkColor', 'themePrimaryText', 'themePrimaryTextHint'],
+                ['themeSecondaryColor', 'themeSecondary', 'themeSecondaryHint'],
+                ['themeBackgroundColor', 'themeBackground', 'themeBackgroundHint'],
+                ['themeSurfaceColor', 'themeSurface', 'themeSurfaceHint'],
+                ['themeTextColor', 'themeText', 'themeTextHint'],
+              ] as const
+            ).map(([field, labelKey, hintKey]) => (
+              <div className="field" key={field}>
+                <label>{t(`settings.${labelKey}`)}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="color"
+                    value={form[field]}
+                    onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                    style={{ width: 44, height: 36, padding: 2, border: '1px solid var(--color-border)', borderRadius: 4, flexShrink: 0 }}
+                  />
+                  <input
+                    className="input"
+                    value={form[field]}
+                    onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                    maxLength={7}
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }}
+                  />
+                </div>
+                <div className="field-hint">{t(`settings.${hintKey}`)}</div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="table-wrap"
+            style={{
+              marginTop: 20,
+              padding: 20,
+              borderRadius: 'var(--radius-md)',
+              background: form.themeBackgroundColor,
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            <div
+              style={{
+                background: form.themeSurfaceColor,
+                borderRadius: 'var(--radius-sm)',
+                padding: 16,
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <p style={{ margin: '0 0 12px', color: form.themeTextColor, fontWeight: 600 }}>
+                {t('settings.themePreviewTitle')}
+              </p>
+              <p style={{ margin: '0 0 16px', color: form.themeTextColor, fontSize: 13 }}>
+                {t('settings.themePreviewBody')}
+              </p>
+              <button
+                type="button"
+                className="btn"
+                style={{
+                  background: form.themeColor,
+                  color: form.themeAccentInkColor,
+                  border: 'none',
+                }}
+              >
+                {t('settings.themePreviewButton')}
+              </button>
+              <span style={{ marginInlineStart: 10, color: form.themeSecondaryColor, fontWeight: 600, fontSize: 13 }}>
+                {t('settings.themePreviewAccent')}
+              </span>
             </div>
           </div>
         </section>
@@ -332,7 +466,7 @@ function SettingsBody() {
           </div>
         </section>
 
-        {/* <section className="card" style={{ padding: 20 }}>
+        <section className="card" style={{ padding: 20 }}>
           <h2 style={{ marginTop: 0 }}>{t('settings.dictionarySection')}</h2>
           <p className="page-subtitle" style={{ margin: '0 0 12px' }}>
             {t('settings.dictionarySubtitle')}
@@ -389,7 +523,7 @@ function SettingsBody() {
               </tbody>
             </table>
           </div>
-        </section> */}
+        </section>
       </form>
     </div>
   );

@@ -14,6 +14,11 @@ export interface Setting {
   metaDescription: string;
   metaKeywords: string;
   themeColor: string;
+  themeAccentInkColor: string;
+  themeSecondaryColor: string;
+  themeBackgroundColor: string;
+  themeSurfaceColor: string;
+  themeTextColor: string;
   maxUploadSizeMb: number;
   updatedAt: string;
 }

@@ -9,13 +9,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
 import { DictionaryEntryDto } from './dictionary-entry.dto';
 
-// Submitted as multipart/form-data alongside the optional `logo` and
-// `favicon` files, so every field arrives as a string and numeric/array
-// fields need explicit conversion — mirrors CreateDocumentDto's approach.
 export class UpdateSettingsDto {
   @IsOptional()
   @IsString()
@@ -41,25 +38,43 @@ export class UpdateSettingsDto {
   @IsHexColor()
   themeColor?: string;
 
-  // Capped at MAX_UPLOAD_CEILING_MB (see file-upload.util.ts) so this
-  // dynamic limit can never exceed Multer's own hard ceiling.
+  @IsOptional()
+  @IsHexColor()
+  themeAccentInkColor?: string;
+
+  @IsOptional()
+  @IsHexColor()
+  themeSecondaryColor?: string;
+
+  @IsOptional()
+  @IsHexColor()
+  themeBackgroundColor?: string;
+
+  @IsOptional()
+  @IsHexColor()
+  themeSurfaceColor?: string;
+
+  @IsOptional()
+  @IsHexColor()
+  themeTextColor?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(200)
   maxUploadSizeMb?: number;
-
-  // Sent as a JSON-stringified array in the same multipart body so the
-  // dictionary and the rest of the settings save "concurrently" in one submit.
   @IsOptional()
   @Transform(({ value }) => {
     if (value === undefined || value === '' || Array.isArray(value)) return value;
+    let parsed: unknown;
     try {
-      return JSON.parse(value);
+      parsed = JSON.parse(value);
     } catch {
       throw new BadRequestException('dictionary must be a valid JSON array');
     }
+    if (!Array.isArray(parsed)) return parsed;
+    return parsed.map((item) => plainToInstance(DictionaryEntryDto, item));
   })
   @IsArray()
   @ValidateNested({ each: true })
