@@ -7,5 +7,7 @@
   "STORAGE_USED": "Storage Used",
   "DEPARTMENT_DOCUMENTS": "Department Documents",
   "MY_DOCUMENTS": "My Documents",
-  "RECENT_DOCUMENTS": "Recent Documents"
+  "RECENT_DOCUMENTS": "Recent Documents",
+  "UPLOADERS_COUNT": "Users Who Uploaded",
+"DEPARTMENT_UPLOADERS": "Department Uploaders"
 }

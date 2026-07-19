@@ -40,6 +40,9 @@ function DocumentsBody() {
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 20;
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
@@ -66,11 +69,10 @@ function DocumentsBody() {
     }
   }
 
-  async function loadDocs(useSearch = false) {
+  async function loadDocs(useSearch = false, targetPage = page) {
     setLoading(true);
     setError('');
     try {
-      let result: DmsDocument[];
       if (
         useSearch ||
         nameFilter ||
@@ -81,7 +83,8 @@ function DocumentsBody() {
         dateTo ||
         folderIdParam
       ) {
-        result = await documentsApi.search({
+        // Search endpoint isn't paginated yet — returns the full matching set.
+        const result = await documentsApi.search({
           name: nameFilter || undefined,
           categoryId: categoryFilter ? Number(categoryFilter) : undefined,
           folderId: folderFilter
@@ -93,12 +96,17 @@ function DocumentsBody() {
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
         });
+        setDocs(result ?? []);
+        setTotalPages(1);
       } else {
-        result = await documentsApi.list();
+        const result = await documentsApi.list({ page: targetPage, limit: PAGE_SIZE });
+        setDocs(result?.data ?? []);
+        setPage(result?.page ?? 1);
+        setTotalPages(result?.totalPages ?? 1);
       }
-      setDocs(result);
     } catch (e) {
       setError(errorMessage(e));
+      setDocs([]); // never leave docs undefined, even on failure
     } finally {
       setLoading(false);
     }
@@ -112,13 +120,21 @@ function DocumentsBody() {
 
   useEffect(() => {
     if (authLoading) return;
-    loadDocs();
+    setPage(1);
+    loadDocs(false, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, folderIdParam]);
 
   function handleSearchSubmit(e: FormEvent) {
     e.preventDefault();
-    loadDocs(true);
+    setPage(1);
+    loadDocs(true, 1);
+  }
+
+  function goToPage(newPage: number) {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    loadDocs(false, newPage);
   }
 
   function clearFolderFilter() {
@@ -306,7 +322,8 @@ function DocumentsBody() {
               setDepartmentFilter('');
               setDateFrom('');
               setDateTo('');
-              loadDocs(false);
+              setPage(1);
+              loadDocs(false, 1);
             }}
           >
             {t('documents.reset')}
@@ -344,6 +361,38 @@ function DocumentsBody() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 12,
+            marginTop: 20,
+          }}
+        >
+          <button
+            className="btn btn-secondary btn-sm"
+            type="button"
+            disabled={page <= 1}
+            onClick={() => goToPage(page - 1)}
+          >
+            {t('documents.previousPage')}
+          </button>
+          <span style={{ color: 'var(--color-muted)' }}>
+            {t('documents.pageOf', { page, totalPages })}
+          </span>
+          <button
+            className="btn btn-secondary btn-sm"
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => goToPage(page + 1)}
+          >
+            {t('documents.nextPage')}
+          </button>
         </div>
       )}
 

@@ -32,6 +32,7 @@ import * as fs from 'fs';
 import { LogActivity } from '../activity-logs/decorators/log-activity.decorator';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { I18nService } from 'nestjs-i18n';
+import { PaginationDto } from './dto/agination.dto';
 
 @Controller('documents')
 export class DocumentsController {
@@ -42,8 +43,8 @@ export class DocumentsController {
   ) {}
 
   @Get()
-  findAll(@CurrentUser() user: AuthUser) {
-    return this.documentsService.findAll(user);
+  findAll(@CurrentUser() user: AuthUser, @Query() pagination: PaginationDto) {
+    return this.documentsService.findAll(user, pagination);
   }
 
   @Get('trash')

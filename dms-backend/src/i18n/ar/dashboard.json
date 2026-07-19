@@ -7,5 +7,7 @@
   "STORAGE_USED": "المساحة المستخدمة",
   "DEPARTMENT_DOCUMENTS": "وثائق القسم",
   "MY_DOCUMENTS": "وثائقي",
-  "RECENT_DOCUMENTS": "الوثائق الأخيرة"
+  "RECENT_DOCUMENTS": "الوثائق الأخيرة",
+  "UPLOADERS_COUNT": "المستخدمون الذين رفعوا مستندات",
+"DEPARTMENT_UPLOADERS": "عدد رافعي المستندات بالقسم"
 }

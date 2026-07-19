@@ -96,7 +96,9 @@
     "name": "الاسم",
     "folder": "المجلد",
     "category": "الفئة",
-    "updated": "آخر تحديث"
+    "updated": "آخر تحديث",
+    "uploadersCount": "المستخدمون الذين رفعوا مستندات",
+    "departmentUploaders": "عدد رافعي المستندات بالقسم"
   },
   "departments": {
     "eyebrow": "الإدارة",
@@ -275,7 +277,10 @@
     "chooseFileError": "يرجى اختيار ملف واحد على الأقل للرفع.",
     "chooseFolderCategoryError": "يرجى اختيار مجلد وفئة.",
     "uploadedSingle": "تم رفع المستند.",
-    "uploadedMulti": "تم رفع {{count}} مستندات."
+    "uploadedMulti": "تم رفع {{count}} مستندات.",
+    "previousPage": "السابق",
+    "nextPage": "التالي",
+    "pageOf": "صفحة {{page}} من {{totalPages}}"
   },
   "documentDetail": {
     "name": "الاسم",

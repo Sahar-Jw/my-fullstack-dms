@@ -92,7 +92,9 @@
     "name": "Name",
     "folder": "Folder",
     "category": "Category",
-    "updated": "Updated"
+    "updated": "Updated",
+    "uploadersCount": "Users who uploaded",
+    "departmentUploaders": "Department uploaders"
   },
   "departments": {
     "eyebrow": "Administration",
@@ -271,7 +273,10 @@
     "chooseFileError": "Please choose at least one file to upload.",
     "chooseFolderCategoryError": "Please choose a folder and category.",
     "uploadedSingle": "Document uploaded.",
-    "uploadedMulti": "{{count}} documents uploaded."
+    "uploadedMulti": "{{count}} documents uploaded.",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}}"
   },
   "documentDetail": {
     "name": "Name",

@@ -728,7 +728,7 @@ table {
 }
 
 thead th {
-  text-align: left;
+  /* text-align: left; */
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -2961,9 +2961,16 @@ tbody tr:hover {
     border-radius: 50%;
   }
 }
+[dir="ltr"] .logs-table thead th,thead th{
+  text-align: left;
+}
 [dir="rtl"] .logs-table thead th,thead th{
   text-align: right;
 }
-[dir="ltr"] .logs-table thead th,thead th{
+
+[dir="rtl"] thead th {
+  text-align: right;
+}
+[dir="ltr"] thead th {
   text-align: left;
 }

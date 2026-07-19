@@ -13,21 +13,21 @@ export class DashboardService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private documentsService: DocumentsService,
-    private readonly i18n: I18nService, // Add i18n service
+    private readonly i18n: I18nService,
   ) {}
 
   async getDashboard(user: AuthUser) {
     if (user.roleName === RoleName.ADMIN) {
-      const [totalUsers, totalDocuments, storageUsed] = await Promise.all([
-        this.usersRepository.count(),
+      const [uploadersCount, totalDocuments, storageUsed] = await Promise.all([
+        this.documentsService.countUniqueUploaders(),
         this.documentsService.countAll(),
         this.documentsService.storageUsedTotal(),
       ]);
       return {
         role: RoleName.ADMIN,
         roleLabel: await this.i18n.translate('dashboard.ROLE_ADMIN'),
-        totalUsers,
-        totalUsersLabel: await this.i18n.translate('dashboard.TOTAL_USERS'),
+        uploadersCount,
+        uploadersCountLabel: await this.i18n.translate('dashboard.UPLOADERS_COUNT'),
         totalDocuments,
         totalDocumentsLabel: await this.i18n.translate('dashboard.TOTAL_DOCUMENTS'),
         storageUsedBytes: storageUsed,
@@ -36,19 +36,18 @@ export class DashboardService {
     }
 
     if (user.roleName === RoleName.MANAGER) {
-      const departmentDocuments = await this.documentsService.countByDepartment(
+      const departmentUploaders = await this.documentsService.countUniqueUploadersByDepartment(
         user.departmentId,
       );
       return {
         role: RoleName.MANAGER,
         roleLabel: await this.i18n.translate('dashboard.ROLE_MANAGER'),
         departmentId: user.departmentId,
-        departmentDocuments,
-        departmentDocumentsLabel: await this.i18n.translate('dashboard.DEPARTMENT_DOCUMENTS'),
+        departmentUploaders,
+        departmentUploadersLabel: await this.i18n.translate('dashboard.DEPARTMENT_UPLOADERS'),
       };
     }
 
-    // Employee
     const [myDocuments, recentDocuments, storageUsed] = await Promise.all([
       this.documentsService.countByOwner(user.userId),
       this.documentsService.recentByOwner(user.userId, 5),

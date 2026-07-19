@@ -131,18 +131,26 @@ export interface LoginResponse {
   };
 }
 
-export type AdminDashboard = {
-  role: 'Admin';
-  totalUsers: number;
-  totalDocuments: number;
-  storageUsedBytes: number;
+// export type AdminDashboard = {
+//   role: 'Admin';
+//   totalUsers: number;
+//   totalDocuments: number;
+//   storageUsedBytes: number;
+// };
+
+// export type ManagerDashboard = {
+//   role: 'Manager';
+//   departmentId: number;
+//   departmentDocuments: number;
+// };
+export type PaginatedDocuments = {
+  items: DmsDocument[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 };
 
-export type ManagerDashboard = {
-  role: 'Manager';
-  departmentId: number;
-  departmentDocuments: number;
-};
 
 export type EmployeeDashboard = {
   role: 'Employee';
@@ -214,3 +222,16 @@ export interface PaginatedResult<T> {
   limit: number;
   totalPages: number;
 }
+
+export type AdminDashboard = {
+  role: 'Admin';
+  uploadersCount: number;
+  totalDocuments: number;
+  storageUsedBytes: number;
+};
+
+export type ManagerDashboard = {
+  role: 'Manager';
+  departmentId: number;
+  departmentUploaders: number;
+};

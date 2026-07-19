@@ -1,4 +1,3 @@
-
 import { api } from './api';
 import {
   AppUser,
@@ -137,7 +136,8 @@ export interface DocumentSearchParams {
 }
 
 export const documentsApi = {
-  list: () => api.get<DmsDocument[]>('/documents'),
+  list: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedResult<DmsDocument>>('/documents', params as Record<string, any>),
   trash: () => api.get<DmsDocument[]>('/documents/trash'),
   search: (params: DocumentSearchParams) =>
     api.get<DmsDocument[]>('/documents/search', params as Record<string, any>),

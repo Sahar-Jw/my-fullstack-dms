@@ -21,6 +21,7 @@ import { FileStorageService } from './file-storage.service';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { I18nService } from 'nestjs-i18n';
+import { PaginationDto } from './dto/agination.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -101,28 +102,33 @@ export class DocumentsService {
 
   // ---------- Queries ----------
 
-  async findAll(user: AuthUser): Promise<Document[]> {
-    const qb = this.documentsRepository
-      .createQueryBuilder('document')
-      .leftJoinAndSelect('document.folder', 'folder')
-      .leftJoinAndSelect('document.category', 'category')
-      .leftJoinAndSelect('document.owner', 'owner')
-      .where('document.is_deleted = false');
+async findAll(user: AuthUser, pagination: PaginationDto) {
+  const { page, limit } = pagination;
+  const qb = this.documentsRepository
+    .createQueryBuilder('document')
+    .leftJoinAndSelect('document.folder', 'folder')
+    .leftJoinAndSelect('document.category', 'category')
+    .leftJoinAndSelect('document.owner', 'owner')
+    .where('document.is_deleted = false');
 
-    if (user.roleName === RoleName.MANAGER) {
-      qb.andWhere('folder.department_id = :departmentId', {
-        departmentId: user.departmentId,
-      });
-    } else if (user.roleName === RoleName.EMPLOYEE) {
-      qb.andWhere(
-        '(document.owner_id = :userId OR folder.department_id = :departmentId)',
-        { userId: user.userId, departmentId: user.departmentId },
-      );
-    }
-
-    qb.orderBy('document.updated_at', 'DESC');
-    return qb.getMany();
+  if (user.roleName === RoleName.MANAGER) {
+    qb.andWhere('folder.department_id = :departmentId', {
+      departmentId: user.departmentId,
+    });
+  } else if (user.roleName === RoleName.EMPLOYEE) {
+    qb.andWhere(
+      '(document.owner_id = :userId OR folder.department_id = :departmentId)',
+      { userId: user.userId, departmentId: user.departmentId },
+    );
   }
+
+  qb.orderBy('document.updatedAt', 'DESC')
+    .skip((page - 1) * limit)
+    .take(limit);
+
+  const [data, total] = await qb.getManyAndCount();
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+}
 
   async findTrash(user: AuthUser): Promise<Document[]> {
     const qb = this.documentsRepository
@@ -721,51 +727,65 @@ export class DocumentsService {
     });
   }
 
-  // ---------- Dashboard support ----------
+// ---------- Dashboard support ----------
 
-  countAll(): Promise<number> {
-    return this.documentsRepository.count({ where: { isDeleted: false } });
-  }
+countAll(): Promise<number> {
+  return this.documentsRepository.count({ where: { isDeleted: false } });
+}
 
-  countByDepartment(departmentId: number): Promise<number> {
-    return this.documentsRepository
-      .createQueryBuilder('document')
-      .leftJoin('document.folder', 'folder')
-      .where('document.is_deleted = false')
-      .andWhere('folder.department_id = :departmentId', { departmentId })
-      .getCount();
-  }
+/** Admin: how many DISTINCT users have ever uploaded a document. */
+async countUniqueUploaders(): Promise<number> {
+  const result = await this.documentsRepository
+    .createQueryBuilder('document')
+    .where('document.is_deleted = false')
+    .select('COUNT(DISTINCT document.owner_id)', 'count')
+    .getRawOne();
+  return parseInt(result.count, 10) || 0;
+}
 
-  countByOwner(ownerId: number): Promise<number> {
-    return this.documentsRepository.count({
-      where: { ownerId, isDeleted: false },
-    });
-  }
+/** Manager: how many DISTINCT employees IN THEIR DEPARTMENT have uploaded. */
+async countUniqueUploadersByDepartment(departmentId: number): Promise<number> {
+  const result = await this.documentsRepository
+    .createQueryBuilder('document')
+    .leftJoin('document.owner', 'owner')
+    .where('document.is_deleted = false')
+    .andWhere('owner.department_id = :departmentId', { departmentId })
+    .select('COUNT(DISTINCT document.owner_id)', 'count')
+    .getRawOne();
+  return parseInt(result.count, 10) || 0;
+}
 
-  async recentByOwner(ownerId: number, limit = 5): Promise<Document[]> {
-    return this.documentsRepository.find({
-      where: { ownerId, isDeleted: false },
-      order: { updatedAt: 'DESC' },
-      take: limit,
-      relations: ['folder', 'category'],
-    });
-  }
+countByOwner(ownerId: number): Promise<number> {
+  return this.documentsRepository.count({
+    where: { ownerId, isDeleted: false },
+  });
+}
 
-  async storageUsedByOwner(ownerId: number): Promise<number> {
-    const result = await this.versionsRepository
-      .createQueryBuilder('version')
-      .leftJoin('version.document', 'document')
-      .where('document.owner_id = :ownerId', { ownerId })
-      .select('COALESCE(SUM(version.file_size), 0)', 'total')
-      .getRawOne();
-    return parseInt(result.total, 10) || 0;
-  }
+/** Employee: last 5 documents by UPLOAD date (createdAt), not last-edited date. */
+async recentByOwner(ownerId: number, limit = 5): Promise<Document[]> {
+  return this.documentsRepository.find({
+    where: { ownerId, isDeleted: false },
+    order: { createdAt: 'DESC' },
+    take: limit,
+    relations: ['folder', 'category'],
+  });
+}
 
-  async storageUsedTotal(): Promise<number> {
-    const result = await this.versionsRepository
-      .createQueryBuilder('version')
-      .select('COALESCE(SUM(version.file_size), 0)', 'total')
-      .getRawOne();
-    return parseInt(result.total, 10) || 0;
-  }
+async storageUsedByOwner(ownerId: number): Promise<number> {
+  const result = await this.versionsRepository
+    .createQueryBuilder('version')
+    .leftJoin('version.document', 'document')
+    .where('document.owner_id = :ownerId', { ownerId })
+    .select('COALESCE(SUM(version.file_size), 0)', 'total')
+    .getRawOne();
+  return parseInt(result.total, 10) || 0;
+}
+
+async storageUsedTotal(): Promise<number> {
+  const result = await this.versionsRepository
+    .createQueryBuilder('version')
+    .select('COALESCE(SUM(version.file_size), 0)', 'total')
+    .getRawOne();
+  return parseInt(result.total, 10) || 0;
+}
 }

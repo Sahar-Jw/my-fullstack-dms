@@ -52,8 +52,8 @@ function DashboardBody() {
       ) : data?.role === 'Admin' ? (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">{t('dashboard.totalUsers')}</div>
-            <div className="stat-value">{data.totalUsers}</div>
+            <div className="stat-label">{t('dashboard.uploadersCount')}</div>
+            <div className="stat-value">{data.uploadersCount}</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">{t('dashboard.totalDocuments')}</div>
@@ -67,8 +67,8 @@ function DashboardBody() {
       ) : data?.role === 'Manager' ? (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">{t('dashboard.departmentDocuments')}</div>
-            <div className="stat-value">{data.departmentDocuments}</div>
+            <div className="stat-label">{t('dashboard.departmentUploaders')}</div>
+            <div className="stat-value">{data.departmentUploaders}</div>
           </div>
         </div>
       ) : data?.role === 'Employee' ? (
