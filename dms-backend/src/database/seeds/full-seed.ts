@@ -9,7 +9,6 @@ import { Folder } from '../../modules/folders/entities/folder.entity';
 import { Document } from '../../modules/documents/entities/document.entity';
 import { DocumentVersion } from '../../modules/documents/entities/document-version.entity';
 import { DocumentAttachment } from '../../modules/documents/entities/document-attachment.entity';
-import { Attachment } from '../../modules/attachments/entities/attachment.entity';
 import { RoleName } from '../../common/enums/role.enum';
 
 dotenv.config();
@@ -31,7 +30,6 @@ const AppDataSource = new DataSource({
     Document,
     DocumentVersion,
     DocumentAttachment,
-    Attachment,
   ],
 });
 
@@ -272,24 +270,26 @@ async function seed() {
     savedDocuments[documentData.name] = await documentRepo.findOneOrFail({ where: { name: documentData.name } });
   }
 
+  // Seed data uses small placeholder text buffers stored directly as bytea
+  // (real uploads go through DocumentsService.create/updateFile with the
+  // actual file bytes -- this is just enough to make download/preview work
+  // for seeded demo documents).
   const versions = [
     {
       document: savedDocuments['IT Security Policy'],
       uploadedBy: savedUsers['it.manager@dms.com'],
       versionNumber: 1,
-      filePath: 'documents/1/it-security-policy-v1.pdf',
-      originalFileName: 'it-security-policy-v1.pdf',
-      mimeType: 'application/pdf',
-      fileSize: 102400,
+      fileData: Buffer.from('Placeholder content for IT Security Policy v1.'),
+      originalFileName: 'it-security-policy-v1.txt',
+      mimeType: 'text/plain',
     },
     {
       document: savedDocuments['Employee Handbook'],
       uploadedBy: savedUsers['hr.employee@dms.com'],
       versionNumber: 1,
-      filePath: 'documents/2/employee-handbook-v1.pdf',
-      originalFileName: 'employee-handbook-v1.pdf',
-      mimeType: 'application/pdf',
-      fileSize: 153600,
+      fileData: Buffer.from('Placeholder content for Employee Handbook v1.'),
+      originalFileName: 'employee-handbook-v1.txt',
+      mimeType: 'text/plain',
     },
   ];
 
@@ -307,10 +307,10 @@ async function seed() {
         uploadedBy: versionData.uploadedBy,
         uploadedById: versionData.uploadedBy.id,
         versionNumber: versionData.versionNumber,
-        filePath: versionData.filePath,
+        fileData: versionData.fileData,
         originalFileName: versionData.originalFileName,
         mimeType: versionData.mimeType,
-        fileSize: versionData.fileSize,
+        fileSize: versionData.fileData.length,
       }));
       console.log(`Created document version for: ${versionData.document.name}`);
     }
@@ -320,18 +320,16 @@ async function seed() {
     {
       document: savedDocuments['IT Security Policy'],
       uploadedBy: savedUsers['it.manager@dms.com'],
-      fileName: 'network-diagram.pdf',
-      filePath: 'attachments/1/network-diagram.pdf',
-      mimeType: 'application/pdf',
-      fileSize: 76234,
+      fileName: 'network-diagram.txt',
+      fileData: Buffer.from('Placeholder content for network-diagram.'),
+      mimeType: 'text/plain',
     },
     {
       document: savedDocuments['Employee Handbook'],
       uploadedBy: savedUsers['hr.employee@dms.com'],
-      fileName: 'benefits-summary.pdf',
-      filePath: 'attachments/2/benefits-summary.pdf',
-      mimeType: 'application/pdf',
-      fileSize: 58200,
+      fileName: 'benefits-summary.txt',
+      fileData: Buffer.from('Placeholder content for benefits-summary.'),
+      mimeType: 'text/plain',
     },
   ];
 
@@ -349,9 +347,9 @@ async function seed() {
         uploadedBy: attachmentData.uploadedBy,
         uploadedById: attachmentData.uploadedBy.id,
         fileName: attachmentData.fileName,
-        filePath: attachmentData.filePath,
+        fileData: attachmentData.fileData,
         mimeType: attachmentData.mimeType,
-        fileSize: attachmentData.fileSize,
+        fileSize: attachmentData.fileData.length,
       }));
       console.log(`Created attachment: ${attachmentData.fileName}`);
     }

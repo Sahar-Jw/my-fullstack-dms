@@ -7,7 +7,6 @@ import * as path from 'path';
 import { Setting } from './entities/setting.entity';
 import { DictionaryEntry } from './entities/dictionary-entry.entity';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
-import { SettingsFileStorageService } from './settings-file-storage.service';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
@@ -16,9 +15,6 @@ const SETTINGS_ROW_ID = 1;
 
 @Injectable()
 export class SettingsService implements OnModuleInit {
-  // Simple in-memory cache — settings change rarely but are read on nearly
-  // every request (upload-limit checks, public GET for the header/meta tags),
-  // so we avoid a DB round-trip on the hot path and only refresh on writes.
   private cache: Setting | null = null;
 
   constructor(
@@ -26,7 +22,6 @@ export class SettingsService implements OnModuleInit {
     private readonly settingsRepo: Repository<Setting>,
     @InjectRepository(DictionaryEntry)
     private readonly dictionaryRepo: Repository<DictionaryEntry>,
-    private readonly fileStorage: SettingsFileStorageService,
     private readonly activityLogService: ActivityLogService,
     private readonly i18n: I18nService,
   ) {}
@@ -56,7 +51,6 @@ export class SettingsService implements OnModuleInit {
     const raw = fs.readFileSync(seedPath, 'utf-8');
     const entries: { key: string; en: string; ar: string }[] = JSON.parse(raw);
     const rows = entries.map((e) => this.dictionaryRepo.create(e));
-    // Batch insert; chunk to stay well under typical parameter limits.
     const chunkSize = 100;
     for (let i = 0; i < rows.length; i += chunkSize) {
       await this.dictionaryRepo.save(rows.slice(i, i + chunkSize));
@@ -102,10 +96,12 @@ export class SettingsService implements OnModuleInit {
     if (dto.maxUploadSizeMb !== undefined) settings.maxUploadSizeMb = dto.maxUploadSizeMb;
 
     if (files.logo) {
-      settings.logoPath = this.fileStorage.saveAsset('logo', files.logo);
+      settings.logoData = files.logo.buffer;
+      settings.logoMime = files.logo.mimetype;
     }
     if (files.favicon) {
-      settings.faviconPath = this.fileStorage.saveAsset('favicon', files.favicon);
+      settings.faviconData = files.favicon.buffer;
+      settings.faviconMime = files.favicon.mimetype;
     }
 
     await this.settingsRepo.save(settings);
@@ -125,6 +121,25 @@ export class SettingsService implements OnModuleInit {
     });
 
     return this.cache as Setting;
+  }
+
+  async getAssetBlob(
+    type: 'logo' | 'favicon',
+  ): Promise<{ data: Buffer; mime: string } | null> {
+    const dataColumn = type === 'logo' ? 'logoData' : 'faviconData';
+    const mimeColumn = type === 'logo' ? 'logoMime' : 'faviconMime';
+
+    const settings = await this.settingsRepo
+      .createQueryBuilder('s')
+      .addSelect(`s.${dataColumn}`)
+      .where('s.id = :id', { id: SETTINGS_ROW_ID })
+      .getOne();
+
+    const data = settings?.[dataColumn] as Buffer | undefined;
+    if (!settings || !data) {
+      return null;
+    }
+    return { data, mime: (settings[mimeColumn] as string) || 'image/png' };
   }
 
   private async upsertDictionary(entries: { key: string; en?: string; ar?: string }[]) {

@@ -1,4 +1,3 @@
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export class ApiError extends Error {
@@ -46,7 +45,13 @@ async function request<T>(
     cache: 'no-store',
   });
 
-  if (res.status === 401) {
+  // A 401 only means "your session died" if we actually sent a token.
+  // A login/register attempt has no token yet, so a 401 there just means
+  // "wrong email or password" -- let it fall through to the normal
+  // error handling below so the real, localized backend message
+  // ("Invalid email or password.") reaches the caller instead of being
+  // overwritten by a hardcoded English "session expired" string.
+  if (res.status === 401 && token) {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('dms_token');
       window.localStorage.removeItem('dms_user');
@@ -54,7 +59,13 @@ async function request<T>(
         window.location.href = '/login';
       }
     }
-    throw new ApiError(401, 'Session expired. Please log in again.');
+    const contentType = res.headers.get('content-type') || '';
+    let message = 'Session expired. Please log in again.';
+    if (contentType.includes('application/json')) {
+      const body = await res.json().catch(() => null);
+      if (body?.message) message = flattenMessage(body.message);
+    }
+    throw new ApiError(401, message);
   }
 
   const contentType = res.headers.get('content-type') || '';

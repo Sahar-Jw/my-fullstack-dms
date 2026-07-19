@@ -12,7 +12,6 @@ import { RolesModule } from './modules/roles/roles.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { FoldersModule } from './modules/folders/folders.module';
 import { DocumentsModule } from './modules/documents/documents.module';
-import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -44,11 +43,9 @@ import { HttpExceptionFilter } from './common/filters/exceptions.filter';
         synchronize: true, // NOTE: development only. Use migrations in production.
       }),
     }),
-    // Files (documents, attachments, profile pictures) now live in Postgres
-    // as bytea columns, so we no longer need to serve a static "uploads"
-    // folder -- ServeStaticModule has been removed.
-    // ✅ Resolves the active locale from the Accept-Language header sent by
-    // lib/api.ts on every frontend request, and falls back to English.
+    // Files (documents, attachments, profile pictures, logo, favicon) all
+    // live in Postgres as bytea columns -- no static "uploads" folder is
+    // served anymore.
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -65,27 +62,14 @@ import { HttpExceptionFilter } from './common/filters/exceptions.filter';
     CategoriesModule,
     FoldersModule,
     DocumentsModule,
-    AttachmentsModule,
     DashboardModule,
     SettingsModule,
   ],
   providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: PasswordChangeGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PasswordChangeGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
     HttpExceptionFilter,
   ],
 })

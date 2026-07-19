@@ -22,13 +22,17 @@ const DEFAULT_MAX_UPLOAD_MB = 10;
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 
-function assetUrl(relativePath: string | null, updatedAt?: string): string | null {
-  if (!relativePath) return null;
-  // Fixed filenames (logo.png / favicon.ico) mean the URL never changes when
-  // the admin re-uploads — the version query string busts the browser cache
-  // so the new asset shows up immediately instead of the stale cached one.
+function assetUrl(
+  kind: 'logo' | 'favicon',
+  mime: string | null,
+  updatedAt?: string,
+): string | null {
+  if (!mime) return null;
+  // The bytes are served straight from Postgres via GET /settings/logo and
+  // GET /settings/favicon. The version query string busts the browser
+  // cache so a re-uploaded asset shows up immediately.
   const version = updatedAt ? `?v=${encodeURIComponent(updatedAt)}` : '';
-  return `${ASSET_BASE_URL}/uploads/${relativePath}${version}`;
+  return `${ASSET_BASE_URL}/api/settings/${kind}${version}`;
 }
 
 function applyThemeColor(color: string | undefined) {
@@ -122,7 +126,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(data);
       applyThemeColor(data.themeColor);
       applyMeta(data);
-      applyFavicon(assetUrl(data.faviconPath, data.updatedAt));
+      applyFavicon(assetUrl('favicon', data.faviconMime, data.updatedAt));
       await applyDictionary();
     } catch {
       // Settings are a progressive enhancement over the app's built-in
@@ -140,8 +144,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const value: SettingsContextValue = {
     settings,
     loading,
-    logoUrl: settings ? assetUrl(settings.logoPath, settings.updatedAt) : null,
-    faviconUrl: settings ? assetUrl(settings.faviconPath, settings.updatedAt) : null,
+    logoUrl: settings ? assetUrl('logo', settings.logoMime, settings.updatedAt) : null,
+    faviconUrl: settings ? assetUrl('favicon', settings.faviconMime, settings.updatedAt) : null,
     maxUploadSizeMb: settings?.maxUploadSizeMb ?? DEFAULT_MAX_UPLOAD_MB,
     maxUploadSizeBytes: (settings?.maxUploadSizeMb ?? DEFAULT_MAX_UPLOAD_MB) * 1024 * 1024,
     refresh,

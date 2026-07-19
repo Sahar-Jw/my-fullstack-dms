@@ -1,10 +1,15 @@
 // lib/types.ts
 
+// lib/types.ts
+
 export interface Setting {
   id: number;
   siteName: string;
-  logoPath: string | null;
-  faviconPath: string | null;
+  // The blobs themselves are select:false on the backend and never appear
+  // in this response -- these mime fields just tell the frontend "an
+  // asset exists, go fetch it from /settings/logo or /settings/favicon".
+  logoMime: string | null;
+  faviconMime: string | null;
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string;

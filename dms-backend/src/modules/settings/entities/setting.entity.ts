@@ -1,8 +1,5 @@
 import { Entity, PrimaryColumn, Column, UpdateDateColumn } from 'typeorm';
 
-// Singleton table: exactly one row, always id = 1.
-// Kept simple on purpose (no history/versioning) since the feature is a
-// single global configuration object managed by the Admin.
 @Entity('settings')
 export class Setting {
   @PrimaryColumn({ default: 1 })
@@ -11,11 +8,19 @@ export class Setting {
   @Column({ name: 'site_name', length: 100, default: 'Ledger' })
   siteName: string;
 
-  @Column({ name: 'logo_path', length: 255, nullable: true })
-  logoPath: string | null;
+  // Logo bytes, stored directly in Postgres (same pattern as
+  // User.profilePictureData / DocumentVersion.fileData).
+  @Column({ type: 'bytea', nullable: true, name: 'logo_data', select: false })
+  logoData: Buffer | null;
 
-  @Column({ name: 'favicon_path', length: 255, nullable: true })
-  faviconPath: string | null;
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'logo_mime' })
+  logoMime: string | null;
+
+  @Column({ type: 'bytea', nullable: true, name: 'favicon_data', select: false })
+  faviconData: Buffer | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'favicon_mime' })
+  faviconMime: string | null;
 
   @Column({ name: 'meta_title', length: 200, default: 'Ledger — Document Management' })
   metaTitle: string;
@@ -26,7 +31,6 @@ export class Setting {
   @Column({ name: 'meta_keywords', length: 500, default: '' })
   metaKeywords: string;
 
-  // Hex color, e.g. #2f5d50 — mapped onto the --color-accent CSS variable.
   @Column({ name: 'theme_color', length: 7, default: '#2f5d50' })
   themeColor: string;
 

@@ -5,14 +5,11 @@ import { User } from '../modules/users/entities/user.entity';
 import { Department } from '../modules/departments/entities/department.entity';
 import { Category } from '../modules/categories/entities/category.entity';
 import { Document } from '../modules/documents/entities/document.entity';
-import { Attachment } from '../modules/attachments/entities/attachment.entity';
+import { DocumentVersion } from '../modules/documents/entities/document-version.entity';
+import { DocumentAttachment } from '../modules/documents/entities/document-attachment.entity';
 
 dotenv.config();
 
-/**
- * Standalone DataSource used by the TypeORM CLI (migration:generate / migration:run).
- * The running NestJS app configures TypeORM via TypeOrmModule.forRootAsync in app.module.ts.
- */
 export default new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -20,7 +17,7 @@ export default new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'dms_db',
-  entities: [Role, User, Department, Category, Document, Attachment],
+  entities: [Role, User, Department, Category, Document, DocumentVersion, DocumentAttachment],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });
