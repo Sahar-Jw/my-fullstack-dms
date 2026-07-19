@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { I18nModule, HeaderResolver } from 'nestjs-i18n';
-import { join } from 'path';
 import * as path from 'path';
 import configuration from './config/configuration';
 
@@ -46,10 +44,9 @@ import { HttpExceptionFilter } from './common/filters/exceptions.filter';
         synchronize: true, // NOTE: development only. Use migrations in production.
       }),
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
+    // Files (documents, attachments, profile pictures) now live in Postgres
+    // as bytea columns, so we no longer need to serve a static "uploads"
+    // folder -- ServeStaticModule has been removed.
     // ✅ Resolves the active locale from the Accept-Language header sent by
     // lib/api.ts on every frontend request, and falls back to English.
     I18nModule.forRoot({
@@ -89,7 +86,7 @@ import { HttpExceptionFilter } from './common/filters/exceptions.filter';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-    HttpExceptionFilter
+    HttpExceptionFilter,
   ],
 })
 export class AppModule {}

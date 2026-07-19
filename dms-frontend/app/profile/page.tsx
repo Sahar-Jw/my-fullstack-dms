@@ -27,7 +27,13 @@ function ProfileBody() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  // Truthy when the user has a profile picture stored in the DB (we get
+  // back the mime type, not a filename, now that bytes live in Postgres).
+  const [hasProfilePicture, setHasProfilePicture] = useState<string | null>(null);
+  // Object URL for the actual image bytes, fetched from the authenticated
+  // GET /profile/picture endpoint (a plain <img src="..."> can't send the
+  // Authorization header, so we fetch it as a blob ourselves).
+  const [pictureUrl, setPictureUrl] = useState<string | null>(null);
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -43,6 +49,37 @@ function ProfileBody() {
     loadProfile();
   }, []);
 
+  // Whenever the user has a picture, fetch its bytes as a blob URL.
+  // Whenever they don't (or on unmount), clean up the previous object URL.
+  useEffect(() => {
+    let activeUrl: string | null = null;
+    let cancelled = false;
+
+    if (hasProfilePicture) {
+      profileApi
+        .getPictureUrl()
+        .then(({ url }) => {
+          if (cancelled) {
+            window.URL.revokeObjectURL(url);
+            return;
+          }
+          activeUrl = url;
+          setPictureUrl(url);
+          setImageError(false);
+        })
+        .catch(() => {
+          if (!cancelled) setPictureUrl(null);
+        });
+    } else {
+      setPictureUrl(null);
+    }
+
+    return () => {
+      cancelled = true;
+      if (activeUrl) window.URL.revokeObjectURL(activeUrl);
+    };
+  }, [hasProfilePicture]);
+
   const loadProfile = async () => {
     setLoading(true);
     try {
@@ -50,7 +87,7 @@ function ProfileBody() {
       setProfile(data);
       setName(data.name);
       setEmail(data.email);
-      setProfilePicture(data.profilePicture);
+      setHasProfilePicture(data.profilePictureMime);
       setImageError(false);
     } catch (err) {
       setError(errorMessage(err));
@@ -65,7 +102,7 @@ function ProfileBody() {
     setSaving(true);
     setError('');
     try {
-      const updated = await profileApi.update({ name,email });
+      const updated = await profileApi.update({ name, email });
       setProfile(updated);
       if (user) {
         setSession({
@@ -74,7 +111,7 @@ function ProfileBody() {
           user: {
             ...user,
             name: updated.name,
-            email: updated.email
+            email: updated.email,
           },
         });
       }
@@ -114,7 +151,7 @@ function ProfileBody() {
     try {
       const updated = await profileApi.uploadPicture(file);
       setProfile(updated);
-      setProfilePicture(updated.profilePicture);
+      setHasProfilePicture(updated.profilePictureMime);
       setImageError(false);
       if (user) {
         setSession({
@@ -122,7 +159,7 @@ function ProfileBody() {
           mustChangePassword: false,
           user: {
             ...user,
-            profilePicture: updated.profilePicture,
+            profilePictureMime: updated.profilePictureMime,
           },
         });
       }
@@ -144,7 +181,7 @@ function ProfileBody() {
     try {
       const updated = await profileApi.removePicture();
       setProfile(updated);
-      setProfilePicture(null);
+      setHasProfilePicture(null);
       setImageError(false);
       if (user) {
         setSession({
@@ -152,7 +189,7 @@ function ProfileBody() {
           mustChangePassword: false,
           user: {
             ...user,
-            profilePicture: null,
+            profilePictureMime: null,
           },
         });
       }
@@ -169,12 +206,12 @@ function ProfileBody() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError(t('profile.passwordMismatch'));
       return;
     }
-    
+
     if (newPassword.length < 6) {
       setPasswordError(t('profile.passwordTooShort'));
       return;
@@ -200,14 +237,6 @@ function ProfileBody() {
     }
   };
 
-  const getProfileImageUrl = () => {
-    if (profilePicture && !imageError) {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
-      return `${baseUrl}/uploads/profile-pictures/${profilePicture}`;
-    }
-    return null;
-  };
-
   const handleImageError = () => {
     setImageError(true);
   };
@@ -224,7 +253,7 @@ function ProfileBody() {
     return <div className="banner banner-danger">{error}</div>;
   }
 
-  const imageUrl = getProfileImageUrl();
+  const imageUrl = !imageError ? pictureUrl : null;
 
   return (
     <div className="profile-page">
@@ -276,9 +305,9 @@ function ProfileBody() {
                 className="profile-avatar-btn profile-avatar-btn-primary"
               >
                 <Camera size={16} />
-                {profilePicture ? t('profile.changePhoto') : t('profile.uploadPhoto')}
+                {hasProfilePicture ? t('profile.changePhoto') : t('profile.uploadPhoto')}
               </button>
-              {profilePicture && (
+              {hasProfilePicture && (
                 <button
                   onClick={handleRemovePicture}
                   disabled={uploading}

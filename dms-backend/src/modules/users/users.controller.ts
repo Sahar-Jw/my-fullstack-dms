@@ -6,10 +6,12 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
 
 // 1. استيراد الديكوريتور والإنترفيس الخاص بالمستخدم الحالي المتوفرين في مشروعك
@@ -24,6 +26,14 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  // NOTE: this must be declared before @Get(':id') -- Nest matches routes
+  // in declaration order, and 'search' would otherwise be swallowed by the
+  // ':id' param route.
+  @Get('search')
+  search(@Query() dto: SearchUserDto) {
+    return this.usersService.search(dto);
   }
 
   @Get(':id')

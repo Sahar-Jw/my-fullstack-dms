@@ -7,8 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
 import { User } from '../users/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -37,12 +35,12 @@ export class ProfileService {
 
   async updateProfile(userId: number, dto: UpdateProfileDto): Promise<User> {
     const user = await this.getProfile(userId);
-    
+
     // Update name if provided
     if (dto.name !== undefined) {
       user.name = dto.name;
     }
-    
+
     // Update email if provided
     if (dto.email !== undefined) {
       if (dto.email !== user.email) {
@@ -55,83 +53,59 @@ export class ProfileService {
         user.email = dto.email;
       }
     }
-    
+
     return this.usersRepository.save(user);
   }
 
   async changePassword(userId: number, dto: ChangePasswordDto): Promise<{ message: string }> {
     const user = await this.getProfile(userId);
-    
+
     const isValid = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isValid) {
       throw new UnauthorizedException(await this.i18n.translate('profile.CURRENT_PASSWORD_INCORRECT'));
     }
-    
+
     if (dto.currentPassword === dto.newPassword) {
       throw new BadRequestException(await this.i18n.translate('profile.PASSWORD_SAME_AS_CURRENT'));
     }
-    
+
     const hashedPassword = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
     user.password = hashedPassword;
     user.passwordChangedAt = new Date();
     user.mustChangePassword = false;
-    
+
     await this.usersRepository.save(user);
     return { message: await this.i18n.translate('profile.PASSWORD_CHANGED_SUCCESS') };
   }
 
+  // Stores the picture bytes directly on the user row -- no disk I/O.
   async uploadProfilePicture(userId: number, file: Express.Multer.File): Promise<User> {
     const user = await this.getProfile(userId);
-    
-    // Delete old picture if exists
-    if (user.profilePicture) {
-      const oldPath = path.join('./uploads/profile-pictures', user.profilePicture);
-      if (fs.existsSync(oldPath)) {
-        try {
-          fs.unlinkSync(oldPath);
-        } catch (err) {
-          console.log('Error deleting old picture:', err);
-        }
-      }
-    }
-    
-    // Create directory if it doesn't exist
-    const uploadDir = './uploads/profile-pictures';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // Generate unique filename
-    const ext = path.extname(file.originalname);
-    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const filePath = path.join(uploadDir, filename);
-    
-    // Save file
-    fs.writeFileSync(filePath, file.buffer);
-    
-    // Store only the filename
-    user.profilePicture = filename;
+    user.profilePictureData = file.buffer;
+    user.profilePictureMime = file.mimetype;
     await this.usersRepository.save(user);
-    
     return user;
   }
 
   async removeProfilePicture(userId: number): Promise<User> {
     const user = await this.getProfile(userId);
-    
-    if (user.profilePicture) {
-      const oldPath = path.join('./uploads/profile-pictures', user.profilePicture);
-      if (fs.existsSync(oldPath)) {
-        try {
-          fs.unlinkSync(oldPath);
-        } catch (err) {
-          console.log('Error deleting picture:', err);
-        }
-      }
-      user.profilePicture = null;
-      return this.usersRepository.save(user);
+    user.profilePictureData = null;
+    user.profilePictureMime = null;
+    return this.usersRepository.save(user);
+  }
+
+  // Used only by GET /profile/picture. The columns are select:false on the
+  // entity, so we explicitly addSelect() the blob here -- keeping every
+  // other profile/user query (login, lists, etc.) free of the large blob.
+  async getProfilePictureBlob(userId: number): Promise<{ data: Buffer; mime: string } | null> {
+    const user = await this.usersRepository
+      .createQueryBuilder('u')
+      .addSelect('u.profilePictureData')
+      .where('u.id = :userId', { userId })
+      .getOne();
+    if (!user || !user.profilePictureData) {
+      return null;
     }
-    
-    return user;
+    return { data: user.profilePictureData, mime: user.profilePictureMime || 'image/jpeg' };
   }
 }

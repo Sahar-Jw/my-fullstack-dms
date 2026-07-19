@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as fs from 'fs';
 import { Document } from './entities/document.entity';
 import { DocumentVersion } from './entities/document-version.entity';
 import { DocumentAttachment } from './entities/document-attachment.entity';
@@ -17,7 +16,6 @@ import { SearchDocumentDto } from './dto/search-document.dto';
 import { MoveDocumentDto } from './dto/move-document.dto';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { RoleName } from '../../common/decorators/roles.decorator';
-import { FileStorageService } from './file-storage.service';
 import { ActivityLogService } from '../activity-logs/activity-log.service';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { I18nService } from 'nestjs-i18n';
@@ -34,7 +32,6 @@ export class DocumentsService {
     private attachmentsRepository: Repository<DocumentAttachment>,
     @InjectRepository(Folder)
     private foldersRepository: Repository<Folder>,
-    private fileStorageService: FileStorageService,
     private readonly activityLogService: ActivityLogService,
     private i18n: I18nService,
   ) {}
@@ -246,18 +243,11 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
       });
       const saved = await this.documentsRepository.save(document);
 
-      const relativePath = this.fileStorageService.saveFile(
-        'documents',
-        saved.id,
-        file.originalname,
-        file.buffer,
-      );
-
       const version = this.versionsRepository.create({
         documentId: saved.id,
         uploadedById: user.userId,
         versionNumber: 1,
-        filePath: relativePath,
+        fileData: file.buffer,
         originalFileName: file.originalname,
         mimeType: file.mimetype,
         fileSize: file.size,
@@ -345,18 +335,11 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     });
     const nextVersionNumber = latestVersion ? latestVersion.versionNumber + 1 : 1;
 
-    const relativePath = this.fileStorageService.saveFile(
-      'documents',
-      id,
-      file.originalname,
-      file.buffer,
-    );
-
     const version = this.versionsRepository.create({
       documentId: id,
       uploadedById: user.userId,
       versionNumber: nextVersionNumber,
-      filePath: relativePath,
+      fileData: file.buffer,
       originalFileName: file.originalname,
       mimeType: file.mimetype,
       fileSize: file.size,
@@ -441,7 +424,10 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     return savedDoc;
   }
 
-  // ✅ FIXED: permanentDelete now uses i18n
+  // permanentDelete: no more manual file cleanup needed -- the file bytes
+  // live in document_versions / document_attachments rows, which are
+  // removed automatically by the ON DELETE CASCADE foreign keys when the
+  // parent Document row is removed below.
   async permanentDelete(id: number, user: AuthUser): Promise<void> {
     const document = await this.documentsRepository.findOne({
       where: { id },
@@ -452,13 +438,6 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     }
 
     const documentName = document.name;
-
-    for (const version of document.versions || []) {
-      this.fileStorageService.deleteFile(version.filePath);
-    }
-    for (const attachment of document.attachments || []) {
-      this.fileStorageService.deleteFile(attachment.filePath);
-    }
 
     await this.documentsRepository.remove(document);
 
@@ -525,6 +504,7 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
 
   async getVersions(id: number, user: AuthUser): Promise<DocumentVersion[]> {
     const document = await this.findOne(id, user);
+    // Metadata-only list -- fileData stays unselected (select: false).
     return this.versionsRepository.find({
       where: { documentId: document.id },
       order: { versionNumber: 'DESC' },
@@ -537,9 +517,12 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     user: AuthUser,
   ): Promise<DocumentVersion> {
     await this.findOne(id, user);
-    const version = await this.versionsRepository.findOne({
-      where: { id: versionId, documentId: id },
-    });
+    // Explicitly pull fileData -- this is used by the download route.
+    const version = await this.versionsRepository
+      .createQueryBuilder('v')
+      .addSelect('v.fileData')
+      .where('v.id = :versionId AND v.documentId = :id', { versionId, id })
+      .getOne();
     if (!version) {
       throw new NotFoundException(await this.i18n.translate('documents.VERSION_NOT_FOUND'));
     }
@@ -557,9 +540,11 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
         await this.i18n.translate('documents.VERSION_RESTORE_DENIED'),
       );
     }
-    const targetVersion = await this.versionsRepository.findOne({
-      where: { id: versionId, documentId: id },
-    });
+    const targetVersion = await this.versionsRepository
+      .createQueryBuilder('v')
+      .addSelect('v.fileData')
+      .where('v.id = :versionId AND v.documentId = :id', { versionId, id })
+      .getOne();
     if (!targetVersion) {
       throw new NotFoundException(await this.i18n.translate('documents.VERSION_NOT_FOUND'));
     }
@@ -570,22 +555,13 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     });
     const nextVersionNumber = latestVersion ? latestVersion.versionNumber + 1 : 1;
 
-    const absPath = this.fileStorageService.getAbsolutePath(
-      targetVersion.filePath,
-    );
-    const buffer = fs.readFileSync(absPath);
-    const relativePath = this.fileStorageService.saveFile(
-      'documents',
-      id,
-      targetVersion.originalFileName || `restored-v${targetVersion.versionNumber}`,
-      buffer,
-    );
-
+    // Restoring just means copying the bytes we already have in memory
+    // into a brand-new version row -- no disk I/O required anymore.
     const newVersion = this.versionsRepository.create({
       documentId: id,
       uploadedById: user.userId,
       versionNumber: nextVersionNumber,
-      filePath: relativePath,
+      fileData: targetVersion.fileData,
       originalFileName: targetVersion.originalFileName,
       mimeType: targetVersion.mimeType,
       fileSize: targetVersion.fileSize,
@@ -600,10 +576,13 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
 
   async getLatestVersion(id: number, user: AuthUser): Promise<DocumentVersion> {
     await this.findOne(id, user);
-    const version = await this.versionsRepository.findOne({
-      where: { documentId: id },
-      order: { versionNumber: 'DESC' },
-    });
+    // Explicitly pull fileData -- this is used by the download/preview routes.
+    const version = await this.versionsRepository
+      .createQueryBuilder('v')
+      .addSelect('v.fileData')
+      .where('v.documentId = :id', { id })
+      .orderBy('v.versionNumber', 'DESC')
+      .getOne();
     if (!version) {
       throw new NotFoundException(await this.i18n.translate('documents.NO_FILE_VERSIONS'));
     }
@@ -617,6 +596,7 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     user: AuthUser,
   ): Promise<DocumentAttachment[]> {
     await this.findOne(id, user);
+    // Metadata-only list -- fileData stays unselected (select: false).
     return this.attachmentsRepository.find({
       where: { documentId: id },
       order: { createdAt: 'DESC' },
@@ -640,18 +620,11 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
 
     const attachments: DocumentAttachment[] = [];
     for (const file of files) {
-      const relativePath = this.fileStorageService.saveFile(
-        'attachments',
-        id,
-        file.originalname,
-        file.buffer,
-      );
-
       const attachment = this.attachmentsRepository.create({
         documentId: id,
         uploadedById: user.userId,
         fileName: file.originalname,
-        filePath: relativePath,
+        fileData: file.buffer,
         mimeType: file.mimetype,
         fileSize: file.size,
       });
@@ -672,14 +645,16 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     return attachments;
   }
 
-  // ✅ FIXED: getAttachment now uses i18n
+  // Explicitly pulls fileData -- used by the download route.
   async getAttachment(
     attachmentId: number,
     user: AuthUser,
   ): Promise<DocumentAttachment> {
-    const attachment = await this.attachmentsRepository.findOne({
-      where: { id: attachmentId },
-    });
+    const attachment = await this.attachmentsRepository
+      .createQueryBuilder('a')
+      .addSelect('a.fileData')
+      .where('a.id = :attachmentId', { attachmentId })
+      .getOne();
     if (!attachment) {
       throw new NotFoundException(await this.i18n.translate('documents.ATTACHMENT_NOT_FOUND'));
     }
@@ -713,7 +688,7 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
     }
     
     const attachmentName = attachment.fileName;
-    this.fileStorageService.deleteFile(attachment.filePath);
+    // No disk file to clean up anymore -- removing the row removes the bytes.
     await this.attachmentsRepository.remove(attachment);
 
     await this.activityLogService.log({

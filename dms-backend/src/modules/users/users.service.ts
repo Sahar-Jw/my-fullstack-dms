@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 import { RolesService } from '../roles/roles.service';
 import { DepartmentsService } from '../departments/departments.service';
 import { RoleName } from '../../common/decorators/roles.decorator';
@@ -33,6 +34,50 @@ export class UsersService {
 
   findAll(): Promise<User[]> {
     return this.usersRepository.find({ order: { createdAt: 'DESC' } });
+  }
+
+  // Mirrors DocumentsService.search(): a single query-builder based lookup
+  // covering every field the admin can filter the user list by.
+  async search(dto: SearchUserDto): Promise<User[]> {
+    const qb = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('user.department', 'department');
+
+    if (dto.name) {
+      qb.andWhere('LOWER(user.name) LIKE :name', {
+        name: `%${dto.name.toLowerCase()}%`,
+      });
+    }
+    if (dto.email) {
+      qb.andWhere('LOWER(user.email) LIKE :email', {
+        email: `%${dto.email.toLowerCase()}%`,
+      });
+    }
+    if (dto.departmentId) {
+      qb.andWhere('user.department_id = :departmentId', {
+        departmentId: dto.departmentId,
+      });
+    }
+    if (dto.roleId) {
+      qb.andWhere('user.role_id = :roleId', { roleId: dto.roleId });
+    }
+    if (dto.isActive !== undefined) {
+      qb.andWhere('user.is_active = :isActive', {
+        isActive: dto.isActive === 'true',
+      });
+    }
+    if (dto.joinedFrom) {
+      qb.andWhere('user.created_at >= :joinedFrom', {
+        joinedFrom: dto.joinedFrom,
+      });
+    }
+    if (dto.joinedTo) {
+      qb.andWhere('user.created_at <= :joinedTo', { joinedTo: dto.joinedTo });
+    }
+
+    qb.orderBy('user.created_at', 'DESC');
+    return qb.getMany();
   }
 
   async findOne(id: number): Promise<User> {

@@ -8,8 +8,11 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Res,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SkipPasswordCheck } from '../../common/decorators/skip-password-check.decorator';
@@ -30,6 +33,18 @@ export class ProfileController {
   @Get()
   getProfile(@CurrentUser('userId') userId: number) {
     return this.profileService.getProfile(userId);
+  }
+
+  // Serves the picture bytes directly -- called by the frontend via
+  // api.blobUrl('/profile/picture') so the Authorization header is sent.
+  @Get('picture')
+  async getPicture(@CurrentUser('userId') userId: number, @Res() res: Response) {
+    const picture = await this.profileService.getProfilePictureBlob(userId);
+    if (!picture) {
+      throw new NotFoundException();
+    }
+    res.set('Content-Type', picture.mime);
+    res.send(picture.data);
   }
 
   @Put()

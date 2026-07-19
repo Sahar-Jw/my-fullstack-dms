@@ -55,7 +55,9 @@ export interface AppUser {
   role: Role;
   departmentId: number | null;
   department: Department | null;
-  profilePicture: string | null; // ✅ ADD THIS
+  // Mime type if a profile picture is stored, else null. The bytes
+  // themselves live in Postgres and are fetched via profileApi.getPictureUrl().
+  profilePictureMime: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,7 +85,8 @@ export interface DocVersion {
   id: number;
   documentId: number;
   versionNumber: number;
-  filePath: string;
+  // File bytes now live in Postgres (fileData column, not exposed here) --
+  // there is no filePath anymore.
   originalFileName: string;
   mimeType: string;
   fileSize: number;
@@ -95,7 +98,8 @@ export interface DocAttachment {
   id: number;
   documentId: number;
   fileName: string;
-  filePath: string;
+  // File bytes now live in Postgres (fileData column, not exposed here) --
+  // there is no filePath anymore.
   mimeType: string;
   fileSize: number;
   createdAt: string;
@@ -127,7 +131,7 @@ export interface LoginResponse {
     role: RoleName;
     departmentId: number | null;
     department: string | null;
-    profilePicture?: string | null; 
+    profilePictureMime?: string | null;
   };
 }
 

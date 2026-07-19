@@ -6,7 +6,6 @@ import { DocumentAttachment } from './entities/document-attachment.entity';
 import { Folder } from '../folders/entities/folder.entity';
 import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
-import { FileStorageService } from './file-storage.service';
 import { UploadSizeInterceptor } from '../../common/interceptors/upload-size.interceptor';
 import { ActivityLogModule } from '../activity-logs/activity-log.module';
 import { SettingsModule } from '../settings/settings.module';
@@ -22,7 +21,7 @@ import { SettingsModule } from '../settings/settings.module';
     ActivityLogModule,
     SettingsModule,
   ],
-  providers: [DocumentsService, FileStorageService, UploadSizeInterceptor],
+  providers: [DocumentsService, UploadSizeInterceptor],
   controllers: [DocumentsController],
   exports: [DocumentsService],
 })

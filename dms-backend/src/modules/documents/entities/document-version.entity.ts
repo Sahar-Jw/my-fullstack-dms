@@ -33,8 +33,13 @@ export class DocumentVersion {
   @Column({ name: 'version_number' })
   versionNumber: number;
 
-  @Column({ name: 'file_path', length: 255 })
-  filePath: string;
+  // The actual file bytes, stored directly in Postgres.
+  // select: false keeps this out of normal find()/findOne() queries (list
+  // views, "get document" calls, etc.) so we don't drag a multi-MB blob
+  // along every time. We explicitly .addSelect('v.fileData') only in the
+  // service methods that actually need to serve/copy the bytes.
+  @Column({ type: 'bytea', nullable: true, select: false })
+  fileData: Buffer;
 
   @Column({ name: 'original_file_name', length: 255, nullable: true })
   originalFileName: string;

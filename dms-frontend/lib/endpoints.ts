@@ -34,6 +34,16 @@ export const authApi = {
 };
 
 // ---------- Users ----------
+export interface UserSearchParams {
+  name?: string;
+  email?: string;
+  departmentId?: number;
+  roleId?: number;
+  isActive?: 'true' | 'false';
+  joinedFrom?: string;
+  joinedTo?: string;
+}
+
 export const usersApi = {
   list: () => api.get<AppUser[]>('/users'),
   get: (id: number) => api.get<AppUser>(`/users/${id}`),
@@ -57,34 +67,40 @@ export const usersApi = {
   },
   remove: (id: number) => api.delete(`/users/${id}`),
   toggleStatus: (id: number) => api.patch<AppUser>(`/users/${id}/toggle-status`),
+  search: (params: UserSearchParams) =>
+    api.get<AppUser[]>('/users/search', params as Record<string, any>),
 };
 
 // ---------- Profile ----------
 export const profileApi = {
   // Get current user profile
   get: () => api.get<AppUser>('/profile'),
-  
+
   // Update profile (name only)
-  update: (data: { name?: string , email:string}) =>
+  update: (data: { name?: string; email: string }) =>
     api.put<AppUser>('/profile', data),
-  
+
   // Change password
-  changePassword: (data: { 
-    currentPassword: string; 
-    newPassword: string; 
-    confirmPassword: string 
-  }) =>
-    api.patch('/profile/change-password', data),
-  
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => api.patch('/profile/change-password', data),
+
   // Upload profile picture
   uploadPicture: (file: File) => {
     const fd = new FormData();
     fd.append('file', file);
     return api.patchForm<AppUser>('/profile/upload-picture', fd);
   },
-  
+
   // Remove profile picture
   removePicture: () => api.patch<AppUser>('/profile/remove-picture'),
+
+  // Profile picture bytes now live in Postgres and are served through an
+  // authenticated route, so we fetch them as a blob (with the Authorization
+  // header attached) instead of pointing an <img> tag at a static file URL.
+  getPictureUrl: () => api.blobUrl('/profile/picture'),
 };
 
 // ---------- Roles ----------

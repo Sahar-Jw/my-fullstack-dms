@@ -202,7 +202,18 @@
     "deleteConfirm": "Delete {{name}}?",
     "cannotDeleteVersions": "{{name}} cannot be deleted because they uploaded one or more document versions. Disable this user instead to keep the document history and audit trail intact.",
     "cannotDeleteDocuments": "{{name}} cannot be deleted because they are linked to existing documents. Disable this user instead, or reassign those documents first.",
-    "cannotDeleteGeneric": "{{name}} cannot be deleted because other records still depend on this account. Disable the user instead, or remove/reassign the related records first."
+    "cannotDeleteGeneric": "{{name}} cannot be deleted because other records still depend on this account. Disable the user instead, or remove/reassign the related records first.",
+    "searchByNamePlaceholder": "Search by name…",
+    "searchByEmailPlaceholder": "Search by email…",
+    "anyDepartment": "Any department",
+    "anyRole": "Any role",
+    "anyStatus": "Any status",
+    "joinedFrom": "Joined from",
+    "joinedTo": "Joined to",
+    "search": "Search",
+    "reset": "Reset",
+    "noUsersFound": "No users found",
+    "tryAdjusting": "Try adjusting your filters."
   },
   "profile": {
     "title": "Profile Settings",

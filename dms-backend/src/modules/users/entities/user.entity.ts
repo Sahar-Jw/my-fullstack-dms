@@ -43,8 +43,17 @@ export class User {
   @Column({ unique: true, length: 150 })
   email: string;
 
-   @Column({ name: 'profile_picture', nullable: true, length: 255 })
-  profilePicture: string | null;
+  // Profile picture bytes, stored directly in Postgres.
+  // select: false keeps this out of every normal user query (login,
+  // user lists, "current user" lookups, etc.) so those stay lightweight.
+  // It's only pulled in explicitly by ProfileService.getProfilePictureBlob().
+  @Column({ type: 'bytea', nullable: true, name: 'profile_picture_data', select: false })
+  profilePictureData: Buffer | null;
+
+  // Small and safe to include in normal responses -- frontend uses a
+  // non-null value here to know "this user has a picture, go fetch it".
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'profile_picture_mime' })
+  profilePictureMime: string | null;
 
   @Exclude()
   @Column({ length: 255 })

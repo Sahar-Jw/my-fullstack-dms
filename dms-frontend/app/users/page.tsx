@@ -60,6 +60,15 @@ function UsersBody() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // ---------- Search (same pattern/style as the documents page) ----------
+  const [nameFilter, setNameFilter] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [joinedFrom, setJoinedFrom] = useState('');
+  const [joinedTo, setJoinedTo] = useState('');
+
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<UserFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
@@ -69,28 +78,73 @@ function UsersBody() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  async function loadAll() {
-    setLoading(true);
-    setError('');
+  async function loadLookups() {
     try {
-      const [u, r, d] = await Promise.all([
-        usersApi.list(),
-        rolesApi.list(),
-        departmentsApi.list(),
-      ]);
-      setUsers(u);
+      const [r, d] = await Promise.all([rolesApi.list(), departmentsApi.list()]);
       setRoles(r);
       setDepartments(d);
     } catch (e) {
+      notify(errorMessage(e), 'error');
+    }
+  }
+
+  async function loadUsers(useSearch = false) {
+    setLoading(true);
+    setError('');
+    try {
+      if (
+        useSearch ||
+        nameFilter ||
+        emailFilter ||
+        departmentFilter ||
+        roleFilter ||
+        statusFilter ||
+        joinedFrom ||
+        joinedTo
+      ) {
+        const result = await usersApi.search({
+          name: nameFilter || undefined,
+          email: emailFilter || undefined,
+          departmentId: departmentFilter ? Number(departmentFilter) : undefined,
+          roleId: roleFilter ? Number(roleFilter) : undefined,
+          isActive: statusFilter ? (statusFilter as 'true' | 'false') : undefined,
+          joinedFrom: joinedFrom || undefined,
+          joinedTo: joinedTo || undefined,
+        });
+        setUsers(result ?? []);
+      } else {
+        const result = await usersApi.list();
+        setUsers(result ?? []);
+      }
+    } catch (e) {
       setError(errorMessage(e));
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadAll();
+    loadLookups();
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleSearchSubmit(e: FormEvent) {
+    e.preventDefault();
+    loadUsers(true);
+  }
+
+  function handleResetSearch() {
+    setNameFilter('');
+    setEmailFilter('');
+    setDepartmentFilter('');
+    setRoleFilter('');
+    setStatusFilter('');
+    setJoinedFrom('');
+    setJoinedTo('');
+    loadUsers(false);
+  }
 
   function openEdit(u: AppUser) {
     setForm({
@@ -122,7 +176,7 @@ function UsersBody() {
       await usersApi.update(form.id, updateData);
       notify(t('users.userUpdated'), 'success');
       setModalOpen(false);
-      loadAll();
+      loadUsers();
     } catch (err) {
       setFormError(errorMessage(err));
       notify(errorMessage(err), 'error');
@@ -135,7 +189,7 @@ function UsersBody() {
     try {
       await usersApi.toggleStatus(u.id);
       notify(u.isActive ? t('users.userDeactivated') : t('users.userActivated'), 'success');
-      loadAll();
+      loadUsers();
     } catch (e) {
       notify(errorMessage(e), 'error');
     }
@@ -149,7 +203,7 @@ function UsersBody() {
       await usersApi.remove(confirmTarget.id);
       notify(t('users.userDeleted'), 'success');
       setConfirmTarget(null);
-      loadAll();
+      loadUsers();
     } catch (e) {
       const message = userDeleteMessage(errorMessage(e), confirmTarget.name, t);
       setDeleteError(message);
@@ -172,6 +226,101 @@ function UsersBody() {
         </div>
       </div>
 
+      <form className="card card-pad" onSubmit={handleSearchSubmit} style={{ marginBottom: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 12 }}>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.name')}</label>
+            <input
+              className="input"
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              placeholder={t('users.searchByNamePlaceholder')}
+            />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.email')}</label>
+            <input
+              className="input"
+              value={emailFilter}
+              onChange={(e) => setEmailFilter(e.target.value)}
+              placeholder={t('users.searchByEmailPlaceholder')}
+            />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.department')}</label>
+            <select
+              className="select"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            >
+              <option value="">{t('users.anyDepartment')}</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.role')}</label>
+            <select
+              className="select"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="">{t('users.anyRole')}</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.status')}</label>
+            <select
+              className="select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">{t('users.anyStatus')}</option>
+              <option value="true">{t('users.active')}</option>
+              <option value="false">{t('users.disabled')}</option>
+            </select>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.joinedFrom')}</label>
+            <input
+              className="input"
+              type="date"
+              value={joinedFrom}
+              onChange={(e) => setJoinedFrom(e.target.value)}
+            />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>{t('users.joinedTo')}</label>
+            <input
+              className="input"
+              type="date"
+              value={joinedTo}
+              onChange={(e) => setJoinedTo(e.target.value)}
+            />
+          </div>
+        </div>
+        <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary btn-sm" type="submit">
+            {t('users.search')}
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            type="button"
+            onClick={handleResetSearch}
+          >
+            {t('users.reset')}
+          </button>
+        </div>
+      </form>
+
       {error && <div className="banner banner-danger">{error}</div>}
 
       {loading ? (
@@ -179,7 +328,7 @@ function UsersBody() {
           <div className="spinner" />
         </div>
       ) : users.length === 0 ? (
-        <EmptyState title={t('users.noUsersYet')} message={t('users.willAppear')} />
+        <EmptyState title={t('users.noUsersFound')} message={t('users.tryAdjusting')} />
       ) : (
         <div className="table-wrap users-table-wrap">
           <table className="users-table">

@@ -33,8 +33,9 @@ export class DocumentAttachment {
   @Column({ name: 'file_name', length: 200 })
   fileName: string;
 
-  @Column({ name: 'file_path', length: 255 })
-  filePath: string;
+  // select: false -- same reasoning as DocumentVersion.fileData.
+  @Column({ type: 'bytea', nullable: true, select: false })
+  fileData: Buffer;
 
   @Column({ name: 'mime_type', length: 100, nullable: true })
   mimeType: string;

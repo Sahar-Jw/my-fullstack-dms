@@ -20,7 +20,9 @@ interface SessionUser {
   role: RoleName;
   departmentId: number | null;
   department: string | null;
-  profilePicture: string | null;
+  // Mime type if the user has a profile picture stored in the DB, else null.
+  // The actual bytes are fetched separately via profileApi.getPictureUrl().
+  profilePictureMime: string | null;
 }
 
 interface AuthState {
@@ -60,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applySession = useCallback((res: LoginResponse) => {
     const userData = {
       ...res.user,
-      profilePicture: res.user.profilePicture || null,
+      profilePictureMime: res.user.profilePictureMime || null,
     };
     window.localStorage.setItem('dms_token', res.accessToken);
     window.localStorage.setItem('dms_user', JSON.stringify(userData));
@@ -119,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: data.role?.name as RoleName,
         departmentId: data.departmentId,
         department: data.department?.name || null,
-        profilePicture: data.profilePicture || null,
+        profilePictureMime: data.profilePictureMime || null,
       };
       setUser(updatedUser);
       window.localStorage.setItem('dms_user', JSON.stringify(updatedUser));

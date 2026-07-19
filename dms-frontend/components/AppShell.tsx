@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useLocale } from '@/lib/i18n/locale-provider';
 import { useSettings } from '@/lib/settings-context';
+import { profileApi } from '@/lib/endpoints';
 import { initials } from '@/lib/format';
 import { User, LogOut, Languages } from 'lucide-react';
 
@@ -28,6 +29,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  // The avatar bytes now live in Postgres and are served through an
+  // authenticated route, so we fetch them as a blob URL instead of
+  // pointing straight at a static file path.
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
@@ -37,10 +42,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (user?.profilePicture) {
+    if (user?.profilePictureMime) {
       setImageError(false);
     }
-  }, [user?.profilePicture]);
+  }, [user?.profilePictureMime]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -83,21 +88,42 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setImageError(false);
-  }, [user?.profilePicture]);
+  }, [user?.profilePictureMime]);
+
+  // Fetch (and clean up) the avatar blob whenever the user's picture changes.
+  useEffect(() => {
+    let activeUrl: string | null = null;
+    let cancelled = false;
+
+    if (user?.profilePictureMime) {
+      profileApi
+        .getPictureUrl()
+        .then(({ url }) => {
+          if (cancelled) {
+            window.URL.revokeObjectURL(url);
+            return;
+          }
+          activeUrl = url;
+          setImageUrl(url);
+        })
+        .catch(() => {
+          if (!cancelled) setImageUrl(null);
+        });
+    } else {
+      setImageUrl(null);
+    }
+
+    return () => {
+      cancelled = true;
+      if (activeUrl) window.URL.revokeObjectURL(activeUrl);
+    };
+  }, [user?.profilePictureMime]);
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.roles || item.roles.includes(user?.role || ''),
   );
 
-  const getProfileImageUrl = () => {
-    if (user?.profilePicture && !imageError) {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
-      return `${baseUrl}/uploads/profile-pictures/${user.profilePicture}`;
-    }
-    return null;
-  };
-
-  const imageUrl = getProfileImageUrl();
+  const displayImageUrl = !imageError ? imageUrl : null;
 
   const handleImageError = () => {
     setImageError(true);
@@ -158,9 +184,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   title={user?.name}
                 >
                   <div className="navbar-avatar">
-                    {imageUrl ? (
+                    {displayImageUrl ? (
                       <img
-                        src={imageUrl}
+                        src={displayImageUrl}
                         alt={user?.name || 'User'}
                         className="w-full h-full rounded-full object-cover"
                         onError={handleImageError}
@@ -172,9 +198,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 </button>
 
                 <div className="navbar-avatar mobile-only">
-                  {imageUrl ? (
+                  {displayImageUrl ? (
                     <img
-                      src={imageUrl}
+                      src={displayImageUrl}
                       alt={user?.name || 'User'}
                       className="w-full h-full rounded-full object-cover"
                       onError={handleImageError}
@@ -188,9 +214,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   <div className="dropdown-menu" ref={dropdownRef}>
                     <div className="dropdown-header">
                       <div className="dropdown-avatar">
-                        {imageUrl ? (
+                        {displayImageUrl ? (
                           <img
-                            src={imageUrl}
+                            src={displayImageUrl}
                             alt={user?.name || 'User'}
                             className="w-full h-full rounded-full object-cover"
                             onError={handleImageError}

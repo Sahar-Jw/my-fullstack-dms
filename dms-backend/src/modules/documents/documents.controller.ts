@@ -18,7 +18,6 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
-import { FileStorageService } from './file-storage.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { SearchDocumentDto } from './dto/search-document.dto';
@@ -28,7 +27,6 @@ import { UploadSizeInterceptor } from '../../common/interceptors/upload-size.int
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/interfaces/auth-user.interface';
 import { Roles, RoleName } from '../../common/decorators/roles.decorator';
-import * as fs from 'fs';
 import { LogActivity } from '../activity-logs/decorators/log-activity.decorator';
 import { ActivityAction } from '../activity-logs/activity-action.enum';
 import { I18nService } from 'nestjs-i18n';
@@ -38,7 +36,6 @@ import { PaginationDto } from './dto/agination.dto';
 export class DocumentsController {
   constructor(
     private readonly documentsService: DocumentsService,
-    private readonly fileStorageService: FileStorageService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -129,11 +126,15 @@ export class DocumentsController {
     @Res() res: Response,
   ) {
     const version = await this.documentsService.getLatestVersion(id, user);
-    const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
-    if (!this.fileStorageService.fileExists(version.filePath)) {
+    if (!version.fileData) {
       throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
-    return res.download(absPath, version.originalFileName || 'document');
+    res.set({
+      'Content-Type': version.mimeType || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(version.originalFileName || 'document')}"`,
+      'Content-Length': version.fileData.length,
+    });
+    res.send(version.fileData);
   }
 
   @Get(':id/preview')
@@ -143,9 +144,8 @@ export class DocumentsController {
     @Res() res: Response,
   ) {
     const version = await this.documentsService.getLatestVersion(id, user);
-    const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
 
-    if (!this.fileStorageService.fileExists(version.filePath)) {
+    if (!version.fileData) {
       throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
 
@@ -175,15 +175,13 @@ export class DocumentsController {
       });
     }
 
-    const fileBuffer = fs.readFileSync(absPath);
-
     res.set({
       'Content-Type': mimeType,
       'Content-Disposition': `inline; filename="${encodeURIComponent(version.originalFileName || 'document')}"`,
-      'Content-Length': fileBuffer.length,
+      'Content-Length': version.fileData.length,
     });
 
-    res.send(fileBuffer);
+    res.send(version.fileData);
   }
 
   @Get(':id/versions')
@@ -199,14 +197,16 @@ export class DocumentsController {
     @Res() res: Response,
   ) {
     const version = await this.documentsService.getVersion(id, versionId, user);
-    const absPath = this.fileStorageService.getAbsolutePath(version.filePath);
-    if (!this.fileStorageService.fileExists(version.filePath)) {
+    if (!version.fileData) {
       throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
-    return res.download(
-      absPath,
-      version.originalFileName || `version-${version.versionNumber}`,
-    );
+    res.set({
+      'Content-Type': version.mimeType || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(
+        version.originalFileName || `version-${version.versionNumber}`,
+      )}"`,
+    });
+    res.send(version.fileData);
   }
 
   @Patch(':id/restore-version/:versionId')
@@ -239,17 +239,15 @@ export class DocumentsController {
     @CurrentUser() user: AuthUser,
     @Res() res: Response,
   ) {
-    const attachment = await this.documentsService.getAttachment(
-      attachmentId,
-      user,
-    );
-    const absPath = this.fileStorageService.getAbsolutePath(
-      attachment.filePath,
-    );
-    if (!this.fileStorageService.fileExists(attachment.filePath)) {
+    const attachment = await this.documentsService.getAttachment(attachmentId, user);
+    if (!attachment.fileData) {
       throw new NotFoundException(await this.i18n.translate('documents.FILE_NOT_FOUND_ON_DISK'));
     }
-    return res.download(absPath, attachment.fileName);
+    res.set({
+      'Content-Type': attachment.mimeType || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(attachment.fileName)}"`,
+    });
+    res.send(attachment.fileData);
   }
 
   @Delete('attachments/:id')
