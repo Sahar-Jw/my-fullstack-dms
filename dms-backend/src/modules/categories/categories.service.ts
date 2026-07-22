@@ -86,7 +86,7 @@ export class CategoriesService {
   async remove(id: number, actor: AuthUser): Promise<void> {
     const category = await this.categoriesRepository.findOne({
       where: { id },
-      relations: ['documents'],
+      relations: {documents :true},
     });
     if (!category) {
       throw new NotFoundException(await this.i18n.translate('validation.CATEGORY_NOT_FOUND'));

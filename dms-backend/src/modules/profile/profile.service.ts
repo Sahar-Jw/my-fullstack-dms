@@ -25,7 +25,7 @@ export class ProfileService {
   async getProfile(userId: number): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
-      relations: ['role', 'department'],
+      relations: {role : true, department: true},
     });
     if (!user) {
       throw new NotFoundException(await this.i18n.translate('profile.USER_NOT_FOUND'));

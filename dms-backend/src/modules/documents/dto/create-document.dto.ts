@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 export class CreateDocumentDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(200)
+  @MaxLength(300)
   name: string;
 
   @IsOptional()

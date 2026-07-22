@@ -68,7 +68,7 @@ export class DocumentsService {
   private async loadDocumentOrFail(id: number): Promise<Document> {
     const document = await this.documentsRepository.findOne({
       where: { id },
-      relations: ['folder', 'category', 'owner'],
+      relations: {folder : true, category: true, owner :true},
     });
     if (!document) {
       throw new NotFoundException(await this.i18n.translate('documents.DOCUMENT_NOT_FOUND'));
@@ -431,7 +431,7 @@ async findAll(user: AuthUser, pagination: PaginationDto) {
   async permanentDelete(id: number, user: AuthUser): Promise<void> {
     const document = await this.documentsRepository.findOne({
       where: { id },
-      relations: ['versions', 'attachments'],
+      relations: {versions : true, attachments : true},
     });
     if (!document) {
       throw new NotFoundException(await this.i18n.translate('documents.DOCUMENT_NOT_FOUND'));
@@ -742,7 +742,7 @@ async recentByOwner(ownerId: number, limit = 5): Promise<Document[]> {
     where: { ownerId, isDeleted: false },
     order: { createdAt: 'DESC' },
     take: limit,
-    relations: ['folder', 'category'],
+    relations: {folder : true, category : true},
   });
 }
 

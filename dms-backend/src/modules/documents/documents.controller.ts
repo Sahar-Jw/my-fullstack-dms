@@ -60,7 +60,7 @@ export class DocumentsController {
   }
 
   @Post()
-  @UseInterceptors(FilesInterceptor('files', 10, multerOptions), UploadSizeInterceptor)
+  @UseInterceptors(FilesInterceptor('files', 30, multerOptions), UploadSizeInterceptor)
   create(
     @Body() dto: CreateDocumentDto,
     @UploadedFiles() files: Express.Multer.File[],
@@ -224,7 +224,7 @@ export class DocumentsController {
   }
 
   @Post(':id/attachments')
-  @UseInterceptors(FilesInterceptor('files', 10, multerOptions), UploadSizeInterceptor)
+  @UseInterceptors(FilesInterceptor('files', 30, multerOptions), UploadSizeInterceptor)
   addAttachment(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Express.Multer.File[],

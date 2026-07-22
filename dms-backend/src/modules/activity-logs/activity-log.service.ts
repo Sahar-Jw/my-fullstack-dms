@@ -130,7 +130,7 @@ export class ActivityLogService {
         .andWhere('log.actorRole = :employeeRole', { employeeRole: RoleName.EMPLOYEE });
 
       if (query.userId !== undefined) {
-        const belongsToScope = await this.repo.exist({
+        const belongsToScope = await this.repo.exists({
           where: {
             actorId: query.userId,
             actorDepartmentId: requester.departmentId,

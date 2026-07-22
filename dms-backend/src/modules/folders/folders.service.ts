@@ -43,7 +43,7 @@ export class FoldersService {
   private async loadFolderOrFail(id: number, user: AuthUser): Promise<Folder> {
     const folder = await this.foldersRepository.findOne({
       where: { id },
-      relations: ['department', 'parentFolder']
+      relations: {department : true, parentFolder : true}
     });
     if (!folder) {
       throw new NotFoundException(await this.i18n.translate('folders.FOLDER_NOT_FOUND'));
@@ -146,7 +146,7 @@ export class FoldersService {
     if (dto.parentFolderId) {
       const parent = await this.foldersRepository.findOne({
         where: { id: dto.parentFolderId },
-        relations: ['department']
+        relations: {department : true}
       });
       if (!parent) {
         throw new NotFoundException(await this.i18n.translate('folders.PARENT_FOLDER_NOT_FOUND'));
@@ -169,7 +169,7 @@ export class FoldersService {
 
     const fullyLoadedFolder = await this.foldersRepository.findOne({
       where: { id: savedFolder.id },
-      relations: ['parentFolder', 'department'],
+      relations: {parentFolder : true, department : true},
     });
 
     const departmentName = fullyLoadedFolder?.department?.name || `Department #${departmentId}`;
@@ -227,7 +227,7 @@ export class FoldersService {
   async remove(id: number, user: AuthUser): Promise<void> {
     const folder = await this.foldersRepository.findOne({ 
       where: { id },
-      relations: ['department']
+      relations: {department : true}
     });
     if (!folder) {
       throw new NotFoundException(await this.i18n.translate('folders.FOLDER_NOT_FOUND'));
